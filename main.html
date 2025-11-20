@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Device Control</title>
+    <link rel="stylesheet" href="main-styles.css">
+</head>
+<body>
+    <div class="main-grid">
+        <!-- Left: Connection Settings -->
+        <div class="sidebar">
+            <h2>Connection Type</h2>
+            <select id="connType">
+                <option value="PWM">PWM</option>
+                <option value="RS485">RS485</option>
+                <option value="CAN">CAN</option>
+            </select>
+
+            <div id="rs485-settings" class="conn-settings hidden">
+                <label>Baudrate:</label>
+                <select id="rs485-baud">
+                    <option>38400</option>
+                    <option>57600</option>
+                    <option>115200</option>
+                    <option>230400</option>
+                    <option>250000</option>
+                </select>
+                <label>ID:</label>
+                <select id="rs485-id"></select>
+            </div>
+            <div id="can-settings" class="conn-settings hidden">
+                <label>Bitrate:</label>
+                <select id="can-bitrate">
+                    <option value="250000">250k</option>
+                    <option value="500000">500k</option>
+                    <option value="1000000">1M</option>
+                </select>
+                <label>ID:</label>
+                <select id="can-id"></select>
+            </div>
+            <button id="connectBtn" class="connect-btn">Connect</button>
+        </div>
+
+        <!-- Center: Working Field -->
+        <div class="main-content">
+            <h2>Motor Position</h2>
+            <input type="range" min="-170" max="170" value="0" id="positionSlider" />
+            <div>
+                <span id="positionLabel">0°</span>
+            </div>
+            <div class="meters">
+                <div class="meter">
+                    <span class="meter-label">Current</span>
+                    <span id="currentValue">--</span> A
+                </div>
+                <div class="meter">
+                    <span class="meter-label">Voltage</span>
+                    <span id="voltageValue">--</span> V
+                </div>
+                <div class="meter">
+                    <span class="meter-label">Temp 1</span>
+                    <span id="temp1Value">--</span> °C
+                </div>
+                <div class="meter">
+                    <span class="meter-label">Temp 2</span>
+                    <span id="temp2Value">--</span> °C
+                </div>
+            </div>
+        </div>
+        <!-- Right: Device selector + parameters -->
+        <div class="right-panel">
+            <div class="right-header">
+                <h2>Device</h2>
+                <select id="deviceSelect">
+                    <option value="">Select device…</option>
+                </select>
+            </div>
+            <div class="param-table-wrapper">
+                <table id="paramTable">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- rows injected dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="param-actions">
+                <button id="readParamsBtn">Read</button>
+                <button id="writeParamsBtn">Write</button>
+            </div>            
+        </div>
+    </div>
+    <script src="main-renderer.js"></script>
+</body>
+</html>

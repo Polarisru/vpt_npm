@@ -1,0 +1,66 @@
+{
+  "devices": [
+    {
+      "name": "DA15-PWM",
+      "type": "PWM",
+      "eeprom": [
+        {
+          "name": "Kp",
+          "address": 32,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 30
+        },
+        {
+          "name": "Kd",
+          "address": 33,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 30
+        },
+        {
+          "name": "Ki",
+          "address": 34,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 30
+        },
+        {
+          "name": "ZeroPos",
+          "address": 48,
+          "type": "int16",
+          "min": -2048,
+          "max": 2047,
+          "dflt": 0
+        }
+      ]
+    },
+    {
+      "name": "DA20-PWM",
+      "type": "PWM"
+    },
+    {
+      "name": "DA22-PWM",
+      "type": "PWM"
+    },
+    {
+      "name": "DA22-BLDC-PWM",
+      "type": "PWM"
+    },
+    {
+      "name": "DA15-RS485",
+      "type": "RS485"
+    },
+    {
+      "name": "DA15-CAN",
+      "type": "CAN"
+    },
+    {
+      "name": "DA20-CAN",
+      "type": "CAN"
+    }
+  ]
+}
