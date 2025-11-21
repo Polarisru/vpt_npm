@@ -28,6 +28,7 @@
                 <label>ID:</label>
                 <select id="rs485-id"></select>
             </div>
+
             <div id="can-settings" class="conn-settings hidden">
                 <label>Bitrate:</label>
                 <select id="can-bitrate">
@@ -38,60 +39,74 @@
                 <label>ID:</label>
                 <select id="can-id"></select>
             </div>
+
             <button id="connectBtn" class="connect-btn">Connect</button>
+
+            <div style="margin-top:8px;font-size:12px;">
+                Port: <span id="portName">-</span>
+            </div>
+            
+            <div id="connectionHint" class="connection-hint">
+                Select connection and press Connect
+            </div>            
         </div>
 
-        <!-- Center: Working Field -->
-        <div class="main-content">
-            <h2>Motor Position</h2>
-            <input type="range" min="-170" max="170" value="0" id="positionSlider" />
-            <div>
-                <span id="positionLabel">0°</span>
-            </div>
-            <div class="meters">
-                <div class="meter">
-                    <span class="meter-label">Current</span>
-                    <span id="currentValue">--</span> A
+        <!-- Wrapper for center + right so we can disable them together -->
+        <div class="content-wrapper">
+            <!-- Center: Working Field -->
+            <div class="main-content">
+                <h2>Motor Position</h2>
+                <input type="range" min="-170" max="170" value="0" id="positionSlider" />
+                <div>
+                    <span id="positionLabel">0°</span>
                 </div>
-                <div class="meter">
-                    <span class="meter-label">Voltage</span>
-                    <span id="voltageValue">--</span> V
-                </div>
-                <div class="meter">
-                    <span class="meter-label">Temp 1</span>
-                    <span id="temp1Value">--</span> °C
-                </div>
-                <div class="meter">
-                    <span class="meter-label">Temp 2</span>
-                    <span id="temp2Value">--</span> °C
+                <div class="meters">
+                    <div class="meter">
+                        <span class="meter-label">Current</span>
+                        <span id="currentValue">--</span> A
+                    </div>
+                    <div class="meter">
+                        <span class="meter-label">Voltage</span>
+                        <span id="voltageValue">--</span> V
+                    </div>
+                    <div class="meter">
+                        <span class="meter-label">Temp 1</span>
+                        <span id="temp1Value">--</span> °C
+                    </div>
+                    <div class="meter">
+                        <span class="meter-label">Temp 2</span>
+                        <span id="temp2Value">--</span> °C
+                    </div>
                 </div>
             </div>
-        </div>
-        <!-- Right: Device selector + parameters -->
-        <div class="right-panel">
-            <div class="right-header">
-                <h2>Device</h2>
-                <select id="deviceSelect">
-                    <option value="">Select device…</option>
-                </select>
+
+            <!-- Right: Device + parameters -->
+            <div class="right-panel">
+                <div class="right-header">
+                    <h2>Device</h2>
+                    <select id="deviceSelect">
+                        <option value="">Select device…</option>
+                    </select>
+                </div>
+                <div class="param-table-wrapper">
+                    <table id="paramTable">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="param-actions">
+                    <button id="readParamsBtn">Read</button>
+                    <button id="writeParamsBtn">Write</button>
+                </div>
             </div>
-            <div class="param-table-wrapper">
-                <table id="paramTable">
-                    <thead>
-                        <tr>
-                            <th>Parameter</th>
-                            <th>Value</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- rows injected dynamically -->
-                    </tbody>
-                </table>
-            </div>
-            <div class="param-actions">
-                <button id="readParamsBtn">Read</button>
-                <button id="writeParamsBtn">Write</button>
-            </div>            
+            
+            <!-- Overlay that blocks interactions until connected -->
+            <div id="contentOverlay" class="content-overlay"></div>
         </div>
     </div>
     <script src="main-renderer.js"></script>

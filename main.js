@@ -1,58 +1,101 @@
+// main.js
+
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const uart = require('./uart');
 
 let selectWindow;
 let mainWindow;
 
 function createSelectWindow() {
     selectWindow = new BrowserWindow({
-        width: 320,           // Increased slightly
-        height: 250,          // Increased to fit content
+        width: 320,
+        height: 280,
         resizable: false,
-        autoHideMenuBar: true,    // Hide menu bar
+        autoHideMenuBar: true,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
         }
     });
 
+    selectWindow.setMenuBarVisibility(false);
     selectWindow.loadFile('index.html');
-    selectWindow.setMenuBarVisibility(false);  // Completely remove it
+
+    selectWindow.on('closed', () => {
+        selectWindow = null;
+    });
 }
 
 function createMainWindow(selectedPort) {
     mainWindow = new BrowserWindow({
-        width: 1000,          // Bigger window
+        width: 1100,
         height: 700,
-        minWidth: 1000,   // minimal allowed width
-        minHeight: 600,  // minimal allowed height
-        autoHideMenuBar: true,    // Hide menu bar
+        minWidth: 900,
+        minHeight: 600,
+        resizable: true,
+        autoHideMenuBar: true,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
         }
     });
 
+    mainWindow.setMenuBarVisibility(false);
     mainWindow.loadFile('main.html');
-    mainWindow.setMenuBarVisibility(false);  // Completely remove it
-    
-    // Send the selected port to the new window
+
+    mainWindow.on('closed', () => {
+        mainWindow = null;
+    });
+
     mainWindow.webContents.on('did-finish-load', () => {
         mainWindow.webContents.send('selected-port', selectedPort);
     });
 }
 
-// Listen for port selection from renderer
-ipcMain.on('port-selected', (event, port) => {
-    console.log('Port selected:', port);
-    createMainWindow(port);
-    selectWindow.close();  // Close the small window
-});
+app.whenReady().then(() => {
+    createSelectWindow();
 
-app.whenReady().then(createSelectWindow);
+    app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            createSelectWindow();
+        }
+    });
+});
 
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        app.quit();
+    uart.close();
+    if (process.platform !== 'darwin') app.quit();
+});
+
+// From small window: user chose a port and clicked Connect
+ipcMain.on('port-selected', async (event, portPath) => {
+    console.log('Port selected in renderer:', portPath);
+
+    const baud = 115200;
+
+    try {
+        //await uart.open(portPath, baud);
+        //await uart.sendAndWait('ID', line => line === 'VPT', 800);
+
+        createMainWindow(portPath);
+        if (selectWindow) selectWindow.close();
+    } catch (err) {
+        console.error('Device ID check failed:', err.message);
+        uart.close();
+
+        if (selectWindow && selectWindow.webContents) {
+            selectWindow.webContents.send('port-check-failed', err.message);
+        } else {
+            event.sender.send('port-check-failed', err.message);
+        }
     }
 });
+
+// Generic UART IPC if needed from main window
+ipcMain.handle('uart-open', (_e, portPath, baud) => uart.open(portPath, baud));
+ipcMain.handle('uart-close', () => uart.close());
+ipcMain.handle('uart-send', (_e, cmd) => uart.send(cmd));
+ipcMain.handle('uart-send-wait', (_e, cmd, timeoutMs) =>
+    uart.sendAndWait(cmd, () => true, timeoutMs)
+);

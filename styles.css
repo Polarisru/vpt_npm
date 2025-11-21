@@ -4,38 +4,44 @@
     box-sizing: border-box;
 }
 
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
     color: #333;
 }
 
 .container {
     background: white;
-    padding: 20px 30px;      /* Reduced from 30px 40px */
+    padding: 20px 30px;
     border-radius: 10px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     text-align: center;
-    min-width: 250px;        /* Reduced from 280px */
+    min-width: 260px;      /* was 250, small bump */
+    max-width: 260px;      /* fix width so it never stretches */
 }
 
 h1 {
-    font-size: 18px;         /* Reduced from 20px */
-    margin-bottom: 20px;     /* Reduced from 25px */
+    font-size: 18px;
+    margin-bottom: 20px;
     color: #333;
 }
 
 #portSelect {
     width: 100%;
-    padding: 10px;           /* Reduced from 12px */
+    padding: 10px;
     font-size: 14px;
     border: 2px solid #e0e0e0;
     border-radius: 6px;
-    margin-bottom: 15px;     /* Reduced from 20px */
+    margin-bottom: 15px;
     background: white;
     cursor: pointer;
     transition: border-color 0.3s;
@@ -52,8 +58,8 @@ h1 {
 
 #connectBtn {
     width: 100%;
-    padding: 10px;           /* Reduced from 12px */
-    font-size: 15px;         /* Reduced from 16px */
+    padding: 10px;
+    font-size: 15px;
     font-weight: 600;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -72,7 +78,22 @@ h1 {
     transform: translateY(0);
 }
 
-#connectBtn:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    transform:
+/* Status label under button */
+.status-label {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #c00;
+    min-height: 35px;
+}
+
+.status-label.info {
+    color: #444;
+}
+
+.status-label.ok {
+    color: #2a8a2a;
+}
+
+.status-label.error {
+    color: #c00;
+}

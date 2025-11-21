@@ -50,7 +50,7 @@ function buildParamTable(device) {
     tbody.innerHTML = '';
 
     if (!device || !Array.isArray(device.eeprom)) {
-        return; // this device has no parameters
+        return;
     }
 
     device.eeprom.forEach(param => {
@@ -73,7 +73,6 @@ function buildParamTable(device) {
         input.dataset.max = param.max;
         input.dataset.name = param.name;
 
-        // clamp while typing
         input.addEventListener('input', () => {
             const min = Number(input.dataset.min);
             const max = Number(input.dataset.max);
@@ -86,7 +85,6 @@ function buildParamTable(device) {
             }
         });
 
-        // clamp on blur
         input.addEventListener('blur', () => {
             const min = Number(input.dataset.min);
             const max = Number(input.dataset.max);
@@ -116,6 +114,18 @@ function buildParamTable(device) {
     });
 }
 
+// Disable / enable all inputs/selects in the left sidebar except the Connect button
+function setSidebarEnabled(enabled) {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    const controls = sidebar.querySelectorAll('select, input, button');
+    controls.forEach(el => {
+        if (el.id === 'connectBtn') return; // keep Connect/Disconnect itself active
+        el.disabled = !enabled;
+    });
+}
+
 // ---------- DOM Init ----------
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -130,8 +140,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const connectBtn = document.getElementById('connectBtn');
     const readBtn = document.getElementById('readParamsBtn');
     const writeBtn = document.getElementById('writeParamsBtn');
+    const contentOverlay = document.getElementById('contentOverlay');
+    const connectionHint = document.getElementById('connectionHint');
 
-    // Fill RS485 IDs 1..31
+    let isConnected = false;
+
+    // RS485 IDs 1..31
     if (rs485Id) {
         for (let i = 1; i <= 31; i++) {
             const opt = document.createElement('option');
@@ -141,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Fill CAN IDs 1..15
+    // CAN IDs 1..15
     if (canId) {
         for (let i = 1; i <= 15; i++) {
             const opt = document.createElement('option');
@@ -191,7 +205,6 @@ document.addEventListener('DOMContentLoaded', () => {
         allDevices = [];
     }
 
-    // Initial device list filtered by connection type
     fillDeviceSelectForType(currentConnType);
 
     // Device selection → build table
@@ -203,12 +216,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Connect button: config only (UART logic later)
+    // Connect / Disconnect button
     if (connectBtn) {
         connectBtn.addEventListener('click', () => {
             const cfg = collectConnectionConfig();
-            console.log('Connect requested with config:', cfg);
-            // Later: send ID command using selected UART/CAN and parameters
+            console.log((isConnected ? 'Disconnect' : 'Connect') + ' requested with config:', cfg);
+
+            if (!isConnected) {
+                // going from disconnected → connected
+                isConnected = true;
+                connectBtn.textContent = 'Disconnect';
+
+                if (contentOverlay) {
+                    contentOverlay.classList.add('hidden'); // enable middle + right
+                }
+                if (connectionHint) {
+                    connectionHint.textContent = 'Connected';
+                }
+
+                // Disable left controls (except button)
+                setSidebarEnabled(false);
+
+                // TODO: open UART/CAN via ipcRenderer.invoke(...) here
+            } else {
+                // going from connected → disconnected
+                isConnected = false;
+                connectBtn.textContent = 'Connect';
+
+                if (contentOverlay) {
+                    contentOverlay.classList.remove('hidden'); // disable middle + right
+                }
+                if (connectionHint) {
+                    connectionHint.textContent = 'Select connection and press Connect';
+                }
+
+                // Enable left controls again
+                setSidebarEnabled(true);
+
+                // TODO: close UART/CAN via ipcRenderer.invoke(...) here
+            }
         });
     }
 
@@ -225,8 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 value: Number(inp.value)
             }));
             console.log('WRITE parameters:', paramsToWrite);
-
-            // Later: ipcRenderer.invoke('write-params', paramsToWrite)
+            // TODO: send paramsToWrite to main process via ipcRenderer.invoke(...)
         });
     }
 
@@ -240,12 +285,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 type: inp.dataset.type
             }));
             console.log('READ parameters:', paramsToRead);
-
-            // Later: ipcRenderer.invoke('read-params', paramsToRead).then(update inputs)
+            // TODO: request values via ipcRenderer.invoke(...) and update inputs
         });
     }
 
-    // Port name from first window
+    // Port name from small window
     ipcRenderer.on('selected-port', (_event, port) => {
         const portLabel = document.getElementById('portName');
         if (portLabel) portLabel.textContent = port;

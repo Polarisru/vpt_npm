@@ -1,18 +1,24 @@
+// renderer.js  (small first window)
+
+console.log('Renderer script started');
+
 const { SerialPort } = require('serialport');
 const { ipcRenderer } = require('electron');
 
-console.log('Renderer script started');
+let statusLabel = null;
 
 // List ports when page loads
 SerialPort.list()
     .then(ports => {
         console.log('Ports received:', ports);
         const select = document.getElementById('portSelect');
-        
+
+        if (!select) return;
+
         if (ports.length === 0) {
             select.innerHTML = '<option>No ports found</option>';
         } else {
-            select.innerHTML = '';  // Clear loading message
+            select.innerHTML = '';
             ports.forEach(port => {
                 const option = document.createElement('option');
                 option.value = port.path;
@@ -24,18 +30,39 @@ SerialPort.list()
     .catch(err => {
         console.error('Error listing ports:', err);
         const select = document.getElementById('portSelect');
-        select.innerHTML = '<option>Error: ' + err.message + '</option>';
+        if (select) {
+            select.innerHTML = '<option>Error: ' + err.message + '</option>';
+        }
     });
 
-// Handle connect button click
-const connectBtn = document.getElementById('connectBtn');
-connectBtn.addEventListener('click', () => {
+document.addEventListener('DOMContentLoaded', () => {
+    const connectBtn = document.getElementById('connectBtn');
     const portSelect = document.getElementById('portSelect');
-    const selectedPort = portSelect.value;
-    
-    if (selectedPort && selectedPort !== 'No ports found') {
-        console.log('Sending port to main:', selectedPort);
-        // Tell main process to open new window and close this one
+    statusLabel = document.getElementById('statusLabel');
+
+    if (!connectBtn || !portSelect) return;
+
+    connectBtn.addEventListener('click', () => {
+        const selectedPort = portSelect.value;
+        if (!selectedPort || selectedPort === 'No ports found') return;
+
+        if (statusLabel) {
+            statusLabel.textContent = 'Checking device...';
+            statusLabel.classList.remove('ok', 'error');
+            statusLabel.classList.add('info');
+        }
+
+        console.log('Selected port:', selectedPort);
         ipcRenderer.send('port-selected', selectedPort);
+    }); 
+});
+
+// Error from main when device not available / timeout / access denied
+ipcRenderer.on('port-check-failed', (_event, message) => {
+    console.log('Port check failed:', message);
+    if (statusLabel) {
+        statusLabel.textContent = 'Device not available: ' + message;
+        statusLabel.classList.remove('ok', 'info');
+        statusLabel.classList.add('error');
     }
 });
