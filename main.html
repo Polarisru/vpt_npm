@@ -117,22 +117,46 @@
                 </div>        
                 
                 <div class="sine-block">
-                    <div class="sine-title">Sinusoidal movement</div>
+                    <div class="sine-title">Periodical movement</div>
+                    <div class="sine-row sine-row-wa">
+                        <div class="sine-label">Waveform</div>
+                        <select id="sineWaveform" class="sine-input">
+                            <option value="sine">Sinusoidal</option>
+                            <option value="rect">Rectangle</option>
+                            <option value="saw">Sawtooth</option>
+                        </select>
 
-                    <div class="sine-row">
-                        <div class="sine-label">Amplitude (°)</div>
-                        <input type="number" id="sineAmplitude" class="sine-input" min="0" max="170" step="1" value="30">
+                        <div class="sine-label sine-label-right">Amplitude (°)</div>
+                        <input type="number" id="sineAmplitude" class="sine-input" min="0" max="180" step="1" value="30">
                     </div>
 
-                    <div class="sine-row">
+                    <div class="sine-row sine-row-fs">
                         <div class="sine-label">Frequency (Hz)</div>
                         <input type="number" id="sineFrequency" class="sine-input" min="0.1" max="10" step="0.1" value="0.5">
-                    </div>
 
-                    <div class="sine-actions">
-                        <button id="sineStartStopBtn" class="sine-btn">Start</button>
+                        <div class="sine-actions sine-actions-inline">
+                            <button id="sineStartStopBtn" class="sine-btn">Start</button>
+                        </div>
                     </div>
                 </div>            
+                
+                <div class="fw-block">
+                    <div class="fw-title">Firmware update</div>
+
+                    <div class="fw-row">
+                        <div class="fw-label">HEX file</div>
+  
+                        <div class="fw-file-area">
+                            <span id="fwFileName" class="fw-filename">No file selected</span>
+                            <button id="fwBrowseBtn" class="fw-browse-btn">Browse…</button>
+                            <input type="file" id="fwFileInput" accept=".hex" style="display:none">
+                        </div>
+                    </div>
+
+                    <div class="fw-actions">
+                        <button id="fwUploadBtn" class="fw-upload-btn">Upload</button>
+                    </div>
+                </div>                
             </div>
             
             <!-- Right: Device + parameters -->
