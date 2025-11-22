@@ -168,6 +168,16 @@ function downloadJsonFile(filename, jsonStr) {
     URL.revokeObjectURL(url);
 }
 
+function randomText(len) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let out = '';
+    for (let i = 0; i < len; i++) {
+        out += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return out;
+}
+
+
 // ---------- DOM Init ----------
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -179,6 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const deviceSelect = document.getElementById('deviceSelect');
     const slider = document.getElementById('positionSlider');
     const positionLabel = document.getElementById('positionLabel');
+    const positionMinBtn = document.getElementById('positionMinBtn');
+    const positionMaxBtn = document.getElementById('positionMaxBtn');
     const connectBtn = document.getElementById('connectBtn');
     const readBtn = document.getElementById('readParamsBtn');
     const writeBtn = document.getElementById('writeParamsBtn');
@@ -187,7 +199,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadFileInput = document.getElementById('loadFileInput');
     const contentOverlay = document.getElementById('contentOverlay');
     const connectionHint = document.getElementById('connectionHint');
-
+    const currentValueEl = document.getElementById('currentValue');
+    const voltageValueEl = document.getElementById('voltageValue');
+    const temp1ValueEl = document.getElementById('temp1Value');
+    const temp2ValueEl = document.getElementById('temp2Value');
+    const readLiveBtn = document.getElementById('readLiveBtn');
+    const serialInput = document.getElementById('serialNumber');
+    const fwInput     = document.getElementById('fwVersion');
+    const hwInput     = document.getElementById('hwRevision');
+    const pnInput     = document.getElementById('pnNumber');
+    const serialReadBtn = document.getElementById('serialReadBtn');
+    const fwReadBtn     = document.getElementById('fwReadBtn');
+    const hwReadBtn     = document.getElementById('hwReadBtn');
+    const pnReadBtn     = document.getElementById('pnReadBtn');
+    const sineAmpInput   = document.getElementById('sineAmplitude');
+    const sineFreqInput  = document.getElementById('sineFrequency');
+    const sineStartStop  = document.getElementById('sineStartStopBtn');
+  
     let isConnected = false;
 
     // RS485 IDs
@@ -234,11 +262,64 @@ document.addEventListener('DOMContentLoaded', () => {
         currentConnType = connType.value;
     }
 
-    // slider label
+    // slider + label + Min/Max
     if (slider && positionLabel) {
+      const updateLabel = () => {
         positionLabel.textContent = slider.value + '°';
-        slider.addEventListener('input', () => {
-            positionLabel.textContent = slider.value + '°';
+      };
+
+      updateLabel();
+
+      slider.addEventListener('input', updateLabel);
+
+      if (positionMinBtn) {
+        positionMinBtn.addEventListener('click', () => {
+          slider.value = slider.min ?? '0';
+          updateLabel();
+          slider.dispatchEvent(new Event('input'));
+        });
+      }
+
+      if (positionMaxBtn) {
+        positionMaxBtn.addEventListener('click', () => {
+          slider.value = slider.max ?? '0';
+          updateLabel();
+          slider.dispatchEvent(new Event('input'));
+        });
+      }
+    }    
+
+    if (serialReadBtn && serialInput) {
+        serialReadBtn.addEventListener('click', () => {
+            // TODO later: replace with UART read
+            serialInput.value = randomText(16); // e.g. 16 chars, <= 32
+        });
+    }
+
+    if (fwReadBtn && fwInput) {
+        fwReadBtn.addEventListener('click', () => {
+            // Example like "v1.2.3-BUILD123"
+            fwInput.value = 'v' + (1 + Math.floor(Math.random() * 3)) + '.' +
+                        Math.floor(Math.random() * 10) + '.' +
+                        Math.floor(Math.random() * 10) +
+                        '-' + randomText(6);
+        });
+    }
+
+    if (hwReadBtn && hwInput) {
+        hwReadBtn.addEventListener('click', () => {
+            // Example like "REV-A3"
+            hwInput.value = 'REV-' + String.fromCharCode(65 + Math.floor(Math.random() * 3)) +
+                        Math.floor(Math.random() * 10);
+        });
+    }
+
+    if (pnReadBtn && pnInput) {
+        pnReadBtn.addEventListener('click', () => {
+            // Example PN like "PN-1234-ABCD"
+            pnInput.value = 'PN-' +
+                        String(Math.floor(Math.random() * 9000) + 1000) + '-' +
+                        randomText(4);
         });
     }
 
@@ -301,6 +382,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    
+    if (readLiveBtn && currentValueEl && voltageValueEl && temp1ValueEl && temp2ValueEl) {
+        readLiveBtn.addEventListener('click', () => {
+            // TODO later: replace with real device read via IPC
+            const current = (Math.random() * 10).toFixed(2);        // 0–10 A
+            const voltage = (12 + Math.random() * 2).toFixed(2);    // 12–14 V
+            const temp1   = (20 + Math.random() * 30).toFixed(1);   // 20–50 °C
+            const temp2   = (20 + Math.random() * 30).toFixed(1);   // 20–50 °C
+
+            currentValueEl.textContent = `${current}`;
+            voltageValueEl.textContent = `${voltage}`;
+            temp1ValueEl.textContent   = `${temp1}`;
+            temp2ValueEl.textContent   = `${temp2}`;
+        });
+    }    
 
     // WRITE
     if (writeBtn) {

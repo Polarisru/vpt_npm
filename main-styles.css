@@ -122,6 +122,44 @@ body {
     transform: translateY(0);
 }
 
+/* Sidebar footer status box */
+.sidebar-status {
+    margin-top: auto;               /* push to bottom */
+    margin-left: -4px;
+    margin-right: -4px;
+    padding: 10px 12px;
+    height: 80px;                   /* fixed height */
+    border-radius: 8px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    text-align: center;
+    display: block;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.sidebar-status-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #667eea;
+    margin-bottom: 4px;
+  }
+
+.sidebar-status-port {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+    word-break: break-all;
+}
+
+.sidebar-status-hint {
+    font-size: 11px;
+    color: #666;
+}
+
 /* ---------- Center content ---------- */
 
 .main-content {
@@ -140,15 +178,58 @@ body {
     margin-bottom: 10px;
 }
 
-#positionSlider {
+/*#positionSlider {
     width: 360px;
     margin-top: 10px;
+}*/
+
+.position-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
 }
 
-#positionLabel {
-    display: inline-block;
-    font-size: 18px;
-    margin: 8px 0 18px 0;
+.position-row #positionSlider {
+  width: 360px;
+  flex: 1;
+  margin-top: 0; /* old margin handled by row now */
+}
+
+.position-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.16);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.position-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(102,126,234,0.35);
+}
+
+.position-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+/* pill-style current value */
+#positionLabel.position-label {
+  width: 70px;
+  display: flex;           /* make it flex */
+  align-items: center;     /* vertical centering (optional) */
+  justify-content: center; /* horizontal centering */
+  margin: 8px 0 18px 0;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: #f6f6ff;
+  box-shadow: 0 0 2px rgba(70,60,150,0.1);
+  font-size: 24px;
 }
 
 .meters {
@@ -172,6 +253,136 @@ body {
     font-size: 13px;
     color: #667eea;
     margin-bottom: 2px;
+}
+
+.info-block {
+  margin-top: 16px;
+  padding: 12px 16px;          /* a bit wider padding */
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;                 /* take full middle-panel width */
+  box-sizing: border-box;      /* include padding in width */
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: 130px 1fr auto;  /* slightly wider label column */
+  gap: 8px;                               /* more breathing room */
+  align-items: center;
+}
+
+.info-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+
+.info-input {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ccd1ff;
+  font-size: 12px;
+  background-color: #f9f9ff;
+  color: #333;
+}
+
+.info-input[readonly] {
+  cursor: default;
+}
+
+.info-read-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.16);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.info-read-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(102,126,234,0.35);
+}
+
+.info-read-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.sine-block {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sine-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 4px;
+}
+
+.sine-row {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.sine-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+
+.sine-input {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ccd1ff;
+  font-size: 12px;
+  background-color: #f9f9ff;
+  color: #333;
+}
+
+.sine-actions {
+  margin-top: 6px;
+  text-align: right;
+}
+
+.sine-btn {
+  padding: 4px 16px;
+  font-size: 13px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.16);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.sine-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(102,126,234,0.35);
+}
+
+.sine-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
 
 /* ---------- Right panel ---------- */
@@ -295,6 +506,15 @@ body {
     transform: translateY(0);
 }
 
+.param-actions button:disabled {
+  background: #ccc;
+  color: #777;
+  cursor: default;
+  box-shadow: none;
+  transform: none;
+  opacity: 1; /* avoid extra fading if browser applies it */
+}
+
 /* ---------- Center+Right overlay (disabled state) ---------- */
 
 .connection-hint {
@@ -314,4 +534,31 @@ body {
 
 .content-overlay.hidden {
     display: none;
+}
+
+.live-actions {
+  margin-top: 12px;
+  text-align: right;
+}
+
+.live-actions button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  transition: transform 0.05s ease, box-shadow 0.05s ease;
+}
+
+.live-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+.live-actions button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
 }

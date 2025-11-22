@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Device Control</title>
+    <title>Volz Programming Tool</title>
     <link rel="stylesheet" href="main-styles.css">
 </head>
 <body>
@@ -42,12 +42,13 @@
 
             <button id="connectBtn" class="connect-btn">Connect</button>
 
-            <div style="margin-top:8px;font-size:12px;">
-                Port: <span id="portName">-</span>
-            </div>
-            
-            <div id="connectionHint" class="connection-hint">
-                Select connection and press Connect
+            <!-- Sidebar footer status box -->
+            <div class="sidebar-status">
+                <div class="sidebar-status-title">Connection</div>
+                <div class="sidebar-status-port" id="portName">No port selected</div>
+                <div class="sidebar-status-hint" id="connectionHint">
+                    Select connection type and press Connect
+                </div>
             </div>            
         </div>
 
@@ -56,9 +57,13 @@
             <!-- Center: Working Field -->
             <div class="main-content">
                 <h2>Motor Position</h2>
-                <input type="range" min="-170" max="170" value="0" id="positionSlider" />
-                <div>
-                    <span id="positionLabel">0°</span>
+                <div class="position-row">
+                    <button id="positionMinBtn" class="position-btn">Min</button>
+                    <input type="range" id="positionSlider" min="-170" max="170" value="0">
+                    <button id="positionMaxBtn" class="position-btn">Max</button>
+                </div>
+                <div id="positionLabel" class="position-label">
+                    0°
                 </div>
                 <div class="meters">
                     <div class="meter">
@@ -78,8 +83,58 @@
                         <span id="temp2Value">--</span> °C
                     </div>
                 </div>
-            </div>
+                <div class="live-panel">
+                    <!-- New Read button -->
+                    <div class="live-actions">
+                        <button id="readLiveBtn">Read</button>
+                    </div>
+                </div>   
 
+                <div class="info-block">
+                    <div class="info-row">
+                        <div class="info-label">Serial Number</div>
+                        <input type="text" id="serialNumber" class="info-input" maxlength="32" readonly>
+                        <button class="info-read-btn" id="serialReadBtn">Read</button>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-label">FW Version</div>
+                        <input type="text" id="fwVersion" class="info-input" maxlength="32" readonly>
+                        <button class="info-read-btn" id="fwReadBtn">Read</button>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-label">HW Revision</div>
+                        <input type="text" id="hwRevision" class="info-input" maxlength="32" readonly>
+                        <button class="info-read-btn" id="hwReadBtn">Read</button>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-label">PN Number</div>
+                        <input type="text" id="pnNumber" class="info-input" maxlength="32" readonly>
+                        <button class="info-read-btn" id="pnReadBtn">Read</button>
+                    </div>
+                </div>        
+                
+                <div class="sine-block">
+                    <div class="sine-title">Sinusoidal movement</div>
+
+                    <div class="sine-row">
+                        <div class="sine-label">Amplitude (°)</div>
+                        <input type="number" id="sineAmplitude" class="sine-input" min="0" max="170" step="1" value="30">
+                    </div>
+
+                    <div class="sine-row">
+                        <div class="sine-label">Frequency (Hz)</div>
+                        <input type="number" id="sineFrequency" class="sine-input" min="0.1" max="10" step="0.1" value="0.5">
+                    </div>
+
+                    <div class="sine-actions">
+                        <button id="sineStartStopBtn" class="sine-btn">Start</button>
+                    </div>
+                </div>            
+            </div>
+            
             <!-- Right: Device + parameters -->
             <div class="right-panel">
                 <div class="right-header">
