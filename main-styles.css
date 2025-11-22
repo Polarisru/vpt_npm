@@ -31,12 +31,12 @@ body {
 
 /* Wrapper for center + right so we can disable them together */
 .content-wrapper {
-    position: relative;
-    display: grid;
-    grid-template-columns: 1.1fr 300px;  /* middle + right */
-    gap: 12px;
-    height: 100%;
-    min-height: 0;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px; /* middle grows, right fixed */
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
 }
 
 /* ---------- Left sidebar ---------- */
@@ -339,22 +339,22 @@ body {
 /* Base layout for rows in sine-block */
 .sine-row {
   display: grid;
-  grid-template-columns: 120px 1fr;  /* default: label + control */
+  grid-template-columns: auto 1fr; /* default: label + control */
   gap: 8px;
   align-items: center;
 }
 
-/* Waveform + Amplitude in one line */
+/* Waveform + Amplitude in one line: labels + equal inputs */
 .sine-row-wa {
-  grid-template-columns: 120px auto 120px auto;
+  grid-template-columns: auto 1fr auto 1fr;
 }
 
 /* Frequency + Start button in one line */
 .sine-row-fs {
-  grid-template-columns: 120px auto auto;
+  grid-template-columns: auto 1fr auto;
 }
 
-/* Make all sine inputs/selects same width */
+/* All three controls same, but allow shrink */
 .sine-input {
   padding: 4px 6px;
   border-radius: 6px;
@@ -362,13 +362,25 @@ body {
   font-size: 12px;
   background-color: #f9f9ff;
   color: #333;
+  min-width: 0;       /* allow grid to shrink them */
+}
 
-  width: 110px;          /* fixed visual width for all three */
-  box-sizing: border-box;
+/* If you still want a visual max width, use max-width, not width */
+.sine-input {
+  max-width: 110px;
+}
+
+.sine-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
 }
 
 /* Right label aligned to the right */
 .sine-label-right {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
   text-align: right;
 }
 
