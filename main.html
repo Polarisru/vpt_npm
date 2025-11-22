@@ -100,8 +100,11 @@
                     </table>
                 </div>
                 <div class="param-actions">
-                    <button id="readParamsBtn">Read</button>
-                    <button id="writeParamsBtn">Write</button>
+                    <button id="readParamsBtn" disabled>Read</button>
+                    <button id="writeParamsBtn" disabled>Write</button>
+                    <button id="saveToFileBtn" disabled>Save to File</button>
+                    <button id="loadFromFileBtn" disabled>Load from File</button>
+                    <input type="file" id="loadFileInput" accept=".json,application/json" style="display:none">
                 </div>
             </div>
             

@@ -114,16 +114,58 @@ function buildParamTable(device) {
     });
 }
 
-// Disable / enable all inputs/selects in the left sidebar except the Connect button
+// left sidebar enable/disable (except Connect)
 function setSidebarEnabled(enabled) {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
 
     const controls = sidebar.querySelectorAll('select, input, button');
     controls.forEach(el => {
-        if (el.id === 'connectBtn') return; // keep Connect/Disconnect itself active
+        if (el.id === 'connectBtn') return;
         el.disabled = !enabled;
     });
+}
+
+// right-panel 4 buttons
+function getRightButtons() {
+    return [
+        document.getElementById('readParamsBtn'),
+        document.getElementById('writeParamsBtn'),
+        document.getElementById('saveToFileBtn'),
+        document.getElementById('loadFromFileBtn')
+    ];
+}
+
+function setRightButtonsEnabled(enabled) {
+    getRightButtons().forEach(btn => {
+        if (btn) btn.disabled = !enabled;
+    });
+}
+
+// collect param values from table
+function collectCurrentParams() {
+    const inputs = document.querySelectorAll('#paramTable tbody input');
+    return Array.from(inputs).map(inp => ({
+        name: inp.dataset.name,
+        address: Number(inp.dataset.address),
+        type: inp.dataset.type,
+        min: Number(inp.dataset.min),
+        max: Number(inp.dataset.max),
+        value: Number(inp.value)
+    }));
+}
+
+// download JSON from renderer
+function downloadJsonFile(filename, jsonStr) {
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
 // ---------- DOM Init ----------
@@ -140,12 +182,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const connectBtn = document.getElementById('connectBtn');
     const readBtn = document.getElementById('readParamsBtn');
     const writeBtn = document.getElementById('writeParamsBtn');
+    const saveBtn = document.getElementById('saveToFileBtn');
+    const loadBtn = document.getElementById('loadFromFileBtn');
+    const loadFileInput = document.getElementById('loadFileInput');
     const contentOverlay = document.getElementById('contentOverlay');
     const connectionHint = document.getElementById('connectionHint');
 
     let isConnected = false;
 
-    // RS485 IDs 1..31
+    // RS485 IDs
     if (rs485Id) {
         for (let i = 1; i <= 31; i++) {
             const opt = document.createElement('option');
@@ -155,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // CAN IDs 1..15
+    // CAN IDs
     if (canId) {
         for (let i = 1; i <= 15; i++) {
             const opt = document.createElement('option');
@@ -165,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Connection type logic
+    // connection type (only device list + table, not right buttons except reset)
     if (connType) {
         connType.addEventListener('change', () => {
             if (rs485Settings) rs485Settings.classList.add('hidden');
@@ -181,12 +226,15 @@ document.addEventListener('DOMContentLoaded', () => {
             currentConnType = connType.value;
             fillDeviceSelectForType(currentConnType);
             clearParamTable();
+
+            if (deviceSelect) deviceSelect.value = '';
+            setRightButtonsEnabled(false);    // after type change: no device selected
         });
 
         currentConnType = connType.value;
     }
 
-    // Slider label
+    // slider label
     if (slider && positionLabel) {
         positionLabel.textContent = slider.value + '°';
         slider.addEventListener('input', () => {
@@ -194,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Load devices.json
+    // load devices.json
     try {
         const jsonPath = path.join(__dirname, 'devices.json');
         const raw = fs.readFileSync(jsonPath, 'utf8');
@@ -207,75 +255,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     fillDeviceSelectForType(currentConnType);
 
-    // Device selection → build table
+    // start: buttons disabled
+    setRightButtonsEnabled(false);
+
+    // deviceSelect controls the 4 buttons
     if (deviceSelect) {
         deviceSelect.addEventListener('change', () => {
             const name = deviceSelect.value;
             const dev = allDevices.find(d => d.name === name);
-            buildParamTable(dev);
+
+            if (dev) {
+                buildParamTable(dev);
+                setRightButtonsEnabled(true);    // ONLY here: enable!
+            } else {
+                clearParamTable();
+                setRightButtonsEnabled(false);
+            }
         });
     }
 
-    // Connect / Disconnect button
+    // connect/disconnect – DOES NOT touch right buttons
     if (connectBtn) {
         connectBtn.addEventListener('click', () => {
             const cfg = collectConnectionConfig();
             console.log((isConnected ? 'Disconnect' : 'Connect') + ' requested with config:', cfg);
 
             if (!isConnected) {
-                // going from disconnected → connected
                 isConnected = true;
                 connectBtn.textContent = 'Disconnect';
 
-                if (contentOverlay) {
-                    contentOverlay.classList.add('hidden'); // enable middle + right
-                }
-                if (connectionHint) {
-                    connectionHint.textContent = 'Connected';
-                }
+                if (contentOverlay) contentOverlay.classList.add('hidden');
+                if (connectionHint) connectionHint.textContent = 'Connected';
 
-                // Disable left controls (except button)
                 setSidebarEnabled(false);
-
-                // TODO: open UART/CAN via ipcRenderer.invoke(...) here
+                // TODO: open UART/CAN
             } else {
-                // going from connected → disconnected
                 isConnected = false;
                 connectBtn.textContent = 'Connect';
 
-                if (contentOverlay) {
-                    contentOverlay.classList.remove('hidden'); // disable middle + right
-                }
-                if (connectionHint) {
-                    connectionHint.textContent = 'Select connection and press Connect';
-                }
+                if (contentOverlay) contentOverlay.classList.remove('hidden');
+                if (connectionHint) connectionHint.textContent = 'Select connection and press Connect';
 
-                // Enable left controls again
                 setSidebarEnabled(true);
-
-                // TODO: close UART/CAN via ipcRenderer.invoke(...) here
+                // TODO: close UART/CAN
             }
         });
     }
 
-    // Write parameters: collect table values
+    // WRITE
     if (writeBtn) {
         writeBtn.addEventListener('click', () => {
-            const inputs = document.querySelectorAll('#paramTable tbody input');
-            const paramsToWrite = Array.from(inputs).map(inp => ({
-                name: inp.dataset.name,
-                address: Number(inp.dataset.address),
-                type: inp.dataset.type,
-                min: Number(inp.dataset.min),
-                max: Number(inp.dataset.max),
-                value: Number(inp.value)
-            }));
+            const paramsToWrite = collectCurrentParams();
             console.log('WRITE parameters:', paramsToWrite);
-            // TODO: send paramsToWrite to main process via ipcRenderer.invoke(...)
         });
     }
 
-    // Read parameters: addresses only
+    // READ
     if (readBtn) {
         readBtn.addEventListener('click', () => {
             const inputs = document.querySelectorAll('#paramTable tbody input');
@@ -285,14 +320,75 @@ document.addEventListener('DOMContentLoaded', () => {
                 type: inp.dataset.type
             }));
             console.log('READ parameters:', paramsToRead);
-            // TODO: request values via ipcRenderer.invoke(...) and update inputs
         });
     }
 
-    // Port name from small window
+    // SAVE TO FILE
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            const deviceName = deviceSelect ? deviceSelect.value : '';
+            if (!deviceName) return;
+
+            const params = collectCurrentParams();
+            const data = {
+                device: deviceName,
+                params: params.map(p => ({
+                    name: p.name,
+                    address: p.address,
+                    value: p.value
+                }))
+            };
+            const jsonStr = JSON.stringify(data, null, 2);
+            const safeName = deviceName.replace(/[^a-z0-9_\-]+/gi, '_');
+            const filename = `params-${safeName}.json`;
+            downloadJsonFile(filename, jsonStr);
+        });
+    }
+
+    // LOAD FROM FILE
+    if (loadBtn && loadFileInput) {
+        loadBtn.addEventListener('click', () => {
+            loadFileInput.value = '';
+            loadFileInput.click();
+        });
+
+        loadFileInput.addEventListener('change', () => {
+            const file = loadFileInput.files && loadFileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const text = reader.result.toString();
+                    const data = JSON.parse(text);
+
+                    if (!data || !Array.isArray(data.params)) {
+                        console.error('Invalid JSON format');
+                        return;
+                    }
+
+                    const inputs = document.querySelectorAll('#paramTable tbody input');
+                    data.params.forEach(p => {
+                        const match = Array.from(inputs).find(inp =>
+                            inp.dataset.name === String(p.name) &&
+                            Number(inp.dataset.address) === Number(p.address)
+                        );
+                        if (match && typeof p.value !== 'undefined') {
+                            match.value = String(p.value);
+                            match.dispatchEvent(new Event('blur'));
+                        }
+                    });
+                } catch (e) {
+                    console.error('Error parsing JSON file:', e);
+                }
+            };
+            reader.readAsText(file, 'utf8');
+        });
+    }
+
+    // port name from small window
     ipcRenderer.on('selected-port', (_event, port) => {
         const portLabel = document.getElementById('portName');
         if (portLabel) portLabel.textContent = port;
-        console.log('Main window got selected port:', port);
     });
 });
