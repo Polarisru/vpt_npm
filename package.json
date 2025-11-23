@@ -15,6 +15,15 @@
     "electron": "^39.2.2",
     "electron-rebuild": "^3.2.9"
   },
+  "build": {
+    "appId": "com.volz-servos.vpt",
+    "productName": "Volz Programming Tool",
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
+  },  
   "dependencies": {
     "serialport": "^13.0.0"
   }
