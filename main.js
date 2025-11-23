@@ -30,9 +30,9 @@ function createSelectWindow() {
 function createMainWindow(selectedPort) {
     mainWindow = new BrowserWindow({
         width: 1100,
-        height: 700,
-        minWidth: 900,
-        minHeight: 600,
+        height: 710,
+        minWidth: 1000,
+        minHeight: 710,
         resizable: true,
         autoHideMenuBar: true,
         webPreferences: {
@@ -51,6 +51,34 @@ function createMainWindow(selectedPort) {
     mainWindow.webContents.on('did-finish-load', () => {
         mainWindow.webContents.send('selected-port', selectedPort);
     });
+}
+
+let uploadWindow = null;
+
+function createUploadWindow() {
+  if (!mainWindow) return;
+
+  uploadWindow = new BrowserWindow({
+    width: 400,
+    height: 140,
+    resizable: false,
+    parent: mainWindow,
+    modal: true,
+    frame: false,
+    transparent: true,
+    autoHideMenuBar: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  });
+
+  uploadWindow.setMenuBarVisibility(false);
+  uploadWindow.loadFile('upload.html');
+
+  uploadWindow.on('closed', () => {
+    uploadWindow = null;
+  });
 }
 
 app.whenReady().then(() => {
@@ -90,6 +118,12 @@ ipcMain.on('port-selected', async (event, portPath) => {
             event.sender.send('port-check-failed', err.message);
         }
     }
+});
+
+ipcMain.handle('fw-open-upload-window', () => {
+  if (!uploadWindow) {
+    createUploadWindow();
+  }
 });
 
 // Generic UART IPC if needed from main window

@@ -128,7 +128,7 @@ body {
     margin-left: -4px;
     margin-right: -4px;
     padding: 10px 12px;
-    height: 80px;                   /* fixed height */
+    height: 100px;                   /* fixed height */
     border-radius: 8px;
     background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
     box-shadow: 0 1px 6px rgba(0,0,0,0.08);
@@ -155,6 +155,14 @@ body {
     word-break: break-all;
 }
 
+.sidebar-status-vptver {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+    word-break: break-all;
+}
+
 .sidebar-status-hint {
     font-size: 11px;
     color: #666;
@@ -166,7 +174,7 @@ body {
     background: white;
     border-radius: 10px;
     box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    padding: 24px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -224,8 +232,8 @@ body {
   display: flex;           /* make it flex */
   align-items: center;     /* vertical centering (optional) */
   justify-content: center; /* horizontal centering */
-  margin: 8px 0 18px 0;
-  padding: 4px 14px;
+  margin: 4px;
+  padding: 3px 14px;
   border-radius: 999px;
   background: #f6f6ff;
   box-shadow: 0 0 2px rgba(70,60,150,0.1);
@@ -235,7 +243,7 @@ body {
 .meters {
     display: flex;
     gap: 24px;
-    margin-top: 10px;
+    margin-top: 5px;
     flex-wrap: wrap;
 }
 
@@ -243,7 +251,7 @@ body {
     background: #f6f6ff;
     min-width: 90px;
     border-radius: 6px;
-    padding: 9px;
+    padding: 6px;
     box-shadow: 0 0 2px rgba(70,60,150,0.08);
     text-align: center;
 }
@@ -266,6 +274,10 @@ body {
   gap: 8px;
   width: 100%;                 /* take full middle-panel width */
   box-sizing: border-box;      /* include padding in width */
+}
+
+#infoBlock {
+  display: none;      /* hidden until RS485/CAN selected */
 }
 
 .info-row {
@@ -336,6 +348,16 @@ body {
   margin-bottom: 4px;
 }
 
+.sine-input {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ccd1ff;
+  font-size: 12px;
+  background-color: #f9f9ff;
+  color: #333;
+  box-sizing: border-box;
+}
+
 /* Base layout for rows in sine-block */
 .sine-row {
   display: grid;
@@ -344,30 +366,21 @@ body {
   align-items: center;
 }
 
-/* Waveform + Amplitude in one line: labels + equal inputs */
-.sine-row-wa {
-  grid-template-columns: auto 1fr auto 1fr;
+/* One row: Waveform + Amplitude + Frequency */
+.sine-row-waf {
+  grid-template-columns:
+    auto   /* Waveform label */
+    1fr    /* Waveform select */
+    auto   /* Amplitude label */
+    auto   /* Amplitude input */
+    auto   /* Frequency label */
+    auto;  /* Frequency input */
 }
 
-/* Frequency + Start button in one line */
-.sine-row-fs {
-  grid-template-columns: auto 1fr auto;
-}
-
-/* All three controls same, but allow shrink */
-.sine-input {
-  padding: 4px 6px;
-  border-radius: 6px;
-  border: 1px solid #ccd1ff;
-  font-size: 12px;
-  background-color: #f9f9ff;
-  color: #333;
-  min-width: 0;       /* allow grid to shrink them */
-}
-
-/* If you still want a visual max width, use max-width, not width */
-.sine-input {
-  max-width: 110px;
+/* Make the two numeric fields narrower */
+.sine-input-narrow {
+  width: 70px;
+  max-width: 70px;
 }
 
 .sine-label {
@@ -376,15 +389,16 @@ body {
   color: #555;
 }
 
-/* Right label aligned to the right */
+/* Right-aligned labels after the first one */
 .sine-label-right {
-  font-size: 12px;
-  font-weight: 600;
-  color: #555;
   text-align: right;
 }
 
-/* Inline Start button container */
+/* Frequency + Start row: keep button right-aligned */
+.sine-row-fs {
+  grid-template-columns: auto 1fr auto; /* empty label, spacer, button */
+}
+
 .sine-actions-inline {
   margin-top: 0;
   text-align: right;

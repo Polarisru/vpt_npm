@@ -208,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const temp2ValueEl = document.getElementById('temp2Value');
   const readLiveBtn = document.getElementById('readLiveBtn');
 
+  const infoBlock = document.getElementById('infoBlock');
   const serialInput = document.getElementById('serialNumber');
   const fwInput = document.getElementById('fwVersion');
   const hwInput = document.getElementById('hwRevision');
@@ -263,15 +264,34 @@ document.addEventListener('DOMContentLoaded', () => {
         canSettings.classList.remove('hidden');
       }
 
+      // show info only for RS485 and CAN
+      if (infoBlock) {
+        if (connType.value === 'RS485' || connType.value === 'CAN') {
+          infoBlock.style.display = 'block';
+        } else {
+          infoBlock.style.display = 'none';
+        }
+      }
+
       currentConnType = connType.value;
       fillDeviceSelectForType(currentConnType);
       clearParamTable();
       if (deviceSelect) deviceSelect.value = '';
-      setRightButtonsEnabled(false); // after type change: no device selected
+      setRightButtonsEnabled(false);
     });
 
     currentConnType = connType.value;
+
+    // initial state on load
+    if (infoBlock) {
+      if (currentConnType === 'RS485' || currentConnType === 'CAN') {
+        infoBlock.style.display = 'block';
+      } else {
+        infoBlock.style.display = 'none';
+      }
+    }
   }
+
 
   // slider + label + Min/Max + shared label updater
   let updatePositionLabel = null;
@@ -314,6 +334,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     sineRunning = false;
     if (sineStartStop) sineStartStop.textContent = 'Start';
+    // re-enable controls
+    if (sineWaveform) sineWaveform.disabled = false;
+    if (sineAmpInput) sineAmpInput.disabled = false;
+    if (sineFreqInput) sineFreqInput.disabled = false;
   }
 
   if (sineStartStop && slider && updatePositionLabel) {
@@ -340,6 +364,11 @@ document.addEventListener('DOMContentLoaded', () => {
           wave = 'sine';
           sineWaveform.value = 'sine';
         }
+
+        // disable controls while running
+        if (sineWaveform) sineWaveform.disabled = true;
+        if (sineAmpInput) sineAmpInput.disabled = true;
+        if (sineFreqInput) sineFreqInput.disabled = true;
 
         sineRunning = true;
         sineStartTime = performance.now();
@@ -437,16 +466,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (fwUploadBtn && fwFileInput) {
-    fwUploadBtn.addEventListener('click', () => {
+    fwUploadBtn.addEventListener('click', async () => {
       const file = fwFileInput.files && fwFileInput.files[0];
       if (!file) {
-        // Later: show a status message; for now log
         console.log('No HEX file selected for upload');
         return;
       }
 
       console.log('HEX upload requested for file:', file.name);
-      // TODO: implement real upload via IPC / UART
+
+      // open modal progress window (simulated upload)
+      try {
+        await ipcRenderer.invoke('fw-open-upload-window');
+      } catch (e) {
+        console.error('Failed to open upload window:', e);
+      }
     });
   }
 
