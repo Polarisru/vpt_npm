@@ -147,6 +147,78 @@ ipcMain.on('port-selected', async (event, portPath) => {
   }
 });
 
+// cfg = { type: 'PWM'|'RS485'|'CAN', baud?, id?, bitrate? }
+ipcMain.handle('conn-init', async (_event, cfg) => {
+  if (!uart.isOpen()) {
+    throw new Error('UART not open');
+  }
+
+  const type = cfg.type;
+
+  // Map connType -> SIx
+  let siCmd = null;
+  if (type === 'PWM') siCmd = 'SI0';
+  else if (type === 'RS485') siCmd = 'SI1';
+  else if (type === 'CAN') siCmd = 'SI2';
+  else throw new Error('Unknown connection type: ' + type);
+
+  // Helper: send command and expect "OK"
+  async function sendOk(cmd) {
+    const resp = await uart.sendAndWait(
+      cmd,
+      line => line.trim() === 'OK',
+      800
+    );
+    return resp;
+  }
+
+  // 1) SIx
+  await sendOk(siCmd);
+
+  // 2) Type-specific SBx / SIDx
+  if (type === 'RS485') {
+    // SBx where x = rs485-baud value
+    const baud = cfg.baud;
+    if (!baud) throw new Error('Missing RS485 baud');
+    await sendOk('SB' + String(baud));
+
+    // SIDx where x = rs485-id value
+    const id = cfg.id;
+    if (!id) throw new Error('Missing RS485 ID');
+    await sendOk('SID' + String(id));
+  } else if (type === 'CAN') {
+    // SBx where x = 250/500/1000 from can-bitrate
+    const bitrate = Number(cfg.bitrate);
+    if (![250, 500, 1000].includes(bitrate)) {
+      throw new Error('Invalid CAN bitrate: ' + cfg.bitrate);
+    }
+    await sendOk('SB' + String(bitrate));
+
+    // SIDx where x = can-id value
+    const id = cfg.id;
+    if (!id) throw new Error('Missing CAN ID');
+    await sendOk('SID' + String(id));
+  }
+
+  // 3) For all protocols: PWR1
+  await sendOk('PWR1');
+
+  // if all OK, just return
+  return true;
+});
+
+ipcMain.handle('conn-power', async (_event, on) => {
+  if (!uart.isOpen()) return false;
+
+  const cmd = on ? 'PWR1' : 'PWR0';
+  await uart.sendAndWait(
+    cmd,
+    line => line.trim() === 'OK',
+    800
+  );
+  return true;
+});
+
 ipcMain.handle('fw-open-upload-window', () => {
   if (!uploadWindow) {
     createUploadWindow();

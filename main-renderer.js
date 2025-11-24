@@ -517,32 +517,40 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // connect/disconnect – DOES NOT touch right buttons
-  if (connectBtn) {
-    connectBtn.addEventListener('click', () => {
-      const cfg = collectConnectionConfig();
-      console.log(
-        (isConnected ? 'Disconnect' : 'Connect') + ' requested with config:',
-        cfg
-      );
+	if (connectBtn) {
+	  connectBtn.addEventListener('click', async () => {
+		if (!isConnected) {
+		  const cfg = collectConnectionConfig();
+		  try {
+			await ipcRenderer.invoke('conn-init', cfg);
+			isConnected = true;
+			connectBtn.textContent = 'Disconnect';
+			if (contentOverlay) contentOverlay.classList.add('hidden');
+			if (connectionHint) connectionHint.textContent = 'Connected';
+			setSidebarEnabled(false);
+		  } catch (e) {
+			console.error('Connection init failed:', e);
+			if (connectionHint) connectionHint.textContent = 'Connection failed';
+		  }
+		} else {
+		  // send PWR0 to disable device
+		  try {
+			await ipcRenderer.invoke('conn-power', false);
+		  } catch (e) {
+			console.error('PWR0 failed:', e);
+		  }
 
-      if (!isConnected) {
-        isConnected = true;
-        connectBtn.textContent = 'Disconnect';
-        if (contentOverlay) contentOverlay.classList.add('hidden');
-        if (connectionHint) connectionHint.textContent = 'Connected';
-        setSidebarEnabled(false);
-        // TODO: open UART/CAN
-      } else {
-        isConnected = false;
-        connectBtn.textContent = 'Connect';
-        if (contentOverlay) contentOverlay.classList.remove('hidden');
-        if (connectionHint)
-          connectionHint.textContent = 'Select connection and press Connect';
-        setSidebarEnabled(true);
-        // TODO: close UART/CAN
-      }
-    });
-  }
+		  isConnected = false;
+		  connectBtn.textContent = 'Connect';
+		  if (contentOverlay) contentOverlay.classList.remove('hidden');
+		  if (connectionHint)
+			connectionHint.textContent = 'Select connection and press Connect';
+		  setSidebarEnabled(true);
+		}
+	  });
+	}
+
+
 
   // middle panel READ (random demo values for current/voltage/temps)
   if (readLiveBtn && currentValueEl && voltageValueEl && temp1ValueEl && temp2ValueEl) {
