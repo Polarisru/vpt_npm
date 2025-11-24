@@ -122,6 +122,12 @@ body {
     transform: translateY(0);
 }
 
+#statusContainer {
+	margin-top: auto;
+	display: flex; 
+	gap: 20px;
+}
+
 /* Sidebar footer status box */
 .sidebar-status {
     margin-top: auto;               /* push to bottom */
@@ -249,7 +255,7 @@ body {
 
 .meter {
     background: #f6f6ff;
-    min-width: 90px;
+    min-width: 80px;
     border-radius: 6px;
     padding: 6px;
     box-shadow: 0 0 2px rgba(70,60,150,0.08);

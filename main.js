@@ -219,6 +219,20 @@ ipcMain.handle('conn-power', async (_event, on) => {
   return true;
 });
 
+ipcMain.handle('uart-send-command', async (_event, command) => {
+  try {
+    const resp = await uart.sendAndWait(
+      command,
+      line => line.startsWith('US:') || line.startsWith('CS:') || line.startsWith('TS:') || line === 'E.H',
+      800
+    );
+    return resp;
+  } catch (e) {
+    console.error(`Error sending uart command '${command}':`, e);
+    throw e;
+  }
+});
+
 ipcMain.handle('fw-open-upload-window', () => {
   if (!uploadWindow) {
     createUploadWindow();

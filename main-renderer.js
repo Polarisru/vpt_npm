@@ -178,6 +178,14 @@ function randomText(len) {
   return out;
 }
 
+function updateStatusFields(voltage, temperature) {
+  const voltageElem = document.getElementById('supplyValue');
+  const tempElem = document.getElementById('temperatureValue');
+
+  if (voltageElem) voltageElem.textContent = voltage.toFixed(2) + ' V';
+  if (tempElem) tempElem.textContent = temperature.toFixed(1) + ' °C';
+}
+
 // ---------- DOM Init ----------
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -550,21 +558,36 @@ document.addEventListener('DOMContentLoaded', () => {
 	  });
 	}
 
-
-
   // middle panel READ (random demo values for current/voltage/temps)
-  if (readLiveBtn && currentValueEl && voltageValueEl && temp1ValueEl && temp2ValueEl) {
-    readLiveBtn.addEventListener('click', () => {
-      // TODO later: replace with real device read via IPC
-      const current = (Math.random() * 10).toFixed(2); // 0–10 A
-      const voltage = (12 + Math.random() * 2).toFixed(2); // 12–14 V
-      const temp1 = (20 + Math.random() * 30).toFixed(1); // 20–50 °C
-      const temp2 = (20 + Math.random() * 30).toFixed(1); // 20–50 °C
+  if (readLiveBtn && voltageValueEl && currentValueEl && temp1ValueEl) {
+    readLiveBtn.addEventListener('click', async () => {
+	  try {
+	    const voltageResp = await ipcRenderer.invoke('uart-send-command', 'GUM');
+	    const currentResp = await ipcRenderer.invoke('uart-send-command', 'GCS');
+	    const tempResp = await ipcRenderer.invoke('uart-send-command', 'GTS');
 
-      currentValueEl.textContent = `${current}`;
-      voltageValueEl.textContent = `${voltage}`;
-      temp1ValueEl.textContent = `${temp1}`;
-      temp2ValueEl.textContent = `${temp2}`;
+	    function parseResponse(prefix, response) {
+		  if (!response) return '--.-';
+		  response = response.trim();
+		  if (response === 'E.H') return '--.-';
+		  const re = new RegExp(`^${prefix}:(\\d+\\.\\d+)$`);
+		  const m = response.match(re);
+		  return m ? m[1] : '--.-';
+	    }
+
+	    const voltage = parseResponse('US', voltageResp);
+	    const current = parseResponse('CS', currentResp);
+	    const temp = parseResponse('TS', tempResp);
+
+	    voltageValueEl.textContent = voltage;
+	    currentValueEl.textContent = current;
+	    temp1ValueEl.textContent = temp;
+	  } catch (e) {
+	    console.error('Failed to read live data:', e);
+	    voltageValueEl.textContent = '--.-';
+	    currentValueEl.textContent = '--.-';
+	    temp1ValueEl.textContent = '--.-';
+	  }
     });
   }
 
