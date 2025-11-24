@@ -647,8 +647,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // port name from small window
-  ipcRenderer.on('selected-port', (_event, port) => {
-    const portLabel = document.getElementById('portName');
-    if (portLabel) portLabel.textContent = port;
+  ipcRenderer.on('selected-port', (_event, data) => {
+	const { portPath, fwVersion } = typeof data === 'string' ? { portPath: data, fwVersion: null } : data;
+    
+	const portLabel = document.getElementById('portName');
+    if (portLabel) {
+		portLabel.textContent = portPath;
+	}
+	
+	if (fwVersion) {
+		const vptVerElem = document.getElementById('vptVer');
+		if (vptVerElem) {
+			vptVerElem.textContent = 'Ver. ' + fwVersion;
+		}
+	}	
   });
 });

@@ -59,10 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Error from main when device not available / timeout / access denied
 ipcRenderer.on('port-check-failed', (_event, message) => {
-    console.log('Port check failed:', message);
-    if (statusLabel) {
-        statusLabel.textContent = 'Device not available: ' + message;
-        statusLabel.classList.remove('ok', 'info');
-        statusLabel.classList.add('error');
-    }
+  console.log('Port check failed:', message);
+  if (statusLabel) {
+    statusLabel.textContent = message || 'VPT not connected';
+    statusLabel.classList.remove('ok', 'info');
+    statusLabel.classList.add('error');
+  }
 });

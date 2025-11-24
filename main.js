@@ -27,7 +27,7 @@ function createSelectWindow() {
     });
 }
 
-function createMainWindow(selectedPort) {
+function createMainWindow({ portPath, fwVersion }) {
     mainWindow = new BrowserWindow({
         width: 1100,
         height: 710,
@@ -49,7 +49,11 @@ function createMainWindow(selectedPort) {
     });
 
     mainWindow.webContents.on('did-finish-load', () => {
-        mainWindow.webContents.send('selected-port', selectedPort);
+        // Send both port and FW version to main window renderer
+		mainWindow.webContents.send('selected-port', {
+			portPath,
+			fwVersion
+		});
     });
 }
 
@@ -98,26 +102,49 @@ app.on('window-all-closed', () => {
 
 // From small window: user chose a port and clicked Connect
 ipcMain.on('port-selected', async (event, portPath) => {
-    console.log('Port selected in renderer:', portPath);
+  console.log('Port selected in renderer:', portPath);
+  const baud = 115200;
 
-    const baud = 115200;
+  try {
+    // 1) Open port
+    await uart.open(portPath, baud);
 
-    try {
-        //await uart.open(portPath, baud);
-        //await uart.sendAndWait('ID', line => line === 'VPT', 800);
+    // 2) Send "ID" and expect exact "VPT"
+    const idResp = await uart.sendAndWait(
+      'ID',
+      line => line.trim() === 'VPT',
+      800
+    );
+    console.log('ID response:', idResp);
 
-        createMainWindow(portPath);
-        if (selectWindow) selectWindow.close();
-    } catch (err) {
-        console.error('Device ID check failed:', err.message);
-        uart.close();
+    // 3) Send "VN" and expect "Nx.y"
+    const vnResp = await uart.sendAndWait(
+      'VN',
+      line => /^N\d+\.\d+$/.test(line.trim()),
+      800
+    );
+    console.log('VN response:', vnResp);
 
-        if (selectWindow && selectWindow.webContents) {
-            selectWindow.webContents.send('port-check-failed', err.message);
-        } else {
-            event.sender.send('port-check-failed', err.message);
-        }
+    // Extract x.y from "Nx.y"
+    const match = vnResp.trim().match(/^N(\d+\.\d+)$/);
+    const fwVersion = match ? match[1] : '0.0';
+
+    // Open main window and pass both port and FW version
+    createMainWindow({ portPath, fwVersion });
+
+    if (selectWindow) selectWindow.close();
+  } catch (err) {
+    console.error('Device handshake failed:', err.message);
+    uart.close();
+
+    // Tell renderer: VPT not connected
+    const msg = 'VPT not connected';
+    if (selectWindow && selectWindow.webContents) {
+      selectWindow.webContents.send('port-check-failed', msg);
+    } else {
+      event.sender.send('port-check-failed', msg);
     }
+  }
 });
 
 ipcMain.handle('fw-open-upload-window', () => {
