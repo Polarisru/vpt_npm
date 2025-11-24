@@ -58,7 +58,7 @@ function open(path, baudRate) {
 }
 
 function setupListeners() {
-    parser = port.pipe(new ReadlineParser({ delimiter: '\r' }));
+    parser = port.pipe(new ReadlineParser({ delimiter: '\n' }));
 
     parser.on('data', handleLine);
 
@@ -67,7 +67,7 @@ function setupListeners() {
         for (const c of chars) {
             if (c === '\x1B') {
                 buffer = '';
-            } else if (c === '\r') {
+            } else if (c === '\n') {
                 handleLine(buffer);
                 buffer = '';
             } else {
@@ -107,7 +107,7 @@ function send(cmd) {
         console.warn('UART send called but port not open');
         return;
     }
-    port.write(cmd + '\r');
+    port.write('\x1B' + cmd + '\n');
 }
 
 function sendAndWait(cmd, matcher, delayMs = 1000) {

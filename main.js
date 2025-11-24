@@ -9,6 +9,32 @@ let selectWindow;
 let mainWindow;
 let uploadWindow = null;
 
+async function sendPwr0OnExit() {
+  if (!uart.isOpen()) {
+    console.log('sendPwr0OnExit: UART not open, skipping PWR0');
+    return;
+  }
+
+  console.log('sendPwr0OnExit: trying to send PWR0');
+
+  try {
+    await uart.sendAndWait(
+      'PWR0',
+      line => {
+        console.log('sendPwr0OnExit got line:', line);
+        return line.trim() === 'OK';
+      },
+      500
+    );
+    console.log('sendPwr0OnExit: PWR0 acknowledged');
+  } catch (e) {
+    console.error('sendPwr0OnExit: PWR0 failed:', e.message);
+  }
+
+  // now close UART once, here
+  uart.close();
+}
+
 function createSelectWindow() {
     selectWindow = new BrowserWindow({
         width: 320,
@@ -59,8 +85,6 @@ function createMainWindow({ portPath, fwVersion }) {
     });
 }
 
-let uploadWindow = null;
-
 function createUploadWindow() {
   if (!mainWindow) return;
 
@@ -98,7 +122,7 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
-    uart.close();
+    //uart.close();
     if (process.platform !== 'darwin') app.quit();
 });
 
@@ -122,13 +146,13 @@ ipcMain.on('port-selected', async (event, portPath) => {
     // 3) Send "VN" and expect "Nx.y"
     const vnResp = await uart.sendAndWait(
       'VN',
-      line => /^N\d+\.\d+$/.test(line.trim()),
+      line => /^N:\d+\.\d+$/.test(line.trim()),
       800
     );
     console.log('VN response:', vnResp);
 
-    // Extract x.y from "Nx.y"
-    const match = vnResp.trim().match(/^N(\d+\.\d+)$/);
+    // Extract x.y from "N:x.y"
+    const match = vnResp.trim().match(/^N:(\d+\.\d+)$/);
     const fwVersion = match ? match[1] : '0.0';
 
     // Open main window and pass both port and FW version
@@ -221,11 +245,29 @@ ipcMain.handle('conn-power', async (_event, on) => {
   return true;
 });
 
+ipcMain.handle('set-position', async (_event, degrees) => {
+  if (!uart.isOpen()) {
+    throw new Error('UART not open');
+  }
+
+  // format with one decimal place, e.g. 12.3
+  const posStr = Number(degrees).toFixed(1);
+  const cmd = 'DP' + posStr;
+
+  await uart.sendAndWait(
+    cmd,
+    line => line.trim() === 'OK',
+    800
+  );
+
+  return true;
+});
+
 ipcMain.handle('uart-send-command', async (_event, command) => {
   try {
     const resp = await uart.sendAndWait(
       command,
-      line => line.startsWith('US:') || line.startsWith('CS:') || line.startsWith('TS:') || line === 'E.H',
+      line => line.startsWith('UM:') || line.startsWith('CS:') || line.startsWith('TS:') || line === 'E.H',
       800
     );
     return resp;
@@ -271,6 +313,16 @@ ipcMain.handle('fw-open-upload-window', () => {
   if (!uploadWindow) {
     createUploadWindow();
   }
+});
+
+app.on('before-quit', event => {
+  // only intercept once
+  app.removeAllListeners('before-quit');
+  // let us run async, then quit
+  event.preventDefault();
+  sendPwr0OnExit().finally(() => {
+    app.quit();
+  });
 });
 
 // Generic UART IPC if needed from main window

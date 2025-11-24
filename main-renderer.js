@@ -192,6 +192,30 @@ function updateUpdateButtonState() {
   updateBtn.disabled = isConnected;
 }
 
+function updatePositionSliderRange(type) {
+  const slider = document.getElementById('positionSlider');
+  if (!slider) return;
+
+  if (type === 'PWM') {
+    slider.min = '-45';
+    slider.max = '45';
+  } else if (type === 'RS485' || type === 'CAN') {
+    slider.min = '-170';
+    slider.max = '170';
+  }
+
+  // clamp current value into new range
+  const v = parseFloat(slider.value || '0');
+  const min = parseFloat(slider.min);
+  const max = parseFloat(slider.max);
+  const clamped = Math.min(Math.max(v, min), max);
+  slider.value = String(clamped);
+
+  if (typeof updatePositionLabel === 'function') {
+    updatePositionLabel();
+  }
+}
+
 // ---------- DOM Init ----------
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -297,6 +321,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     currentConnType = connType.value;
+    
+    updatePositionSliderRange(currentConnType);
 
     // initial state on load
     if (infoBlock) {
@@ -313,19 +339,35 @@ document.addEventListener('DOMContentLoaded', () => {
   let updatePositionLabel = null;
 
   if (slider && positionLabel) {
+    const sendPosition = async () => {
+      if (!isConnected) return;
+      const degrees = parseFloat(slider.value || '0');
+      try {
+        await ipcRenderer.invoke('set-position', degrees);
+        // optional: handle success
+      } catch (e) {
+        console.error('Failed to set position:', e);
+        // optional: show error in UI
+      }
+    };
+
     updatePositionLabel = () => {
       positionLabel.textContent = slider.value + '°';
     };
 
     updatePositionLabel();
 
-    slider.addEventListener('input', updatePositionLabel);
+    // on manual slider move
+    slider.addEventListener('input', () => {
+      updatePositionLabel();
+      sendPosition();
+    });
 
     if (positionMinBtn) {
       positionMinBtn.addEventListener('click', () => {
         slider.value = slider.min ?? '0';
         updatePositionLabel();
-        slider.dispatchEvent(new Event('input'));
+        sendPosition();
       });
     }
 
@@ -333,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
       positionMaxBtn.addEventListener('click', () => {
         slider.value = slider.max ?? '0';
         updatePositionLabel();
-        slider.dispatchEvent(new Event('input'));
+        sendPosition();
       });
     }
   }
@@ -588,7 +630,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		  return m ? m[1] : '--.-';
 	    }
 
-	    const voltage = parseResponse('US', voltageResp);
+	    const voltage = parseResponse('UM', voltageResp);
 	    const current = parseResponse('CS', currentResp);
 	    const temp = parseResponse('TS', tempResp);
 
