@@ -134,7 +134,7 @@ body {
     margin-left: -4px;
     margin-right: -4px;
     padding: 10px 12px;
-    height: 100px;                   /* fixed height */
+    height: 140px;                   /* fixed height */
     border-radius: 8px;
     background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
     box-shadow: 0 1px 6px rgba(0,0,0,0.08);
@@ -172,6 +172,23 @@ body {
 .sidebar-status-hint {
     font-size: 11px;
     color: #666;
+}
+
+#updateBtn {
+  margin-top: 5px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: #667eea;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#updateBtn:disabled {
+  background-color: #bbb;
+  cursor: not-allowed;
 }
 
 /* ---------- Center content ---------- */

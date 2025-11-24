@@ -186,6 +186,12 @@ function updateStatusFields(voltage, temperature) {
   if (tempElem) tempElem.textContent = temperature.toFixed(1) + ' °C';
 }
 
+// Function to update the Update button state based on isConnected
+function updateUpdateButtonState() {
+  if (!updateBtn) return;
+  updateBtn.disabled = isConnected;
+}
+
 // ---------- DOM Init ----------
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -235,6 +241,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const fwBrowseBtn = document.getElementById('fwBrowseBtn');
   const fwFileInput = document.getElementById('fwFileInput');
   const fwUploadBtn = document.getElementById('fwUploadBtn');
+  
+  const updateBtn = document.getElementById('updateBtn');  
 
   let isConnected = false;
 
@@ -524,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // connect/disconnect – DOES NOT touch right buttons
+	// Modify your connectBtn click handler to call updateUpdateButtonState()
 	if (connectBtn) {
 	  connectBtn.addEventListener('click', async () => {
 		if (!isConnected) {
@@ -536,12 +544,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (contentOverlay) contentOverlay.classList.add('hidden');
 			if (connectionHint) connectionHint.textContent = 'Connected';
 			setSidebarEnabled(false);
+
+			// Enable/disable Update button according to new state
+			updateUpdateButtonState();
 		  } catch (e) {
 			console.error('Connection init failed:', e);
 			if (connectionHint) connectionHint.textContent = 'Connection failed';
 		  }
 		} else {
-		  // send PWR0 to disable device
 		  try {
 			await ipcRenderer.invoke('conn-power', false);
 		  } catch (e) {
@@ -554,6 +564,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		  if (connectionHint)
 			connectionHint.textContent = 'Select connection and press Connect';
 		  setSidebarEnabled(true);
+
+		  // Enable/disable Update button according to new state
+		  updateUpdateButtonState();
 		}
 	  });
 	}
@@ -676,6 +689,25 @@ document.addEventListener('DOMContentLoaded', () => {
       reader.readAsText(file, 'utf8');
     });
   }
+  
+	updateBtn.addEventListener('click', async () => {
+	  // 1. Open file dialog to select hex file
+	  const { canceled, filePaths } = await ipcRenderer.invoke('select-hex-file');
+	  if (canceled || !filePaths || filePaths.length === 0) {
+		return; // User canceled
+	  }
+	  const filePath = filePaths[0];
+
+	  // 2. Read file content
+	  const hexContent = await ipcRenderer.invoke('read-file', filePath);
+
+	  // 3. Open the upload window with progress bar
+	  ipcRenderer.send('open-upload-window');
+
+	  // 4. Send the file to the device, monitor progress
+	  // Implement your device update logic on main process
+	  ipcRenderer.invoke('perform-update', hexContent);
+	});  
 
   // port name from small window
   ipcRenderer.on('selected-port', (_event, data) => {

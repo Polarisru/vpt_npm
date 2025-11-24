@@ -3,9 +3,11 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const uart = require('./uart');
+const fs = require('fs');
 
 let selectWindow;
 let mainWindow;
+let uploadWindow = null;
 
 function createSelectWindow() {
     selectWindow = new BrowserWindow({
@@ -231,6 +233,38 @@ ipcMain.handle('uart-send-command', async (_event, command) => {
     console.error(`Error sending uart command '${command}':`, e);
     throw e;
   }
+});
+
+ipcMain.handle('select-hex-file', async () => {
+  const result = await dialog.showOpenDialog({ filters: [{ name: 'Hex Files', extensions: ['hex'] }], properties: ['openFile'] });
+  return result;
+});
+
+ipcMain.handle('read-file', async (_event, path) => {
+  return fs.promises.readFile(path, 'utf-8');
+});
+
+// Create and show upload window
+ipcMain.on('open-upload-window', () => {
+  if (!uploadWindow) {
+    uploadWindow = new BrowserWindow({
+      width: 400,
+      height: 200,
+      resizable: false,
+    });
+    uploadWindow.loadFile('upload.html');
+    uploadWindow.on('closed', () => { uploadWindow = null; });
+  }
+});
+
+// Perform the update (simulate or real)
+ipcMain.handle('perform-update', async (_event, hexContent) => {
+  // Example implementation: simulate upload with progress
+  for (let progress = 0; progress <= 100; progress++) {
+    uploadWindow.webContents.send('update-progress', progress);
+    await new Promise(r => setTimeout(r, 50)); // simulate delay
+  }
+  uploadWindow.webContents.send('update-complete');
 });
 
 ipcMain.handle('fw-open-upload-window', () => {
