@@ -67,8 +67,8 @@
           "min": 10,
           "max": 200,
           "dflt": 100,
-		  "unit": "%"
-        },	
+          "unit": "%"
+        },
         {
           "name": "RightScaling",
           "address": 44,
@@ -76,8 +76,8 @@
           "min": 10,
           "max": 200,
           "dflt": 100,
-		  "unit": "%"
-        },	
+          "unit": "%"
+        },
         {
           "name": "Expansion",
           "address": 46,
@@ -85,8 +85,8 @@
           "min": 10,
           "max": 200,
           "dflt": 100,
-		  "unit": "%"
-        },	
+          "unit": "%"
+        },
         {
           "name": "Min_us",
           "address": 40,
@@ -94,8 +94,8 @@
           "min": 800,
           "max": 2200,
           "dflt": 1000,
-		  "unit": "us"
-        },		
+          "unit": "us"
+        },
         {
           "name": "Max_us",
           "address": 42,
@@ -103,8 +103,8 @@
           "min": 800,
           "max": 2200,
           "dflt": 2000,
-		  "unit": "us"
-        },		
+          "unit": "us"
+        },
         {
           "name": "Options",
           "address": 45,
@@ -112,7 +112,7 @@
           "min": 0,
           "max": 255,
           "dflt": 0
-        },		
+        },
         {
           "name": "FailsafePos",
           "address": 48,
@@ -120,7 +120,7 @@
           "min": 800,
           "max": 2200,
           "dflt": 1500,
-		  "unit": "us"
+          "unit": "us"
         },
         {
           "name": "Neutral",
@@ -137,7 +137,7 @@
           "min": 1000,
           "max": 2000,
           "dflt": 1500,
-		  "unit": "us"
+          "unit": "us"
         },
         {
           "name": "SaverTime",
@@ -146,7 +146,7 @@
           "min": 0,
           "max": 255,
           "dflt": 2
-        },		
+        },
         {
           "name": "SaverFrame",
           "address": 65,
@@ -154,8 +154,8 @@
           "min": 0,
           "max": 255,
           "dflt": 50,
-		  "unit": "us"
-        },	
+          "unit": "us"
+        },
         {
           "name": "PWM_Safe",
           "address": 47,
@@ -184,7 +184,7 @@
     },
     {
       "name": "DA15-CAN",
-      "type": "CAN"
+      "type": "CAN",
       "eeprom": [
         {
           "name": "Kd",
@@ -194,7 +194,7 @@
           "max": 255,
           "dflt": 30
         },
-		{
+        {
           "name": "Kp",
           "address": 33,
           "type": "uint8",
@@ -202,7 +202,7 @@
           "max": 255,
           "dflt": 60
         },
-		{
+        {
           "name": "Ki",
           "address": 49,
           "type": "uint8",
@@ -241,9 +241,9 @@
           "min": 0,
           "max": 255,
           "dflt": 2,
-		  "unit": "sec",
-		  "mult": 0.1
-        },		
+          "unit": "sec",
+          "mult": 0.1
+        },
         {
           "name": "SaverFrame",
           "address": 39,
@@ -251,7 +251,7 @@
           "min": 0,
           "max": 255,
           "dflt": 30
-        },	
+        },
         {
           "name": "PWM_Safe",
           "address": 37,
@@ -259,8 +259,8 @@
           "min": 0,
           "max": 255,
           "dflt": 64
-        }		
-		
+        }
+      ]
     },
     {
       "name": "DA20-CAN",

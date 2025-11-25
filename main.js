@@ -371,14 +371,29 @@ ipcMain.handle('read-byte', async (_event, address) => {
 
   const resp = await uart.sendAndWait(
     cmd,
-    line => /^B:[0-9A-Fa-f]{2}$/.test(line.trim()),
+    line => /^B:0x[0-9A-Fa-f]{2}$/.test(line.trim()),
     800
   );
 
-  const m = resp.trim().match(/^B:([0-9A-Fa-f]{2})$/);
+  const m = resp.trim().match(/^B:0x([0-9A-Fa-f]{2})$/);
   if (!m) throw new Error('Bad RB response for address ' + address + ': ' + resp);
 
   return parseInt(m[1], 16); // numeric 0..255
+});
+
+ipcMain.handle('send-raw-command', async (_event, { bytes }) => {
+  if (!uart.isOpen()) throw new Error('UART not open');
+  // bytes: array of numbers 0..255
+  // Build command string, e.g. "RCxx yy zz ..." or directly hex frame
+  const hex = bytes.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('');
+  // Assuming device expects just hex bytes as one command:
+  const cmd = hex; // adjust if protocol needs prefix
+  const resp = await uart.sendAndWait(
+    cmd,
+    line => line.trim() === 'OK',
+    800
+  );
+  return resp;
 });
 
 ipcMain.handle('fw-open-upload-window', () => {

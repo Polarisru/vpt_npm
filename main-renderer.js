@@ -256,6 +256,21 @@ async function readParamFromDevice(address, type) {
   return low;
 }
 
+function parseHexBytes(str, expectedLen) {
+  const clean = str.replace(/[\s,]+/g, '').toUpperCase();
+  if (!/^[0-9A-F]*$/.test(clean)) {
+    throw new Error('Only HEX digits 0-9, A-F are allowed');
+  }
+  if (clean.length !== expectedLen * 2) {
+    throw new Error(`Enter exactly ${expectedLen} bytes (${expectedLen * 2} hex digits)`);
+  }
+  const bytes = [];
+  for (let i = 0; i < clean.length; i += 2) {
+    bytes.push(parseInt(clean.slice(i, i + 2), 16));
+  }
+  return bytes;
+}
+
 function collectConnectionConfig() {
   const connType = document.getElementById('connType').value;
   const cfg = { type: connType };
@@ -323,6 +338,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const sineStartStop = document.getElementById('sineStartStopBtn');
   const sineWaveform = document.getElementById('sineWaveform');
 
+  const rawBlock = document.getElementById('rawBlock');
+  const rawCommandInput = document.getElementById('rawCommandInput');
+  const rawSendBtn = document.getElementById('rawSendBtn');
+
   const fwFileName  = document.getElementById('fwFileName');
   const fwBrowseBtn = document.getElementById('fwBrowseBtn');
   const fwFileInput = document.getElementById('fwFileInput');
@@ -372,6 +391,14 @@ document.addEventListener('DOMContentLoaded', () => {
           infoBlock.style.display = 'block';
         } else {
           infoBlock.style.display = 'none';
+        }
+      }
+      
+      if (rawBlock) {
+        if (connType.value === 'RS485' || connType.value === 'CAN') {
+          rawBlock.classList.remove('hidden');
+        } else {
+          rawBlock.classList.add('hidden');
         }
       }
 
@@ -684,15 +711,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   devicePositionLabel.addEventListener('click', async () => {
     try {
-  	  const resp = await ipcRenderer.invoke('read-device-position');
-	  // Parse response: "PS:xxx.x"
-	  const match = resp.trim().match(/^PS:(-?\d+\.\d+)$/);
-	  const value = match ? match[1] : '--.-';
-	  devicePositionLabel.textContent = value + '°';
-	} catch (e) {
-	  devicePositionLabel.textContent = '--.-°';
-	  console.error('Failed to read device position:', e);
-	}
+      const resp = await ipcRenderer.invoke('read-device-position');
+      // Parse response: "PS:xxx.x"
+      const match = resp.trim().match(/^PS:(-?\d+\.\d+)$/);
+      if (!match) {
+        devicePositionLabel.textContent = '--.-°';
+        return;
+      }
+
+      const num = Number(match[1]);        // removes leading zeros
+      const value = num.toFixed(1);        // keep one decimal
+
+      devicePositionLabel.textContent = value + '°';
+    } catch (e) {
+      devicePositionLabel.textContent = '--.-°';
+      console.error('Failed to read device position:', e);
+    }
   });
 
   // middle panel READ (random demo values for current/voltage/temps)
@@ -849,6 +883,55 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
+  if (rawCommandInput && connType) {
+    rawCommandInput.addEventListener('input', () => {
+      // 1) keep only HEX digits and spaces, and uppercase
+      let v = rawCommandInput.value.toUpperCase().replace(/[^0-9A-F\s]/g, '');
+
+      // 2) remove spaces for length check
+      const clean = v.replace(/\s+/g, '');
+
+      const type = connType.value;           // PWM / RS485 / CAN
+      const maxBytes = type === 'CAN' ? 8 : 4; // 8 bytes CAN, 4 bytes RS485
+      const maxHexChars = maxBytes * 2;
+
+      // 3) clip to allowed hex length
+      let clipped = clean.slice(0, maxHexChars);
+
+      // 4) reinsert space every 2 hex chars for readability
+      clipped = clipped.match(/.{1,2}/g)?.join(' ') ?? '';
+
+      rawCommandInput.value = clipped;
+    });
+  }
+
+  if (rawSendBtn && rawCommandInput) {
+    rawSendBtn.addEventListener('click', async () => {
+      try {
+        if (!isConnected) {
+          alert('Not connected');
+          return;
+        }
+
+        const connTypeEl = document.getElementById('connType');
+        const type = connTypeEl ? connTypeEl.value : 'PWM';
+
+        const expectedBytes = type === 'CAN' ? 8 : 4;
+        const bytes = parseHexBytes(rawCommandInput.value, expectedBytes);
+
+        rawSendBtn.disabled = true;
+
+        await ipcRenderer.invoke('send-raw-command', { bytes });
+        // optional: some UI feedback
+      } catch (e) {
+        alert('Raw command error: ' + e.message);
+        console.error('Raw command failed:', e);
+      } finally {
+        rawSendBtn.disabled = false;
+      }
+    });
+  }
+
 	updateBtn.addEventListener('click', async () => {
 	  // 1. Open file dialog to select hex file
 	  const { canceled, filePaths } = await ipcRenderer.invoke('select-hex-file');
@@ -866,7 +949,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	  // 4. Send the file to the device, monitor progress
 	  // Implement your device update logic on main process
 	  ipcRenderer.invoke('perform-update', hexContent);
-	});  
+	});    
 
   // port name from small window
   ipcRenderer.on('selected-port', (_event, data) => {
