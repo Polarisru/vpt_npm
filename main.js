@@ -57,10 +57,10 @@ function createSelectWindow() {
 
 function createMainWindow({ portPath, fwVersion }) {
     mainWindow = new BrowserWindow({
-        width: 1100,
-        height: 710,
-        minWidth: 1000,
-        minHeight: 710,
+        width: 1050,
+        height: 750,
+        minWidth: 1050,
+        minHeight: 750,
         resizable: true,
         autoHideMenuBar: true,
         webPreferences: {
