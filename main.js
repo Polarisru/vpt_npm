@@ -263,6 +263,18 @@ ipcMain.handle('set-position', async (_event, degrees) => {
   return true;
 });
 
+ipcMain.handle('read-device-position', async () => {
+  if (!uart.isOpen()) throw new Error('UART not open');
+
+  // Send "GPS", wait for a line starting with "PS:"
+  const resp = await uart.sendAndWait(
+    'GPS',
+    line => line.trim().startsWith('PS:'),
+    800
+  );
+  return resp;
+});
+
 ipcMain.handle('uart-send-command', async (_event, command) => {
   try {
     const resp = await uart.sendAndWait(

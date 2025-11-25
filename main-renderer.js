@@ -230,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const positionLabel = document.getElementById('positionLabel');
   const positionMinBtn = document.getElementById('positionMinBtn');
   const positionMaxBtn = document.getElementById('positionMaxBtn');
+  const devicePositionLabel = document.getElementById('devicePositionLabel');
 
   const connectBtn = document.getElementById('connectBtn');
   const readBtn = document.getElementById('readParamsBtn');
@@ -378,6 +379,13 @@ document.addEventListener('DOMContentLoaded', () => {
         sendPosition();
       });
     }
+	
+    // click on label -> set position to 0
+    positionLabel.addEventListener('click', () => {
+      slider.value = '0';
+      updatePositionLabel();
+      sendPosition();
+    });	
   }
 
   // --- Sinus/rectangle/sawtooth movement driving the slider ---
@@ -612,6 +620,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	  });
 	}
+
+  devicePositionLabel.addEventListener('click', async () => {
+    try {
+  	  const resp = await ipcRenderer.invoke('read-device-position');
+	  // Parse response: "PS:xxx.x"
+	  const match = resp.trim().match(/^PS:(-?\d+\.\d+)$/);
+	  const value = match ? match[1] : '--.-';
+	  devicePositionLabel.textContent = value + '°';
+	} catch (e) {
+	  devicePositionLabel.textContent = '--.-°';
+	  console.error('Failed to read device position:', e);
+	}
+  });
 
   // middle panel READ (random demo values for current/voltage/temps)
   if (readLiveBtn && voltageValueEl && currentValueEl && temp1ValueEl) {
