@@ -83,6 +83,23 @@ body {
     margin-bottom: 8px;
 }
 
+.sidebar input {
+    width: 100%;
+    padding: 9px 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 2px solid #e0e0e0;
+    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+    color: #333;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    margin-bottom: 8px;
+}
+
 .sidebar select:hover {
     border-color: #667eea;
 }
@@ -275,7 +292,7 @@ body {
 	display: flex; 
 	align-items: center; 
 	margin-top: 10px;
-	gap: 24px;	
+	gap: 15px;	
 }
 
 .meter {

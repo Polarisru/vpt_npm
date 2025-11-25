@@ -15,7 +15,8 @@
                 <option value="RS485">RS485</option>
                 <option value="CAN">CAN</option>
             </select>
-
+			<label for="currentLimit">Current (A)</label>
+			<input id="currentLimit" class="conn-settings" type="number" min="1.0" max="9.9" step="0.1" value="1.0">
             <div id="rs485-settings" class="conn-settings hidden">
                 <label>Baudrate:</label>
                 <select id="rs485-baud">

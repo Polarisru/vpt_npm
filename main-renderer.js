@@ -256,6 +256,27 @@ async function readParamFromDevice(address, type) {
   return low;
 }
 
+function collectConnectionConfig() {
+  const connType = document.getElementById('connType').value;
+  const cfg = { type: connType };
+
+  const currentEl = document.getElementById('currentLimit');
+  if (currentEl) {
+    const val = parseFloat(currentEl.value || '0');
+    if (Number.isFinite(val)) cfg.current = val;
+  }
+
+  if (connType === 'RS485') {
+    cfg.baud = document.getElementById('rs485-baud').value;
+    cfg.id = document.getElementById('rs485-id').value;
+  } else if (connType === 'CAN') {
+    cfg.bitrate = document.getElementById('can-bitrate').value;
+    cfg.id = document.getElementById('can-id').value;
+  }
+
+  return cfg;
+}
+
 // ---------- DOM Init ----------
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -226,6 +226,12 @@ ipcMain.handle('conn-init', async (_event, cfg) => {
     await sendOk('SID' + String(id));
   }
 
+  // 4) SCLx.x current limit
+  if (typeof cfg.current === 'number') {
+    const curStr = cfg.current.toFixed(1); // 1 decimal
+    await sendOk('SCL' + curStr);
+  }
+
   // 3) For all protocols: PWR1
   await sendOk('PWR1');
 
