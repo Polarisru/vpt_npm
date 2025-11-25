@@ -61,7 +61,9 @@
                 <div class="sidebar-status-hint" id="connectionHint">
                     Select connection type and press Connect
                 </div>
-				<button id="updateBtn">Update</button>
+				<div>
+					<button id="updateBtn">Update</button>
+				</div>
             </div>            
         </div>
 
@@ -81,30 +83,27 @@
 					</div>
 					<span id="positionLabel" class="positionLabel">0.0°</span>
 				</div>
-                <div class="meters">
-                    <div class="meter">
-                        <span class="meter-label">Current</span>
-                        <span id="currentValue">--</span> A
-                    </div>
-                    <div class="meter">
-                        <span class="meter-label">Voltage</span>
-                        <span id="voltageValue">--</span> V
-                    </div>
-                    <div class="meter">
-                        <span class="meter-label">Temp 1</span>
-                        <span id="temp1Value">--</span> °C
-                    </div>
-                    <div class="meter">
-                        <span class="meter-label">Temp 2</span>
-                        <span id="temp2Value">--</span> °C
-                    </div>
-                </div>
-                <div class="live-panel">
-                    <!-- New Read button -->
-                    <div class="live-actions">
-                        <button id="readLiveBtn">Read</button>
-                    </div>
-                </div>   
+				<div class="meters-row">
+				  <div class="meter">
+					<span class="meter-label">Current</span>
+					<span id="currentValue">--</span> A
+				  </div>
+				  <div class="meter">
+					<span class="meter-label">Voltage</span>
+					<span id="voltageValue">--</span> V
+				  </div>
+				  <div class="meter">
+					<span class="meter-label">Temp 1</span>
+					<span id="temp1Value">--</span> °C
+				  </div>
+				  <div class="meter">
+					<span class="meter-label">Temp 2</span>
+					<span id="temp2Value">--</span> °C
+				  </div>
+				  <div class="live-actions">
+					<button id="readLiveBtn">Read</button>
+				  </div>
+				</div>  
 
                 <div id="infoBlock" class="info-block">
                     <div class="info-row">

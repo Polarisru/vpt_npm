@@ -52,66 +52,84 @@ function buildParamTable(device) {
     return;
   }
 
-  device.eeprom.forEach(param => {
-    const tr = document.createElement('tr');
+	device.eeprom.forEach(param => {
+	  const tr = document.createElement('tr');
 
-    const nameTd = document.createElement('td');
-    nameTd.textContent = param.name;
+	  const nameTd = document.createElement('td');
+	  const label = param.unit ? `${param.name}, ${param.unit}` : param.name;
+	  nameTd.textContent = label;
 
-    const valueTd = document.createElement('td');
-    const input = document.createElement('input');
-    input.type = 'number';
+	  const valueTd = document.createElement('td');
+	  const input = document.createElement('input');
+	  input.type = 'number';
 
-    if (typeof param.min === 'number') input.min = param.min;
-    if (typeof param.max === 'number') input.max = param.max;
-    if (typeof param.dflt !== 'undefined') input.value = param.dflt;
+	  // store multiplier (default 1)
+	  const mult = typeof param.mult === 'number' && param.mult > 0 ? param.mult : 1;
 
-    input.dataset.address = param.address;
-    input.dataset.type = param.type;
-    input.dataset.min = param.min;
-    input.dataset.max = param.max;
-    input.dataset.name = param.name;
+	  // limits in raw units
+	  if (typeof param.min === 'number') input.min = (param.min * mult).toString();
+	  if (typeof param.max === 'number') input.max = (param.max * mult).toString();
 
-    input.addEventListener('input', () => {
-      const min = Number(input.dataset.min);
-      const max = Number(input.dataset.max);
-      let val = input.value === '' ? NaN : Number(input.value);
+	  // default value in scaled units
+	  if (typeof param.dflt !== 'undefined') {
+		input.value = (param.dflt * mult).toString();
+	  }
 
-      if (!isNaN(val)) {
-        if (!isNaN(min) && val < min) val = min;
-        if (!isNaN(max) && val > max) val = max;
-        input.value = String(val);
-      }
-    });
+	  input.dataset.address = param.address;
+	  input.dataset.type = param.type;
+	  input.dataset.min = param.min;
+	  input.dataset.max = param.max;
+	  input.dataset.name = param.name;
+	  input.dataset.mult = String(mult);
 
-    input.addEventListener('blur', () => {
-      const min = Number(input.dataset.min);
-      const max = Number(input.dataset.max);
-      let val = input.value === '' ? NaN : Number(input.value);
+	  // clamp in scaled domain
+	  input.addEventListener('input', () => {
+		const min = Number(input.dataset.min);
+		const max = Number(input.dataset.max);
+		const m = Number(input.dataset.mult) || 1;
 
-      if (isNaN(val)) {
-        if (typeof param.dflt !== 'undefined') {
-          val = param.dflt;
-        } else if (!isNaN(min)) {
-          val = min;
-        } else if (!isNaN(max)) {
-          val = max;
-        } else {
-          return;
-        }
-      }
+		let val = input.value === '' ? NaN : Number(input.value);
+		if (!isNaN(val)) {
+		  let raw = val / m;
+		  if (!isNaN(min) && raw < min) raw = min;
+		  if (!isNaN(max) && raw > max) raw = max;
+		  input.value = String(raw * m);
+		}
+	  });
 
-      if (!isNaN(min) && val < min) val = min;
-      if (!isNaN(max) && val > max) val = max;
+	  input.addEventListener('blur', () => {
+		const min = Number(input.dataset.min);
+		const max = Number(input.dataset.max);
+		const m = Number(input.dataset.mult) || 1;
 
-      input.value = String(val);
-    });
+		let val = input.value === '' ? NaN : Number(input.value);
+		if (isNaN(val)) {
+		  let raw;
+		  if (typeof param.dflt !== 'undefined') {
+			raw = param.dflt;
+		  } else if (!isNaN(min)) {
+			raw = min;
+		  } else if (!isNaN(max)) {
+			raw = max;
+		  } else {
+			return;
+		  }
+		  input.value = String(raw * m);
+		  return;
+		}
 
-    valueTd.appendChild(input);
-    tr.appendChild(nameTd);
-    tr.appendChild(valueTd);
-    tbody.appendChild(tr);
-  });
+		let raw2 = val / m;
+		if (!isNaN(min) && raw2 < min) raw2 = min;
+		if (!isNaN(max) && raw2 > max) raw2 = max;
+		input.value = String(raw2 * m);
+	  });
+
+	  valueTd.appendChild(input);
+	  tr.appendChild(nameTd);
+	  tr.appendChild(valueTd);
+	  tbody.appendChild(tr);
+	});
+
 }
 
 // left sidebar enable/disable (except Connect)
@@ -145,14 +163,19 @@ function setRightButtonsEnabled(enabled) {
 // collect param values from table
 function collectCurrentParams() {
   const inputs = document.querySelectorAll('#paramTable tbody input');
-  return Array.from(inputs).map(inp => ({
-    name: inp.dataset.name,
-    address: Number(inp.dataset.address),
-    type: inp.dataset.type,
-    min: Number(inp.dataset.min),
-    max: Number(inp.dataset.max),
-    value: Number(inp.value)
-  }));
+  return Array.from(inputs).map(inp => {
+    const mult = Number(inp.dataset.mult) || 1;
+    const scaled = Number(inp.value);
+    const raw = scaled / mult;
+    return {
+      name: inp.dataset.name,
+      address: Number(inp.dataset.address),
+      type: inp.dataset.type,
+      min: Number(inp.dataset.min),
+      max: Number(inp.dataset.max),
+      value: raw
+    };
+  });
 }
 
 // download JSON from renderer
@@ -214,6 +237,23 @@ function updatePositionSliderRange(type) {
   if (typeof updatePositionLabel === 'function') {
     updatePositionLabel();
   }
+}
+
+async function readParamFromDevice(address, type) {
+  // returns raw numeric value (no mult applied)
+  const low = await ipcRenderer.invoke('read-byte', address);
+
+  if (type === 'uint16' || type === 'int16') {
+    const high = await ipcRenderer.invoke('read-byte', address + 1);
+    let raw = (high << 8) | low;
+
+    if (type === 'int16' && raw >= 0x8000) {
+      raw = raw - 0x10000; // sign-extend
+    }
+    return raw;
+  }
+
+  return low;
 }
 
 // ---------- DOM Init ----------
@@ -668,25 +708,60 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // WRITE
-  if (writeBtn) {
-    writeBtn.addEventListener('click', () => {
-      const paramsToWrite = collectCurrentParams();
-      console.log('WRITE parameters:', paramsToWrite);
-    });
-  }
+	if (writeBtn) {
+	  writeBtn.addEventListener('click', async () => {
+		const paramsToWrite = collectCurrentParams();
+		if (!paramsToWrite.length) return;
+
+		writeBtn.disabled = true;
+
+		try {
+		  for (const p of paramsToWrite) {
+			await ipcRenderer.invoke('write-param', {
+			  address: p.address,
+			  type: p.type,
+			  value: p.value
+			});
+		  }
+		  console.log('All parameters written successfully');
+		} catch (e) {
+		  console.error('Write failed:', e);
+		  alert('Error while writing parameters: ' + e.message);
+		} finally {
+		  writeBtn.disabled = false;
+		}
+	  });
+	}
 
   // READ
-  if (readBtn) {
-    readBtn.addEventListener('click', () => {
-      const inputs = document.querySelectorAll('#paramTable tbody input');
-      const paramsToRead = Array.from(inputs).map(inp => ({
-        name: inp.dataset.name,
-        address: Number(inp.dataset.address),
-        type: inp.dataset.type
-      }));
-      console.log('READ parameters:', paramsToRead);
-    });
-  }
+	if (readBtn) {
+	  readBtn.addEventListener('click', async () => {
+		const inputs = document.querySelectorAll('#paramTable tbody input');
+		if (!inputs.length) return;
+
+		readBtn.disabled = true;
+
+		try {
+		  for (const inp of Array.from(inputs)) {
+			const address = Number(inp.dataset.address);
+			const type = inp.dataset.type;
+			const mult = Number(inp.dataset.mult) || 1;
+
+			const raw = await readParamFromDevice(address, type);
+			const scaled = raw * mult;
+
+			inp.value = String(scaled);
+			inp.dispatchEvent(new Event('blur')); // reuse clamping/formatting
+		  }
+		  console.log('All parameters read from device');
+		} catch (e) {
+		  console.error('Read failed:', e);
+		  alert('Error while reading parameters: ' + e.message);
+		} finally {
+		  readBtn.disabled = false;
+		}
+	  });
+	}
 
   // SAVE TO FILE
   if (saveBtn) {

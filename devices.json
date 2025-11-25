@@ -5,7 +5,7 @@
       "type": "PWM",
       "eeprom": [
         {
-          "name": "Kp",
+          "name": "Kd",
           "address": 32,
           "type": "uint8",
           "min": 0,
@@ -13,29 +13,157 @@
           "dflt": 30
         },
         {
-          "name": "Kd",
+          "name": "Kp",
           "address": 33,
           "type": "uint8",
           "min": 0,
           "max": 255,
-          "dflt": 30
-        },
+          "dflt": 60
+        },	
         {
           "name": "Ki",
+          "address": 35,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 0
+        },
+        {
+          "name": "PWM_Min",
           "address": 34,
           "type": "uint8",
           "min": 0,
           "max": 255,
-          "dflt": 30
+          "dflt": 40
         },
         {
-          "name": "ZeroPos",
+          "name": "PWM_Max",
+          "address": 36,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 255
+        },
+        {
+          "name": "Signal_DB",
+          "address": 37,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 1
+        },
+        {
+          "name": "Sensor_DB",
+          "address": 38,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 0
+        },
+        {
+          "name": "LeftScaling",
+          "address": 39,
+          "type": "uint8",
+          "min": 10,
+          "max": 200,
+          "dflt": 100,
+		  "unit": "%"
+        },	
+        {
+          "name": "RightScaling",
+          "address": 44,
+          "type": "uint8",
+          "min": 10,
+          "max": 200,
+          "dflt": 100,
+		  "unit": "%"
+        },	
+        {
+          "name": "Expansion",
+          "address": 46,
+          "type": "uint8",
+          "min": 10,
+          "max": 200,
+          "dflt": 100,
+		  "unit": "%"
+        },	
+        {
+          "name": "Min_us",
+          "address": 40,
+          "type": "uint16",
+          "min": 800,
+          "max": 2200,
+          "dflt": 1000,
+		  "unit": "us"
+        },		
+        {
+          "name": "Max_us",
+          "address": 42,
+          "type": "uint16",
+          "min": 800,
+          "max": 2200,
+          "dflt": 2000,
+		  "unit": "us"
+        },		
+        {
+          "name": "Options",
+          "address": 45,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 0
+        },		
+        {
+          "name": "FailsafePos",
           "address": 48,
+          "type": "uint16",
+          "min": 800,
+          "max": 2200,
+          "dflt": 1500,
+		  "unit": "us"
+        },
+        {
+          "name": "Neutral",
+          "address": 50,
           "type": "int16",
           "min": -2048,
           "max": 2047,
           "dflt": 0
-        }
+        },
+        {
+          "name": "PWM_Neutral",
+          "address": 52,
+          "type": "uint16",
+          "min": 1000,
+          "max": 2000,
+          "dflt": 1500,
+		  "unit": "us"
+        },
+        {
+          "name": "SaverTime",
+          "address": 64,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 2
+        },		
+        {
+          "name": "SaverFrame",
+          "address": 65,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 50,
+		  "unit": "us"
+        },	
+        {
+          "name": "PWM_Safe",
+          "address": 47,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 128
+        }		
       ]
     },
     {
@@ -57,6 +185,82 @@
     {
       "name": "DA15-CAN",
       "type": "CAN"
+      "eeprom": [
+        {
+          "name": "Kd",
+          "address": 32,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 30
+        },
+		{
+          "name": "Kp",
+          "address": 33,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 60
+        },
+		{
+          "name": "Ki",
+          "address": 49,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 0
+        },
+        {
+          "name": "PWM_Min",
+          "address": 34,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 40
+        },
+        {
+          "name": "PWM_Max",
+          "address": 36,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 255
+        },
+        {
+          "name": "Sensor_DB",
+          "address": 38,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 0
+        },
+        {
+          "name": "SaverTime",
+          "address": 38,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 2,
+		  "unit": "sec",
+		  "mult": 0.1
+        },		
+        {
+          "name": "SaverFrame",
+          "address": 39,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 30
+        },	
+        {
+          "name": "PWM_Safe",
+          "address": 37,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 64
+        }		
+		
     },
     {
       "name": "DA20-CAN",

@@ -321,6 +321,60 @@ ipcMain.handle('perform-update', async (_event, hexContent) => {
   uploadWindow.webContents.send('update-complete');
 });
 
+ipcMain.handle('write-param', async (_event, { address, type, value }) => {
+  if (!uart.isOpen()) {
+    throw new Error('UART not open');
+  }
+
+  // Ensure integer raw value
+  let raw = Number(value);
+  if (!Number.isFinite(raw)) {
+    throw new Error('Invalid value for address ' + address);
+  }
+  raw = Math.trunc(raw);
+
+  // Helper to send one WBxx:yy and expect OK
+  async function writeByte(addr, byteVal) {
+    const addrHex = addr.toString(16).toUpperCase().padStart(2, '0');
+    const valHex = (byteVal & 0xFF).toString(16).toUpperCase().padStart(2, '0');
+    const cmd = `WB${addrHex}:${valHex}`;
+    await uart.sendAndWait(
+      cmd,
+      line => line.trim() === 'OK',
+      800
+    );
+  }
+
+  if (type === 'uint16' || type === 'int16') {
+    const low = raw & 0xFF;
+    const high = (raw >> 8) & 0xFF;
+    await writeByte(address, low);
+    await writeByte(address + 1, high);
+  } else {
+    await writeByte(address, raw);
+  }
+
+  return true;
+});
+
+ipcMain.handle('read-byte', async (_event, address) => {
+  if (!uart.isOpen()) throw new Error('UART not open');
+
+  const addrHex = address.toString(16).toUpperCase().padStart(2, '0');
+  const cmd = `RB${addrHex}`;
+
+  const resp = await uart.sendAndWait(
+    cmd,
+    line => /^B:[0-9A-Fa-f]{2}$/.test(line.trim()),
+    800
+  );
+
+  const m = resp.trim().match(/^B:([0-9A-Fa-f]{2})$/);
+  if (!m) throw new Error('Bad RB response for address ' + address + ': ' + resp);
+
+  return parseInt(m[1], 16); // numeric 0..255
+});
+
 ipcMain.handle('fw-open-upload-window', () => {
   if (!uploadWindow) {
     createUploadWindow();

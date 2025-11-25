@@ -206,7 +206,7 @@ body {
 
 .main-content h2 {
     font-size: 18px;
-    margin-bottom: 10px;
+    margin-bottom: 0px;
 }
 
 /*#positionSlider {
@@ -269,6 +269,13 @@ body {
     gap: 24px;
     margin-top: 5px;
     flex-wrap: wrap;
+}
+
+.meters-row {
+	display: flex; 
+	align-items: center; 
+	margin-top: 10px;
+	gap: 24px;	
 }
 
 .meter {
@@ -698,6 +705,7 @@ body {
   cursor: pointer;
   box-shadow: 0 1px 4px rgba(0,0,0,0.15);
   transition: transform 0.05s ease, box-shadow 0.05s ease;
+  margin-left: auto;
 }
 
 .live-actions button:hover {
