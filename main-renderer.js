@@ -191,16 +191,6 @@ function downloadJsonFile(filename, jsonStr) {
   URL.revokeObjectURL(url);
 }
 
-// random text helper for info-block fields
-function randomText(len) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let out = '';
-  for (let i = 0; i < len; i++) {
-    out += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return out;
-}
-
 function updateStatusFields(voltage, temperature) {
   const voltageElem = document.getElementById('supplyValue');
   const tempElem = document.getElementById('temperatureValue');
@@ -292,6 +282,11 @@ function collectConnectionConfig() {
   return cfg;
 }
 
+async function readInfoField(start, end) {
+  const txt = await ipcRenderer.invoke('read-ascii-range', { start, end });
+  return txt.trim();
+}
+
 // ---------- DOM Init ----------
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -325,9 +320,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const infoBlock = document.getElementById('infoBlock');
   const serialInput = document.getElementById('serialNumber');
+  const pnInput = document.getElementById('pnNumber');
   const fwInput = document.getElementById('fwVersion');
   const hwInput = document.getElementById('hwRevision');
-  const pnInput = document.getElementById('pnNumber');
   const serialReadBtn = document.getElementById('serialReadBtn');
   const fwReadBtn = document.getElementById('fwReadBtn');
   const hwReadBtn = document.getElementById('hwReadBtn');
@@ -562,44 +557,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (serialReadBtn && serialInput) {
     serialReadBtn.addEventListener('click', () => {
-      // TODO later: replace with UART read
-      serialInput.value = randomText(16); // e.g. 16 chars, <= 32
-    });
-  }
-
-  if (fwReadBtn && fwInput) {
-    fwReadBtn.addEventListener('click', () => {
-      // Example like "v1.2.3-BUILD123"
-      fwInput.value =
-        'v' +
-        (1 + Math.floor(Math.random() * 3)) +
-        '.' +
-        Math.floor(Math.random() * 10) +
-        '.' +
-        Math.floor(Math.random() * 10) +
-        '-' +
-        randomText(6);
-    });
-  }
-
-  if (hwReadBtn && hwInput) {
-    hwReadBtn.addEventListener('click', () => {
-      // Example like "REV-A3"
-      hwInput.value =
-        'REV-' +
-        String.fromCharCode(65 + Math.floor(Math.random() * 3)) +
-        Math.floor(Math.random() * 10);
+      const serial = await readInfoField(0x100, 0x12F);
+	  serialInput.textContent = serial;
     });
   }
 
   if (pnReadBtn && pnInput) {
     pnReadBtn.addEventListener('click', () => {
-      // Example PN like "PN-1234-ABCD"
-      pnInput.value =
-        'PN-' +
-        String(Math.floor(Math.random() * 9000) + 1000) +
-        '-' +
-        randomText(4);
+	  const pn = await readInfoField(0x130, 0x15F);
+	  pnInput.textContent = pn;
+    });
+  }
+
+  if (fwReadBtn && fwInput) {
+    fwReadBtn.addEventListener('click', () => {
+	  const fw = await readInfoField(0x160, 0x18F);
+	  fwInput.textContent = fw
+    });
+  }
+
+  if (hwReadBtn && hwInput) {
+    hwReadBtn.addEventListener('click', () => {
+      const hw = await readInfoField(0x190, 0x1BF);
+	  hwInput.textContent = hw;
     });
   }
 

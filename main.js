@@ -381,6 +381,36 @@ ipcMain.handle('read-byte', async (_event, address) => {
   return parseInt(m[1], 16); // numeric 0..255
 });
 
+ipcMain.handle('read-ascii-range', async (_event, { start, end }) => {
+  if (!uart.isOpen()) throw new Error('UART not open');
+
+  function addrHex(a) {
+    return a.toString(16).toUpperCase().padStart(2, '0');
+  }
+
+  async function readByte(addr) {
+    const cmd = 'RB' + addrHex(addr);
+    const resp = await uart.sendAndWait(
+      cmd,
+      line => /^B:[0-9A-Fa-f]{2}$/.test(line.trim()),
+      800
+    );
+    const m = resp.trim().match(/^B:([0-9A-Fa-f]{2})$/);
+    if (!m) throw new Error('Bad RB response at ' + addr + ': ' + resp);
+    return parseInt(m[1], 16);
+  }
+
+  const bytes = [];
+  for (let a = start; a <= end; a++) {
+    const b = await readByte(a);
+    if (b === 0x00 || b === 0xFF) break; // terminator
+    bytes.push(b);
+  }
+
+  const chars = bytes.map(b => String.fromCharCode(b));
+  return chars.join('');
+});
+
 ipcMain.handle('send-raw-command', async (_event, { bytes }) => {
   if (!uart.isOpen()) throw new Error('UART not open');
   // bytes: array of numbers 0..255
