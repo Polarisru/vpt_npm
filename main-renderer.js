@@ -195,8 +195,14 @@ function updateStatusFields(voltage, temperature) {
   const voltageElem = document.getElementById('supplyValue');
   const tempElem = document.getElementById('temperatureValue');
 
-  if (voltageElem) voltageElem.textContent = voltage.toFixed(2) + ' V';
-  if (tempElem) tempElem.textContent = temperature.toFixed(1) + ' °C';
+  if (voltageElem) {
+    voltageElem.textContent =
+      typeof voltage === 'number' ? voltage.toFixed(1) + ' V' : '--.- V';
+  }
+  if (tempElem) {
+    tempElem.textContent =
+      typeof temperature === 'number' ? temperature.toFixed(1) + ' °C' : '--.- °C';
+  }
 }
 
 // Function to update the Update button state based on isConnected
@@ -280,6 +286,36 @@ function collectConnectionConfig() {
   }
 
   return cfg;
+}
+
+let statusTimer = null;
+let sineRunning = false; // set this true/false together with sine Start/Stop
+
+async function pollStatusOnce() {
+  if (!isConnected || sineRunning) return;
+
+  try {
+    const [v, t] = await Promise.all([
+      ipcRenderer.invoke('read-supply'),
+      ipcRenderer.invoke('read-temperature')
+    ]);
+    updateStatusFields(v, t);
+  } catch (e) {
+    console.error('Status poll failed:', e);
+    updateStatusFields(null, null);
+  }
+}
+
+function startStatusPolling() {
+  if (statusTimer) clearInterval(statusTimer);
+  statusTimer = setInterval(pollStatusOnce, 1000);
+}
+
+function stopStatusPolling() {
+  if (statusTimer) {
+    clearInterval(statusTimer);
+    statusTimer = null;
+  }
 }
 
 async function readInfoField(start, end) {
@@ -658,6 +694,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		  try {
 			await ipcRenderer.invoke('conn-init', cfg);
 			isConnected = true;
+			startStatusPolling();
 			connectBtn.textContent = 'Disconnect';
 			if (contentOverlay) contentOverlay.classList.add('hidden');
 			if (connectionHint) connectionHint.textContent = 'Connected';
@@ -677,6 +714,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		  }
 
 		  isConnected = false;
+		  stopStatusPolling();
+		  updateStatusFields(null, null);
 		  connectBtn.textContent = 'Connect';
 		  if (contentOverlay) contentOverlay.classList.remove('hidden');
 		  if (connectionHint)

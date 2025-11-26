@@ -426,6 +426,30 @@ ipcMain.handle('send-raw-command', async (_event, { bytes }) => {
   return resp;
 });
 
+ipcMain.handle('read-supply', async () => {
+  if (!uart.isOpen()) throw new Error('UART not open');
+
+  const resp = await uart.sendAndWait(
+    'GUS',
+    line => /^US:-?\d+\.\d+$/.test(line.trim()),
+    800
+  );
+  const m = resp.trim().match(/^US:(-?\d+\.\d+)$/);
+  return m ? parseFloat(m[1]) : null;
+});
+
+ipcMain.handle('read-temperature', async () => {
+  if (!uart.isOpen()) throw new Error('UART not open');
+
+  const resp = await uart.sendAndWait(
+    'GT',
+    line => /^T:-?\d+\.\d+$/.test(line.trim()),
+    800
+  );
+  const m = resp.trim().match(/^T:(-?\d+\.\d+)$/);
+  return m ? parseFloat(m[1]) : null;
+});
+
 ipcMain.handle('fw-open-upload-window', () => {
   if (!uploadWindow) {
     createUploadWindow();
