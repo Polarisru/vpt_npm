@@ -418,7 +418,7 @@ ipcMain.handle('send-raw-command', async (_event, { bytes }) => {
   // Build command string, e.g. "RCxx yy zz ..." or directly hex frame
   const hex = bytes.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('');
   // Assuming device expects just hex bytes as one command:
-  const cmd = hex; // adjust if protocol needs prefix
+  const cmd = 'RAW' + hex; // adjust if protocol needs prefix
   const resp = await uart.sendAndWait(
     cmd,
     line => line.trim() === 'OK',
