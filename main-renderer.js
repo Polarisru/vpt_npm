@@ -197,11 +197,11 @@ function updateStatusFields(voltage, temperature) {
 
   if (voltageElem) {
     voltageElem.textContent =
-      typeof voltage === 'number' ? voltage.toFixed(1) + ' V' : '--.- V';
+      typeof voltage === 'number' ? voltage.toFixed(1) : '--.-';
   }
   if (tempElem) {
     tempElem.textContent =
-      typeof temperature === 'number' ? temperature.toFixed(1) + ' °C' : '--.- °C';
+      typeof temperature === 'number' ? temperature.toFixed(1) : '--.-';
   }
 }
 
@@ -292,13 +292,14 @@ let statusTimer = null;
 let sineRunning = false; // set this true/false together with sine Start/Stop
 
 async function pollStatusOnce() {
+  console.log('Tick');
   if (!isConnected || sineRunning) return;
 
   try {
     const [v, t] = await Promise.all([
       ipcRenderer.invoke('read-supply'),
       ipcRenderer.invoke('read-temperature'),
-	  ipcRenderer.invoke('read-status')
+	    //ipcRenderer.invoke('read-status')
     ]);
     updateStatusFields(v, t);
 	if (connectionHint) {
@@ -316,11 +317,13 @@ async function pollStatusOnce() {
 }
 
 function startStatusPolling() {
+  console.log('Timer started');
   if (statusTimer) clearInterval(statusTimer);
   statusTimer = setInterval(pollStatusOnce, 1000);
 }
 
 function stopStatusPolling() {
+  console.log('Timer stopped');
   if (statusTimer) {
     clearInterval(statusTimer);
     statusTimer = null;
@@ -703,7 +706,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		  try {
 			await ipcRenderer.invoke('conn-init', cfg);
 			isConnected = true;
-			startStatusPolling();
+			//startStatusPolling();
 			connectBtn.textContent = 'Disconnect';
 			if (contentOverlay) contentOverlay.classList.add('hidden');
 			if (connectionHint) connectionHint.textContent = 'Connected';
@@ -712,8 +715,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			// Enable/disable Update button according to new state
 			updateUpdateButtonState();
 		  } catch (e) {
+      console.log('catch block entered');
 			console.error('Connection init failed:', e);
-			if (connectionHint) connectionHint.textContent = 'Connection failed';
+			if (connectionHint) connectionHint.textContent = '111';//'Connection failed';
 		  }
 		} else {
 		  try {
