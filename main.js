@@ -450,6 +450,18 @@ ipcMain.handle('read-temperature', async () => {
   return m ? parseFloat(m[1]) : null;
 });
 
+ipcMain.handle('read-status', async () => {
+  if (!uart.isOpen()) throw new Error('UART not open');
+
+  const resp = await uart.sendAndWait(
+    'GS',
+    line => /^S:\d+$/.test(line.trim()),
+    800
+  );
+  const m = resp.trim().match(/^S:(\d+)$/);
+  return m ? parseInt(m[1], 10) : null;
+});
+
 ipcMain.handle('fw-open-upload-window', () => {
   if (!uploadWindow) {
     createUploadWindow();

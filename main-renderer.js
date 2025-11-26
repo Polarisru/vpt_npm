@@ -297,12 +297,21 @@ async function pollStatusOnce() {
   try {
     const [v, t] = await Promise.all([
       ipcRenderer.invoke('read-supply'),
-      ipcRenderer.invoke('read-temperature')
+      ipcRenderer.invoke('read-temperature'),
+	  ipcRenderer.invoke('read-status')
     ]);
     updateStatusFields(v, t);
+	if (connectionHint) {
+      if (typeof s === 'number' && s === 0) {
+        connectionHint.textContent = 'Connected';
+      } else {
+        connectionHint.textContent = 'ERROR';
+      }
+    }
   } catch (e) {
     console.error('Status poll failed:', e);
     updateStatusFields(null, null);
+	if (connectionHint) connectionHint.textContent = 'ERROR';
   }
 }
 
