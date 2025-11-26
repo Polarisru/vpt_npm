@@ -205,12 +205,6 @@ function updateStatusFields(voltage, temperature) {
   }
 }
 
-// Function to update the Update button state based on isConnected
-function updateUpdateButtonState() {
-  if (!updateBtn) return;
-  updateBtn.disabled = isConnected;
-}
-
 function updatePositionSliderRange(type) {
   const slider = document.getElementById('positionSlider');
   if (!slider) return;
@@ -393,6 +387,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const updateBtn = document.getElementById('updateBtn');  
 
   let isConnected = false;
+
+  // Function to update the Update button state based on isConnected
+  function updateUpdateButtonState() {
+    if (!updateBtn) return;
+    updateBtn.disabled = !isConnected;
+  }
 
   // RS485 IDs
   if (rs485Id) {

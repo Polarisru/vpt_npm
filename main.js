@@ -1,6 +1,6 @@
 // main.js
 
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const uart = require('./uart');
 const fs = require('fs');
@@ -304,19 +304,6 @@ ipcMain.handle('read-file', async (_event, path) => {
   return fs.promises.readFile(path, 'utf-8');
 });
 
-// Create and show upload window
-ipcMain.on('open-upload-window', () => {
-  if (!uploadWindow) {
-    uploadWindow = new BrowserWindow({
-      width: 400,
-      height: 200,
-      resizable: false,
-    });
-    uploadWindow.loadFile('upload.html');
-    uploadWindow.on('closed', () => { uploadWindow = null; });
-  }
-});
-
 // Perform the update (simulate or real)
 ipcMain.handle('perform-update', async (_event, hexContent) => {
   // Example implementation: simulate upload with progress
@@ -467,6 +454,22 @@ ipcMain.handle('fw-open-upload-window', () => {
   if (!uploadWindow) {
     createUploadWindow();
   }
+});
+
+// Create and show upload window
+ipcMain.on('open-upload-window', () => {
+  // if (!uploadWindow) {
+    // uploadWindow = new BrowserWindow({
+      // width: 400,
+      // height: 200,
+      // resizable: false,
+    // });
+    // uploadWindow.loadFile('upload.html');
+    // uploadWindow.on('closed', () => { uploadWindow = null; });
+  // }
+  if (!uploadWindow) {
+    createUploadWindow();
+  }  
 });
 
 app.on('before-quit', event => {
