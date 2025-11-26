@@ -601,30 +601,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // random-text READs for info-block
 
   if (serialReadBtn && serialInput) {
-    serialReadBtn.addEventListener('click', () => {
+    serialReadBtn.addEventListener('click', async () => {
       const serial = await readInfoField(0x100, 0x12F);
-	  serialInput.textContent = serial;
+	  serialInput.value = serial;
     });
   }
 
   if (pnReadBtn && pnInput) {
-    pnReadBtn.addEventListener('click', () => {
+    pnReadBtn.addEventListener('click', async () => {
 	  const pn = await readInfoField(0x130, 0x15F);
-	  pnInput.textContent = pn;
+	  pnInput.value = pn;
     });
   }
 
   if (fwReadBtn && fwInput) {
-    fwReadBtn.addEventListener('click', () => {
+    fwReadBtn.addEventListener('click', async () => {
 	  const fw = await readInfoField(0x160, 0x18F);
-	  fwInput.textContent = fw
+	  fwInput.value = fw
     });
   }
 
   if (hwReadBtn && hwInput) {
-    hwReadBtn.addEventListener('click', () => {
+    hwReadBtn.addEventListener('click', async () => {
       const hw = await readInfoField(0x190, 0x1BF);
-	  hwInput.textContent = hw;
+	  hwInput.value = hw;
     });
   }
 

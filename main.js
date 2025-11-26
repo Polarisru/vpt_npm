@@ -392,10 +392,10 @@ ipcMain.handle('read-ascii-range', async (_event, { start, end }) => {
     const cmd = 'RB' + addrHex(addr);
     const resp = await uart.sendAndWait(
       cmd,
-      line => /^B:[0-9A-Fa-f]{2}$/.test(line.trim()),
+      line => /^B:0x[0-9A-Fa-f]{2}$/.test(line.trim()),
       800
     );
-    const m = resp.trim().match(/^B:([0-9A-Fa-f]{2})$/);
+    const m = resp.trim().match(/^B:0x([0-9A-Fa-f]{2})$/);
     if (!m) throw new Error('Bad RB response at ' + addr + ': ' + resp);
     return parseInt(m[1], 16);
   }
@@ -408,6 +408,7 @@ ipcMain.handle('read-ascii-range', async (_event, { start, end }) => {
   }
 
   const chars = bytes.map(b => String.fromCharCode(b));
+  console.log("Text: ", chars.join(''));
   return chars.join('');
 });
 
