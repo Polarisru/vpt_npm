@@ -243,7 +243,23 @@
 			  </div>
 
 			  <div class="tab-pane" id="script-tab">
-				<!-- empty for future use -->
+				  <div class="fw-row">
+					<div class="fw-label">Script file</div>
+					<div class="fw-file-area">
+					  <span id="scriptFileName" class="fw-filename">No file selected</span>
+					  <button id="scriptBrowseBtn" class="fw-browse-btn">Browse</button>
+					  <input type="file" id="scriptFileInput" style="display:none">
+					</div>
+				  </div>
+
+				  <div class="script-textarea-row">
+					<textarea id="scriptText" class="script-textarea" placeholder="Enter or edit script here..."></textarea>
+				  </div>
+
+				  <div class="script-actions">
+					<button id="scriptRunBtn" class="sine-btn">Run</button>
+					<button id="scriptSaveOutputBtn" class="sine-btn">Save output</button>
+				  </div>
 			  </div>
 
 			</div>
