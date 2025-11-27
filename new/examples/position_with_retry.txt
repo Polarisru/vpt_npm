@@ -1,0 +1,81 @@
+# Motor positioning with retry logic and timeout
+
+SET target = 90.0
+SET tolerance = 2.0
+SET max_tries = 5
+SET timeout_ms = 10000
+SET tries = 0
+
+SET start_time = {time_ms}
+
+PRINT [{elapsed_sec}s] Moving to {target} degrees
+
+LABEL move_motor
+SEND DP{target}
+WAIT 500
+
+LABEL check_position
+# Check timeout
+SET now = {time_ms}
+SET elapsed_time = now - start_time
+IF elapsed_time > timeout_ms GOTO timeout_error
+
+# Request position
+SENDNW GPS
+RECV PS:{current}
+PRINT [{elapsed_sec}s] Position: {current}
+
+# Calculate error
+SET diff = target - current
+SET distance = ABS(diff)
+PRINT [{elapsed_sec}s] Distance to target: {distance}
+
+# Check if reached
+IF distance < tolerance GOTO success
+
+# Increment tries
+SET tries = tries + 1
+PRINT [{elapsed_sec}s] Attempt {tries} of {max_tries}
+
+IF tries >= max_tries GOTO max_tries_error
+
+WAIT 200
+GOTO check_position
+
+LABEL success
+SET final_time = {time_ms}
+SET duration = final_time - start_time
+PRINT
+PRINT ================================================
+PRINT [{elapsed_sec}s] SUCCESS!
+PRINT Final position: {current} degrees
+PRINT Target: {target} degrees
+PRINT Error: {distance} degrees
+PRINT Duration: {duration} ms
+PRINT Attempts: {tries}
+PRINT ================================================
+GOTO end
+
+LABEL timeout_error
+PRINT
+PRINT ================================================
+PRINT [{elapsed_sec}s] ERROR: TIMEOUT
+PRINT Exceeded maximum time: {timeout_ms} ms
+PRINT Current position: {current}
+PRINT Target position: {target}
+PRINT ================================================
+GOTO end
+
+LABEL max_tries_error
+PRINT
+PRINT ================================================
+PRINT [{elapsed_sec}s] ERROR: MAX RETRIES
+PRINT Failed after {max_tries} attempts
+PRINT Current position: {current}
+PRINT Target position: {target}
+PRINT Distance: {distance} degrees
+PRINT ================================================
+GOTO end
+
+LABEL end
+PRINT Script finished at {timestamp}

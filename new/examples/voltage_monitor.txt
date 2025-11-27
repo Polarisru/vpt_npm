@@ -1,0 +1,66 @@
+# Voltage monitoring script
+# Monitors supply voltage and logs warnings
+
+SET low_voltage_threshold = 11.5
+SET critical_voltage_threshold = 11.0
+SET sample_interval = 1000
+SET max_samples = 60
+
+SET sample_count = 0
+SET min_voltage = 999
+SET max_voltage = 0
+SET total_voltage = 0
+
+PRINT ================================================
+PRINT Voltage Monitor
+PRINT Low threshold: {low_voltage_threshold}V
+PRINT Critical threshold: {critical_voltage_threshold}V
+PRINT Duration: {max_samples} seconds
+PRINT ================================================
+
+LABEL sample_loop
+SET sample_count = sample_count + 1
+
+# Request voltage
+SENDNW GVS
+RECV VS:{voltage}
+
+# Update statistics
+SET total_voltage = total_voltage + voltage
+SET avg_voltage = total_voltage / sample_count
+
+SET min_voltage = MIN(min_voltage, voltage)
+SET max_voltage = MAX(max_voltage, voltage)
+
+# Log current reading
+PRINT [{elapsed_sec}s] Sample {sample_count}: {voltage}V (avg: {avg_voltage}V)
+
+# Check thresholds
+IF voltage < critical_voltage_threshold GOTO critical_voltage
+IF voltage < low_voltage_threshold GOTO low_voltage
+GOTO continue_sampling
+
+LABEL critical_voltage
+PRINT [{elapsed_sec}s] *** CRITICAL VOLTAGE: {voltage}V ***
+GOTO continue_sampling
+
+LABEL low_voltage
+PRINT [{elapsed_sec}s] ** LOW VOLTAGE WARNING: {voltage}V **
+GOTO continue_sampling
+
+LABEL continue_sampling
+IF sample_count >= max_samples GOTO finish
+
+WAIT sample_interval
+GOTO sample_loop
+
+LABEL finish
+PRINT
+PRINT ================================================
+PRINT Voltage Monitoring Complete
+PRINT Samples: {sample_count}
+PRINT Average: {avg_voltage}V
+PRINT Minimum: {min_voltage}V
+PRINT Maximum: {max_voltage}V
+PRINT Duration: {elapsed_sec} seconds
+PRINT ================================================

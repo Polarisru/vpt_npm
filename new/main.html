@@ -83,85 +83,89 @@
 
 			<div class="tab-panel">
 			  <div class="tab-pane active" id="main-tab">
-				<!-- your existing .main-content markup, without its outer wrapper -->
-				<div class="main-content">
-					<h2>Motor Position</h2>
-					<div class="position-row">
-						<button id="positionMinBtn" class="position-btn">Min</button>
-						<input type="range" id="positionSlider" min="-170" max="170" value="0">
-						<button id="positionMaxBtn" class="position-btn">Max</button>
-					</div>
-					<div class="firstDiv">
-					  <div class="right-col">
-						<span id="devicePositionLabel" class="positionLabel">--.-°</span>
-					  </div>
-					  <span id="positionLabel" class="positionLabel">0.0°</span>
-					</div>
-					
-					<div class="meters-row">
-					  <div class="meter">
-					  <span class="meter-label">Current</span>
-					  <span id="currentValue">--</span> A
-					  </div>
-					  <div class="meter">
-					  <span class="meter-label">Voltage</span>
-					  <span id="voltageValue">--</span> V
-					  </div>
-					  <div class="meter">
-					  <span class="meter-label">Temp 1</span>
-					  <span id="temp1Value">--</span> °C
-					  </div>
-					  <div class="meter">
-					  <span class="meter-label">Temp 2</span>
-					  <span id="temp2Value">--</span> °C
-					  </div>
-					  <div class="live-actions">
-					  <button id="readLiveBtn">Read</button>
-					  </div>
-					</div>  
+          <!-- your existing .main-content markup, without its outer wrapper -->
+          <div class="main-content">
+            <h2>Motor Position</h2>
+            <div class="position-row">
+              <button id="positionMinBtn" class="position-btn">Min</button>
+              <input type="range" id="positionSlider" min="-170" max="170" value="0">
+              <button id="positionMaxBtn" class="position-btn">Max</button>
+            </div>
+            <div class="firstDiv">
+              <div class="right-col">
+              <span id="devicePositionLabel" class="positionLabel">--.-°</span>
+              </div>
+              <span id="positionLabel" class="positionLabel">0.0°</span>
+            </div>
+            
+            <div class="meters-row">
+              <div class="meter">
+              <span class="meter-label">Current</span>
+              <span id="currentValue">--</span> A
+              </div>
+              <div class="meter">
+              <span class="meter-label">Voltage</span>
+              <span id="voltageValue">--</span> V
+              </div>
+              <div class="meter">
+              <span class="meter-label">Temp 1</span>
+              <span id="temp1Value">--</span> °C
+              </div>
+              <div class="meter">
+              <span class="meter-label">Temp 2</span>
+              <span id="temp2Value">--</span> °C
+              </div>
+              <div class="live-actions">
+              <button id="readLiveBtn">Read</button>
+              </div>
+            </div>  
 
-					<div class="sine-block">
-						<div class="sine-title">Periodical movement</div>
+            <div class="sine-block">
+              <div class="sine-title">Periodical movement</div>
 
-						<!-- One row: Waveform + Amplitude + Frequency -->
-						<div class="sine-row sine-row-waf">
-							<div class="sine-label">Waveform</div>
-							<select id="sineWaveform" class="sine-input">
-							  <option value="sine">Sinusoidal</option>
-							  <option value="rect">Rectangle</option>
-							  <option value="saw">Sawtooth</option>
-							</select>
+              <!-- First row: Waveform + Amplitude -->
+              <div class="sine-row-dual">
+                <div class="sine-field">
+                  <div class="sine-label">Waveform</div>
+                  <select id="sineWaveform" class="sine-input">
+                    <option value="sine">Sinusoidal</option>
+                    <option value="rect">Rectangle</option>
+                    <option value="saw">Sawtooth</option>
+                  </select>
+                </div>
+                <div class="sine-field">
+                  <div class="sine-label">Amplitude (°)</div>
+                  <input type="number" id="sineAmplitude"
+                       class="sine-input"
+                       min="0" max="180" step="1" value="30">
+                </div>
+              </div>
 
-							<div class="sine-label sine-label-right">Amplitude (°)</div>
-							<input type="number" id="sineAmplitude"
-								   class="sine-input sine-input-narrow"
-								   min="0" max="180" step="1" value="30">
+              <!-- Second row: Frequency + Start button -->
+              <div class="sine-row-dual">
+                <div class="sine-field">
+                  <div class="sine-label">Frequency (Hz)</div>
+                  <input type="number" id="sineFrequency"
+                       class="sine-input"
+                       min="0.1" max="10" step="0.1" value="0.5">
+                </div>
+                <div class="sine-field sine-field-button">
+                  <button id="sineStartStopBtn" class="sine-btn">Start</button>
+                </div>
+              </div>
+            </div>			  
 
-							<div class="sine-label sine-label-right">Frequency (Hz)</div>
-							<input type="number" id="sineFrequency"
-								   class="sine-input sine-input-narrow"
-								   min="0.1" max="10" step="0.1" value="0.5">
-						</div>
-
-						<!-- Second row: Start/Stop button, right aligned -->
-						<div class="sine-row sine-row-fs">
-							<div class="sine-label"></div>
-							<div></div>
-							<div class="sine-actions sine-actions-inline">
-							  <button id="sineStartStopBtn" class="sine-btn">Start</button>
-							</div>
-						</div>
-					</div>				  
-
-					<!-- Raw command block -->
-					<div class="raw-block hidden" id="rawBlock">
-					  <div class="raw-title">Raw command</div>
-					  <div class="raw-row">
-						<input id="rawCommandInput" class="raw-input" type="text" placeholder="Enter HEX bytes">
-						<button id="rawSendBtn" class="sine-btn">Send</button>
-					  </div>
-					</div>
-				</div>
+            <!-- Raw command block -->
+            <div class="raw-block hidden" id="rawBlock">
+              <div class="raw-title">Raw command</div>
+              <div class="raw-grid">
+                <input id="rawCommandInput" class="raw-input" type="text" placeholder="Enter HEX bytes">
+                <button id="rawSendBtn" class="sine-btn">Send</button>
+                <input id="rawCommandResponse" class="raw-input" type="text" placeholder="Response" readonly>
+                <span></span>
+              </div>
+            </div>
+          </div>
 			  </div>
 
 			  <div class="tab-pane" id="eeprom-tab">
@@ -195,51 +199,60 @@
 
 			  <div class="tab-pane" id="info-tab">
 			    <div class="main-content">
-					<div class="fw-block">
-						<div class="fw-title">Firmware update</div>
+            <div class="fw-block">
+              <div class="fw-title">Firmware update</div>
 
-						<div class="fw-row">
-							<div class="fw-label">HEX file</div>
-	  
-							<div class="fw-file-area">
-								<span id="fwFileName" class="fw-filename">No file selected</span>
-								<button id="fwBrowseBtn" class="fw-browse-btn">Browse…</button>
-								<input type="file" id="fwFileInput" accept=".hex" style="display:none">
-							</div>
-						</div>
+              <div class="fw-row">
+                <div class="fw-label">HEX file</div>
+      
+                <div class="fw-file-area">
+                  <span id="fwFileName" class="fw-filename">No file selected</span>
+                  <button id="fwBrowseBtn" class="fw-browse-btn">Browse…</button>
+                  <input type="file" id="fwFileInput" accept=".hex" style="display:none">
+                </div>
+              </div>
 
-						<div class="fw-actions">
-							<button id="fwUploadBtn" class="fw-upload-btn">Upload</button>
-						</div>
-					</div>  
+              <div class="fw-actions">
+                <button id="fwUploadBtn" class="fw-upload-btn">Upload</button>
+              </div>
+            </div>  
+            
+            <div id="infoBlock" class="info-block">
+              <div class="info-row">
+                <div class="info-label">Serial Number</div>
+                <input type="text" id="serialNumber" class="info-input" maxlength="32" readonly>
+                <button class="info-read-btn" id="serialReadBtn">Read</button>
+              </div>
+
+              <div class="info-row">
+                <div class="info-label">PN Number</div>
+                <input type="text" id="pnNumber" class="info-input" maxlength="32" readonly>
+                <button class="info-read-btn" id="pnReadBtn">Read</button>
+              </div>
+
+              <div class="info-row">
+                <div class="info-label">FW Version</div>
+                <input type="text" id="fwVersion" class="info-input" maxlength="32" readonly>
+                <button class="info-read-btn" id="fwReadBtn">Read</button>
+              </div>
+
+              <div class="info-row">
+                <div class="info-label">HW Revision</div>
+                <input type="text" id="hwRevision" class="info-input" maxlength="32" readonly>
+                <button class="info-read-btn" id="hwReadBtn">Read</button>
+              </div>
+            </div>        
 					
-					<div id="infoBlock" class="info-block">
-						<div class="info-row">
-							<div class="info-label">Serial Number</div>
-							<input type="text" id="serialNumber" class="info-input" maxlength="32" readonly>
-							<button class="info-read-btn" id="serialReadBtn">Read</button>
-						</div>
-
-						<div class="info-row">
-							<div class="info-label">PN Number</div>
-							<input type="text" id="pnNumber" class="info-input" maxlength="32" readonly>
-							<button class="info-read-btn" id="pnReadBtn">Read</button>
-						</div>
-
-						<div class="info-row">
-							<div class="info-label">FW Version</div>
-							<input type="text" id="fwVersion" class="info-input" maxlength="32" readonly>
-							<button class="info-read-btn" id="fwReadBtn">Read</button>
-						</div>
-
-						<div class="info-row">
-							<div class="info-label">HW Revision</div>
-							<input type="text" id="hwRevision" class="info-input" maxlength="32" readonly>
-							<button class="info-read-btn" id="hwReadBtn">Read</button>
-						</div>
-					</div>        
-					
-				</div>
+            <div id="revBlock" class="rev-block">
+              <div class="rev-row">
+                <div class="rev-label">Revision String</div>
+                <textarea id="revText" class="rev-textarea"></textarea>
+              </div>            
+              <div class="rev-actions">
+                <button id="revReadBtn" class="rev-read-btn">Read</button>
+              </div>
+            </div>
+          </div>
 			  </div>
 
 			  <div class="tab-pane" id="script-tab">
