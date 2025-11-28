@@ -1,20 +1,30 @@
 {
   "name": "VPT",
   "version": "1.0.0",
-  "description": "",
+  "description": "Volz Programming Tool GUI",
+  "authors": "Volz-Servos",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "electron-forge start",
     "postinstall": "electron-rebuild",
-    "build:win": "electron-builder --win"
+    "build:win": "electron-builder --win",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@electron-forge/cli": "^7.10.2",
+    "@electron-forge/maker-deb": "^7.10.2",
+    "@electron-forge/maker-rpm": "^7.10.2",
+    "@electron-forge/maker-squirrel": "^7.10.2",
+    "@electron-forge/maker-zip": "^7.10.2",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.10.2",
+    "@electron-forge/plugin-fuses": "^7.10.2",
+    "@electron/fuses": "^1.8.0",
     "electron": "^39.2.2",
-    "electron-builder": "^26.0.12",
     "electron-rebuild": "^3.2.9"
   },
   "build": {
@@ -27,6 +37,7 @@
     }
   },
   "dependencies": {
+    "electron-squirrel-startup": "^1.0.1",
     "serialport": "^13.0.0"
   }
 }
