@@ -1,5 +1,7 @@
 // main-renderer.js
 
+console.log('===== main-renderer.js LOADED =====');
+
 const fs = require('fs');
 const path = require('path');
 const { ipcRenderer } = require('electron');
@@ -213,12 +215,12 @@ function updateStatusFields(voltage, temperature) {
 function updatePositionSliderRange(type) {
   const slider = document.getElementById('positionSlider');
   if (!slider) return;
-
+  console.log("Type: ", type);
   if (type === 'PWM') {
-    slider.min = '-45';
+    slider.min = '45';
     slider.max = '45';
   } else if (type === 'RS485' || type === 'CAN') {
-    slider.min = '-170';
+    slider.min = '170';
     slider.max = '170';
   }
 
@@ -352,6 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const devicePositionLabel = document.getElementById('devicePositionLabel');
 
   const connectBtn = document.getElementById('connectBtn');
+  console.log('connectBtn element:', connectBtn);
   const readBtn = document.getElementById('readParamsBtn');
   const writeBtn = document.getElementById('writeParamsBtn');
   const saveBtn = document.getElementById('saveToFileBtn');
@@ -541,14 +544,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       currentConnType = connType.value;
       fillDeviceSelectForType(currentConnType);
+      updatePositionSliderRange(currentConnType);
       clearParamTable();
       if (deviceSelect) deviceSelect.value = '';
       setRightButtonsEnabled(false);
     });
 
     currentConnType = connType.value;
-    
-    updatePositionSliderRange(currentConnType);
 
     // initial state on load
     if (infoBlock) {
@@ -578,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     updatePositionLabel = () => {
-      positionLabel.textContent = slider.value + '°';
+      positionLabel.textContent = parseFloat(slider.value).toFixed(1) + '°';
     };
 
     updatePositionLabel();
@@ -729,7 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (revReadBtn && revText) {
 	  revReadBtn.addEventListener('click', async () => {
 		if (!isConnected) {
-		  alert('Not connected');
+		  showError ? showError('Not connected') : alert('Not connected');
 		  return;
 		}
 
@@ -749,8 +751,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		  revText.value = txt || '';
 		} catch (e) {
-		  console.error('Revision read failed:', e);
-		  revText.value = 'Error reading revision';
+		  //console.error('Revision read failed:', e);
+		  //revText.value = 'Error reading revision';
+      showError ? showError('Revision read failed: ' + e) : alert('Revision read failed: ' + e);
 		} finally {
 		  revReadBtn.disabled = false;
 		  revReadBtn.textContent = oldLabel;
@@ -897,6 +900,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Modify your connectBtn click handler to call updateUpdateButtonState()
 	if (connectBtn) {
 	  connectBtn.addEventListener('click', async () => {
+    console.log('connectBtn click');
 		if (!isConnected) {
 		  const cfg = collectConnectionConfig();
 		  try {
@@ -1032,6 +1036,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (!inputs.length) return;
 
 		readBtn.disabled = true;
+    
+		showProgress('Reading parameters', 'Reading EEPROM parameters…');
+		const total = inputs.length;
+		let step = 0;    
 
 		try {
 		  for (const inp of Array.from(inputs)) {
@@ -1044,12 +1052,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			inp.value = String(scaled);
 			inp.dispatchEvent(new Event('blur')); // reuse clamping/formatting
+      
+      step += 1;
+			updateProgress(step, total);
 		  }
 		  console.log('All parameters read from device');
 		} catch (e) {
 		  console.error('Read failed:', e);
 		  alert('Error while reading parameters: ' + e.message);
 		} finally {
+      hideProgress();
 		  readBtn.disabled = false;
 		}
 	  });
@@ -1146,7 +1158,7 @@ document.addEventListener('DOMContentLoaded', () => {
     rawSendBtn.addEventListener('click', async () => {
       try {
         if (!isConnected) {
-          alert('Not connected');
+          showError ? showError('Not connected') : alert('Not connected');
           return;
         }
 
@@ -1161,8 +1173,9 @@ document.addEventListener('DOMContentLoaded', () => {
         await ipcRenderer.invoke('send-raw-command', { bytes });
         // optional: some UI feedback
       } catch (e) {
-        alert('Raw command error: ' + e.message);
-        console.error('Raw command failed:', e);
+        //alert('Raw command error: ' + e.message);
+        //console.error('Raw command failed:', e);
+        showError ? showError('Raw command error: ' + e.message) : alert('Raw command error: ' + e.message);
       } finally {
         rawSendBtn.disabled = false;
       }

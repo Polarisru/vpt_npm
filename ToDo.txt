@@ -1,13 +1,21 @@
 More Visio-look:
 	Periodical movement: offset and speed. Speed is not really neccessary	
 	Identify servo - read EEPROM @0xF0, type is encoded there
-	Set actual position as Zero Position: FW change in VPT needed
 	Periodically reading of info parameters, how??
 	
 VPT FW
 	Add Base ID setup
 	Add RS485 subtype setup
 	Add one decimal position to SCL
+  Send raw command is not ready yet
+  Set as ZeroPos
 	
 GUI:
-	Motor position in 0.1° steps
+	Motor position in 0.1° steps              DONE
+  Disable functions if not connected        DONE
+  Range -45..45 for all types               DONE
+  Set as ZeroPos button                     DONE
+  Progress bar for Read EEPROM parameters   DONE
+  Add error messages everywhere
+  EEPROM parameters input is boring
+  Writing EEPROM parameters is wrong??

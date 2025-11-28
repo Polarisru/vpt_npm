@@ -22,35 +22,103 @@ body {
 
 /* Outer layout: left sidebar + content wrapper */
 .main-grid {
-    display: grid;
-    grid-template-columns: 220px 1fr;   /* sidebar + center+right */
-    height: 100%;
-    gap: 12px;
-    overflow: hidden;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  height: 100%;
+  gap: 12px;
+  overflow: hidden;
 }
 
 /* Wrapper for center + right so we can disable them together */
 .content-wrapper {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px; /* middle grows, right fixed */
+  grid-template-columns: minmax(0, 1fr); /* single center column; add 280px if you later want a fixed right column again */
   gap: 12px;
   height: 100%;
+  min-height: 0;
+}
+
+/* Center panel: same look as sidebar */
+.center-panel {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Tabs at the top */
+.tabs {
+  display: flex;
+  padding: 6px 8px 0 8px;
+  gap: 4px;
+}
+
+/* Individual tab buttons: small rounded “pills” */
+.tab-link {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  cursor: pointer;
+  font-size: 13px;
+  color: #333;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.05s;
+}
+
+.tab-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(102,126,234,0.35);
+}
+
+.tab-link.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+/* Panel around tab content: same visual style as sidebar */
+.tab-panel {
+  margin: 6px 8px 8px 8px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  flex: 1;
+  overflow: auto;
+}
+
+/* Individual tab panes */
+.tab-pane {
+  display: none;
+  height: 100%;
+  min-height: 0;
+}
+
+/*.tab-pane.active {
+  display: block;
+}*/
+
+.tab-pane.active {
+  display: flex;
+  flex-direction: column;
   min-height: 0;
 }
 
 /* ---------- Left sidebar ---------- */
 
 .sidebar {
-    background: white;
-    padding: 18px;
-    border-radius: 10px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-width: 200px;
-    min-height: 0;
+  background: white;
+  padding: 18px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  min-width: 200px;
+  min-height: 0;
 }
 
 .sidebar h2 {
@@ -59,11 +127,7 @@ body {
 }
 
 .sidebar label {
-    font-size: 13px;
-    margin-top: 4px;
-    margin-bottom: 4px;
-    display: block;
-    color: #555;
+	margin-top: 10px;
 }
 
 .sidebar select {
@@ -80,7 +144,7 @@ body {
     -webkit-appearance: none;
     -moz-appearance: none;
     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    margin-bottom: 0px;
+    margin-bottom: 10px;
 }
 
 .sidebar input {
@@ -97,7 +161,7 @@ body {
     -webkit-appearance: none;
     -moz-appearance: none;
     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    margin-bottom: 0px;
+    margin-bottom: 10px;
 }
 
 .sidebar select:hover {
@@ -110,7 +174,7 @@ body {
 }
 
 .conn-settings {
-    margin-top: 4px;
+    /*margin-top: 4px;*/
 }
 
 .hidden {
@@ -139,26 +203,34 @@ body {
     transform: translateY(0);
 }
 
+/* meters directly above status box, centered */
 #statusContainer {
-	margin-top: auto;
-	display: flex; 
-	gap: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
 }
 
-/* Sidebar footer status box */
+/* new wrapper that sits at the bottom */
+.sidebar-footer {
+  margin-top: auto;              /* pushes footer to bottom */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* keep the status box pinned to bottom */
 .sidebar-status {
-    margin-top: auto;               /* push to bottom */
-    margin-left: -4px;
-    margin-right: -4px;
-    padding: 10px 12px;
-    height: 140px;                   /* fixed height */
-    border-radius: 8px;
-    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-    text-align: center;
-    display: block;
-    flex-direction: column;
-    justify-content: center;
+  margin-left: -4px;
+  margin-right: -4px;
+  padding: 10px 12px;
+  height: 140px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  text-align: center;
+  display: block;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .sidebar-status-title {
@@ -210,7 +282,7 @@ body {
 
 /* ---------- Center content ---------- */
 
-.main-content {
+/*.main-content {
     background: white;
     border-radius: 10px;
     box-shadow: 0 2px 12px rgba(0,0,0,0.08);
@@ -219,6 +291,14 @@ body {
     flex-direction: column;
     align-items: center;
     min-height: 0;
+}*/
+.main-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* if this is inside a flex/grid parent, also allow it to grow: */
+  /*flex: 1 1 auto;*/
+  height: 100%;
 }
 
 .main-content h2 {
@@ -268,42 +348,59 @@ body {
 
 /* pill-style current value */
 .positionLabel {
-  width: 80px;
-  display: flex;           /* make it flex */
-  align-items: center;     /* vertical centering (optional) */
-  justify-content: center; /* horizontal centering */
-  margin: 10px 0px 0px 0px;
+  width: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0 0 0;
   padding: 3px 14px;
   border-radius: 999px;
   background: #d6d6df;
-  box-shadow: 0 0 2px rgba(70,60,150,0.1);
+  border: 1px solid #b5b9e6;      /* subtle, darker border */
+  box-shadow: 0 0 2px rgba(70,60,150,0.08);
   font-size: 24px;
   text-align: center;
   cursor: pointer;
   user-select: none;
 }
 
-.meters {
-    display: flex;
-    gap: 24px;
-    margin-top: 5px;
-    flex-wrap: wrap;
+#positionLabel::before {
+  content: '';
+  position: absolute;
+  bottom: 80%;           /* start from bottom of label */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 12px;        /* adjust length as needed */
+  background: #b5b9e6; /* match border color */
+}
+
+.meters-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;   /* center everything horizontally */
+  gap: 8px;
 }
 
 .meters-row {
-	display: flex; 
-	align-items: center; 
-	margin-top: 10px;
-	gap: 15px;	
+  display: flex;
+  gap: 15px;
+  justify-content: center;  /* meters row centered */
+  margin-top: 10px;
 }
 
 .meter {
-    background: #f6f6ff;
-    min-width: 80px;
-    border-radius: 6px;
-    padding: 6px;
-    box-shadow: 0 0 2px rgba(70,60,150,0.08);
-    text-align: center;
+  background: #f6f6ff;
+  min-width: 80px;
+  border-radius: 6px;
+  padding: 6px;
+  box-shadow: 0 0 2px rgba(70,60,150,0.08);
+  text-align: center;
+}
+
+.live-actions {
+  display: flex;
+  justify-content: center;  /* button centered under meters row */
 }
 
 .meter-label {
@@ -311,6 +408,17 @@ body {
     font-size: 13px;
     color: #667eea;
     margin-bottom: 2px;
+}
+
+#readLiveBtn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
 }
 
 .info-block {
@@ -326,9 +434,9 @@ body {
   box-sizing: border-box;      /* include padding in width */
 }
 
-#infoBlock {
-  display: none;      /* hidden until RS485/CAN selected */
-}
+/*#infoBlock {
+  display: none;      // hidden until RS485/CAN selected
+}*/
 
 .info-row {
   display: grid;
@@ -378,6 +486,144 @@ body {
   box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
 
+.wt-block {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.wt-row {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.wt-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+
+.wt-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wt-input {
+  flex: 1;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ccd1ff;
+  font-size: 12px;
+  background-color: #f9f9ff;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.wt-input[readonly] {
+  cursor: default;
+}
+
+.wt-read-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.16);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.wt-read-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(102,126,234,0.35);
+}
+
+.wt-read-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.rev-block {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.rev-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rev-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 4px;  
+}
+
+.rev-textarea {
+  width: 100%;
+  min-height: 60px;
+  resize: vertical;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccd1ff;
+  font-size: 12px;
+  font-family: monospace;
+  background-color: #f9f9ff;
+  color: #333;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.rev-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.rev-read-btn {
+  padding: 4px 16px;
+  font-size: 13px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.16);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.rev-read-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(102,126,234,0.35);
+}
+
+.rev-read-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
 .sine-block {
   margin-top: 16px;
   padding: 12px 16px;
@@ -398,39 +644,21 @@ body {
   margin-bottom: 4px;
 }
 
-.sine-input {
-  padding: 4px 6px;
-  border-radius: 6px;
-  border: 1px solid #ccd1ff;
-  font-size: 12px;
-  background-color: #f9f9ff;
-  color: #333;
-  box-sizing: border-box;
-}
-
-/* Base layout for rows in sine-block */
-.sine-row {
+.sine-row-dual {
   display: grid;
-  grid-template-columns: auto 1fr; /* default: label + control */
-  gap: 8px;
-  align-items: center;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-/* One row: Waveform + Amplitude + Frequency */
-.sine-row-waf {
-  grid-template-columns:
-    auto   /* Waveform label */
-    1fr    /* Waveform select */
-    auto   /* Amplitude label */
-    auto   /* Amplitude input */
-    auto   /* Frequency label */
-    auto;  /* Frequency input */
+.sine-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-/* Make the two numeric fields narrower */
-.sine-input-narrow {
-  width: 70px;
-  max-width: 70px;
+.sine-field-button {
+  justify-content: flex-end;
+  align-items: flex-end;
 }
 
 .sine-label {
@@ -439,9 +667,14 @@ body {
   color: #555;
 }
 
-/* Right-aligned labels after the first one */
-.sine-label-right {
-  text-align: right;
+.sine-input {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ccd1ff;
+  font-size: 12px;
+  background-color: #f9f9ff;
+  color: #333;
+  box-sizing: border-box;
 }
 
 /* Frequency + Start row: keep button right-aligned */
@@ -496,7 +729,7 @@ body {
   margin-bottom: 4px;
 }
 
-.raw-row {
+.raw-grid {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
@@ -595,19 +828,6 @@ body {
   text-align: right;
 }
 
-/* ---------- Right panel ---------- */
-
-.right-panel {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    min-width: 220px;
-    min-height: 0;
-}
-
 .right-header {
     display: flex;
     align-items: center;
@@ -622,8 +842,8 @@ body {
 }
 
 #deviceSelect {
-    flex: 0 0 130px;
-    max-width: 130px;
+    flex: 0 0 250px;
+    max-width: 250px;
     padding: 3px 5px;
     font-size: 12px;
     border-radius: 6px;
@@ -644,10 +864,10 @@ body {
 }
 
 .param-table-wrapper {
-    flex: 1;
+    flex: 1 1 auto;
     overflow-y: auto;
     margin-top: 6px;
-    max-height: calc(100% - 50px);
+    /*max-height: calc(100% - 50px);*/
 }
 
 #paramTable {
@@ -689,10 +909,10 @@ body {
 }
 
 .param-actions {
+	margin-top: auto;
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-    margin-top: 8px;
 }
 
 .param-actions button {
@@ -725,6 +945,44 @@ body {
   opacity: 1; /* avoid extra fading if browser applies it */
 }
 
+.script-block {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.script-textarea-row {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 8px;
+}
+
+.script-textarea {
+  flex: 1 1 auto;
+  width: 100%;
+  resize: none;  /* disable manual resize since it fills available space */
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccd1ff;
+  font-size: 12px;
+  font-family: monospace;
+  background-color: #f9f9ff;
+  color: #333;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.script-actions {
+  margin-top: auto;  /* pushes buttons to bottom */
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+}
+
 /* ---------- Center+Right overlay (disabled state) ---------- */
 
 .connection-hint {
@@ -737,13 +995,15 @@ body {
 .content-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.5);
+    backdrop-filter: blur(2px);
     z-index: 10;
-    pointer-events: auto;
+    pointer-events: all;
 }
 
 .content-overlay.hidden {
     display: none;
+    pointer-events: none;
 }
 
 .live-actions {
@@ -790,4 +1050,120 @@ body {
   width:80px;
   height:50px;
   padding:0px;
+}
+
+.right-col-btn {
+  position: absolute;
+  left: 100%;
+  top: 5px;
+  margin-left: 120px;  /* 20px gap + 80px width of right-col + 20px extra gap */
+  height: 50px;
+  display: flex;
+  align-items: center;
+}
+
+.set-zero-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  height: 36px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  white-space: nowrap;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.set-zero-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(102,126,234,0.35);
+}
+
+.set-zero-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal-dialog {
+  min-width: 260px;
+  max-width: 360px;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 16px 18px 14px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  text-align: center;
+}
+
+.modal-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #e53e3e;
+  color: #e53e3e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  margin: 0 auto 8px;
+  font-size: 20px;
+}
+
+.modal-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.modal-text {
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+}
+
+.modal-close-btn {
+  padding: 6px 18px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.16);
+}
+
+.progress-bar-outer {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: #e4e7ff;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.progress-bar-inner {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: width 0.2s ease;
 }

@@ -11,3 +11,6 @@ npx electron-forge import
 
 Create:
 npm run make
+
+Open debug console:
+Ctrl+Shift+I
