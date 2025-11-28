@@ -817,19 +817,6 @@ body {
   text-align: right;
 }
 
-/* ---------- Right panel ---------- */
-
-.right-panel {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    min-width: 220px;
-    min-height: 0;
-}
-
 .right-header {
     display: flex;
     align-items: center;
@@ -844,8 +831,8 @@ body {
 }
 
 #deviceSelect {
-    flex: 0 0 130px;
-    max-width: 130px;
+    flex: 0 0 250px;
+    max-width: 250px;
     padding: 3px 5px;
     font-size: 12px;
     border-radius: 6px;
