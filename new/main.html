@@ -293,6 +293,14 @@
 		  </div>		
 		</div>
 	</div>
+	<div id="errorOverlay" class="modal-overlay hidden">
+	  <div class="modal-dialog">
+		<div class="modal-icon">!</div>
+		<div class="modal-title">Error</div>
+		<div id="errorMessage" class="modal-text"></div>
+		<button id="errorCloseBtn" class="modal-close-btn">Close</button>
+	  </div>
+	</div>	
 	<script>
 		document.querySelectorAll('.tab-link').forEach(btn => {
 		  btn.addEventListener('click', function() {

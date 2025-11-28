@@ -370,6 +370,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const hwReadBtn = document.getElementById('hwReadBtn');
   const pnReadBtn = document.getElementById('pnReadBtn');
 
+  const revText   = document.getElementById('revText');
+  const revReadBtn = document.getElementById('revReadBtn');
+
   const sineAmpInput = document.getElementById('sineAmplitude');
   const sineFreqInput = document.getElementById('sineFrequency');
   const sineStartStop = document.getElementById('sineStartStopBtn');
@@ -386,12 +389,31 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const updateBtn = document.getElementById('updateBtn');  
 
+  const errorOverlay  = document.getElementById('errorOverlay');
+  const errorMessage  = document.getElementById('errorMessage');
+  const errorCloseBtn = document.getElementById('errorCloseBtn');
+
   let isConnected = false;
 
   // Function to update the Update button state based on isConnected
   function updateUpdateButtonState() {
     if (!updateBtn) return;
     updateBtn.disabled = !isConnected;
+  }
+
+  function showError(message) {
+    if (!errorOverlay || !errorMessage) {
+      alert(message); // fallback
+      return;
+    }
+    errorMessage.textContent = message;
+    errorOverlay.classList.remove('hidden');
+  }
+
+  if (errorCloseBtn && errorOverlay) {
+    errorCloseBtn.addEventListener('click', () => {
+      errorOverlay.classList.add('hidden');
+    });
   }
 
   // RS485 IDs
@@ -630,6 +652,39 @@ document.addEventListener('DOMContentLoaded', () => {
 	  hwInput.value = hw;
     });
   }
+
+	// --- Revision String (GVS -> VS:string_response) ---
+	if (revReadBtn && revText) {
+	  revReadBtn.addEventListener('click', async () => {
+		if (!isConnected) {
+		  alert('Not connected');
+		  return;
+		}
+
+		revReadBtn.disabled = true;
+		const oldLabel = revReadBtn.textContent;
+		revReadBtn.textContent = 'Reading…';
+
+		try {
+		  // Ask main process to send GVS and return the raw text response
+		  const line = await ipcRenderer.invoke('send-text-command', 'GVS');
+
+		  // Expect "VS:some text"
+		  let txt = typeof line === 'string' ? line.trim() : '';
+		  if (txt.startsWith('VS:')) {
+			txt = txt.slice(3);          // strip "VS:"
+		  }
+
+		  revText.value = txt || '';
+		} catch (e) {
+		  console.error('Revision read failed:', e);
+		  revText.value = 'Error reading revision';
+		} finally {
+		  revReadBtn.disabled = false;
+		  revReadBtn.textContent = oldLabel;
+		}
+	  });
+	}
 
   if (fwBrowseBtn && fwFileInput && fwFileName) {
     fwBrowseBtn.addEventListener('click', () => {
