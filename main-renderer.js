@@ -370,9 +370,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const hwReadBtn = document.getElementById('hwReadBtn');
   const pnReadBtn = document.getElementById('pnReadBtn');
 
-  const revText   = document.getElementById('revText');
+  const revText = document.getElementById('revText');
   const revReadBtn = document.getElementById('revReadBtn');
 
+  const workingTimeInput = document.getElementById('workingTime');
+  const wtReadBtn = document.getElementById('wtReadBtn');
+  
   const sineAmpInput = document.getElementById('sineAmplitude');
   const sineFreqInput = document.getElementById('sineFrequency');
   const sineStartStop = document.getElementById('sineStartStopBtn');
@@ -685,6 +688,52 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	  });
 	}
+	
+	// --- Working Time (GWT -> WT:hhhh:mm:ss) ---
+	if (wtReadBtn && workingTimeInput) {
+	  wtReadBtn.addEventListener('click', async () => {
+		if (!isConnected) {
+		  showError ? showError('Not connected') : alert('Not connected');
+		  return;
+		}
+
+		wtReadBtn.disabled = true;
+		const oldLabel = wtReadBtn.textContent;
+		wtReadBtn.textContent = 'Reading…';
+
+		try {
+		  // ask main to send GWT and return the response line as string
+		  const line = await ipcRenderer.invoke('send-text-command', 'GWT');
+
+		  let txt = typeof line === 'string' ? line.trim() : '';
+
+		  // expect WT:hhhh:mm:ss
+		  if (txt.startsWith('WT:')) {
+			txt = txt.slice(3); // remove "WT:"
+		  }
+
+		  // basic validation/normalization
+		  const parts = txt.split(':');
+		  if (parts.length === 3) {
+			let [h, m, s] = parts;
+			h = h.padStart(4, '0');
+			m = m.padStart(2, '0');
+			s = s.padStart(2, '0');
+			workingTimeInput.value = `${h}:${m}:${s}`;
+		  } else {
+			workingTimeInput.value = '0000:00:00';
+			showError && showError('Invalid working time format from device.');
+		  }
+		} catch (e) {
+		  console.error('Working time read failed:', e);
+		  workingTimeInput.value = '0000:00:00';
+		  showError ? showError('Error reading working time.') : alert('Error reading working time.');
+		} finally {
+		  wtReadBtn.disabled = false;
+		  wtReadBtn.textContent = oldLabel;
+		}
+	  });
+	}	
 
   if (fwBrowseBtn && fwFileInput && fwFileName) {
     fwBrowseBtn.addEventListener('click', () => {

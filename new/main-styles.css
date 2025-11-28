@@ -116,7 +116,7 @@ body {
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0px;
   min-width: 200px;
   min-height: 0;
 }
@@ -126,16 +126,8 @@ body {
     margin-bottom: 6px;
 }
 
-.sidebar {
-  background: white;
-  padding: 18px;
-  border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 200px;
-  min-height: 0;
+.sidebar label {
+	margin-top: 10px;
 }
 
 .sidebar select {
@@ -152,7 +144,7 @@ body {
     -webkit-appearance: none;
     -moz-appearance: none;
     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    margin-bottom: 0px;
+    margin-bottom: 10px;
 }
 
 .sidebar input {
@@ -169,7 +161,7 @@ body {
     -webkit-appearance: none;
     -moz-appearance: none;
     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    margin-bottom: 0px;
+    margin-bottom: 10px;
 }
 
 .sidebar select:hover {
@@ -182,7 +174,7 @@ body {
 }
 
 .conn-settings {
-    margin-top: 4px;
+    /*margin-top: 4px;*/
 }
 
 .hidden {
