@@ -1,0 +1,7 @@
+Periodical movement: offset and speed. Speed is not really neccessary	
+
+Identify servo - read EEPROM @0xF0, type is encoded there
+
+Set actual position as Zero Position: FW change in VPT needed
+
+Periodically reading of info parameters, how??

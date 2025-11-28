@@ -392,9 +392,14 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const updateBtn = document.getElementById('updateBtn');  
 
-  const errorOverlay  = document.getElementById('errorOverlay');
-  const errorMessage  = document.getElementById('errorMessage');
+  const errorOverlay = document.getElementById('errorOverlay');
+  const errorMessage = document.getElementById('errorMessage');
   const errorCloseBtn = document.getElementById('errorCloseBtn');
+  
+  const progressOverlay = document.getElementById('progressOverlay');
+  const progressTitle = document.getElementById('progressTitle');
+  const progressText = document.getElementById('progressText');
+  const progressBar = document.getElementById('progressBar');  
 
   let isConnected = false;
 
@@ -417,6 +422,25 @@ document.addEventListener('DOMContentLoaded', () => {
     errorCloseBtn.addEventListener('click', () => {
       errorOverlay.classList.add('hidden');
     });
+  }
+  
+  function showProgress(title, message) {
+    if (!progressOverlay || !progressTitle || !progressBar) return;
+    progressTitle.textContent = title || 'Progress';
+    if (progressText) progressText.textContent = message || '';
+    progressBar.style.width = '0%';
+    progressOverlay.classList.remove('hidden');
+  }
+
+  function updateProgress(currentStep, totalSteps) {
+    if (!progressBar || !totalSteps || totalSteps <= 0) return;
+    const ratio = Math.max(0, Math.min(1, currentStep / totalSteps));
+    progressBar.style.width = (ratio * 100).toFixed(1) + '%';
+  }
+
+  function hideProgress() {
+    if (!progressOverlay) return;
+    progressOverlay.classList.add('hidden');
   }
 
   // RS485 IDs
@@ -906,6 +930,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		writeBtn.disabled = true;
 
+		showProgress('Writing parameters', 'Writing EEPROM parameters…');
+		const total = paramsToWrite.length;
+		let step = 0;
+
 		try {
 		  for (const p of paramsToWrite) {
 			await ipcRenderer.invoke('write-param', {
@@ -913,12 +941,17 @@ document.addEventListener('DOMContentLoaded', () => {
 			  type: p.type,
 			  value: p.value
 			});
+
+			step += 1;
+			updateProgress(step, total);
 		  }
 		  console.log('All parameters written successfully');
 		} catch (e) {
 		  console.error('Write failed:', e);
-		  alert('Error while writing parameters: ' + e.message);
+		  showError ? showError('Error while writing parameters: ' + e.message)
+					: alert('Error while writing parameters: ' + e.message);
 		} finally {
+		  hideProgress();
 		  writeBtn.disabled = false;
 		}
 	  });

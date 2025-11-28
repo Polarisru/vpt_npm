@@ -293,6 +293,7 @@
 		  </div>		
 		</div>
 	</div>
+
 	<div id="errorOverlay" class="modal-overlay hidden">
 	  <div class="modal-dialog">
 		<div class="modal-icon">!</div>
@@ -301,6 +302,17 @@
 		<button id="errorCloseBtn" class="modal-close-btn">Close</button>
 	  </div>
 	</div>	
+	
+	<div id="progressOverlay" class="modal-overlay hidden">
+	  <div class="modal-dialog">
+		<div id="progressTitle" class="modal-title">Progress</div>
+		<div class="modal-text" id="progressText"></div>
+		<div class="progress-bar-outer">
+		  <div class="progress-bar-inner" id="progressBar"></div>
+		</div>
+	  </div>
+	</div>
+	
 	<script>
 		document.querySelectorAll('.tab-link').forEach(btn => {
 		  btn.addEventListener('click', function() {
