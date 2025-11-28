@@ -32,42 +32,46 @@
                 <select id="rs485-id"></select>
             </div>
 
-            <div id="can-settings" class="conn-settings hidden">
+            <div id="can-settings" class="conn-settings">
                 <label>Bitrate:</label>
                 <select id="can-bitrate">
                     <option value="250">250k</option>
                     <option value="500">500k</option>
                     <option value="1000">1M</option>
                 </select>
+				<label>Base ID (HEX):</label>
+				<input id="can-base-id" type="text" value="3E0">
                 <label>ID:</label>
                 <select id="can-id"></select>
             </div>
 
             <button id="connectBtn" class="connect-btn">Connect</button>
 
-			<div id="statusContainer">
-			  <div class="meter" id="voltageMeter">
-				<span class="meter-label">Voltage</span>
-				<span id="supplyValue">--</span> V
-			  </div>
-			  <div class="meter" id="temperatureMeter">
-				<span class="meter-label">Temp</span>
-				<span id="temperatureValue">--</span> °C
-			  </div>
-			</div>
-			
-            <!-- Sidebar footer status box -->
-            <div class="sidebar-status">
-                <div class="sidebar-status-title">Connection</div>
-                <div class="sidebar-status-port" id="portName">No port selected</div>
-                <div class="sidebar-status-vptver" id="vptVer">Ver. 1.0</div>
-                <div class="sidebar-status-hint" id="connectionHint">
-                    Select connection type and press Connect
-                </div>
-				<div>
-					<button id="updateBtn">Update</button>
+			<div class="sidebar-footer">
+				<div id="statusContainer">
+				  <div class="meter" id="voltageMeter">
+					<span class="meter-label">Voltage</span>
+					<span id="supplyValue">--</span> V
+				  </div>
+				  <div class="meter" id="temperatureMeter">
+					<span class="meter-label">Temp</span>
+					<span id="temperatureValue">--</span> °C
+				  </div>
 				</div>
-            </div>            
+				
+				<!-- Sidebar footer status box -->
+				<div class="sidebar-status">
+					<div class="sidebar-status-title">Connection</div>
+					<div class="sidebar-status-port" id="portName">No port selected</div>
+					<div class="sidebar-status-vptver" id="vptVer">Ver. 1.0</div>
+					<div class="sidebar-status-hint" id="connectionHint">
+						Select connection type and press Connect
+					</div>
+					<div>
+						<button id="updateBtn">Update</button>
+					</div>
+				</div>            
+			</div>
         </div>
 
         <!-- Wrapper for center + right so we can disable them together -->
@@ -98,27 +102,29 @@
               <span id="positionLabel" class="positionLabel">0.0°</span>
             </div>
             
-            <div class="meters-row">
-              <div class="meter">
-              <span class="meter-label">Current</span>
-              <span id="currentValue">--</span> A
-              </div>
-              <div class="meter">
-              <span class="meter-label">Voltage</span>
-              <span id="voltageValue">--</span> V
-              </div>
-              <div class="meter">
-              <span class="meter-label">Temp 1</span>
-              <span id="temp1Value">--</span> °C
-              </div>
-              <div class="meter">
-              <span class="meter-label">Temp 2</span>
-              <span id="temp2Value">--</span> °C
-              </div>
-              <div class="live-actions">
-              <button id="readLiveBtn">Read</button>
-              </div>
-            </div>  
+			<div class="meters-block">
+			  <div class="meters-row">
+				<div class="meter">
+				  <span class="meter-label">Current</span>
+				  <span id="currentValue">--</span> A
+				</div>
+				<div class="meter">
+				  <span class="meter-label">Voltage</span>
+				  <span id="voltageValue">--</span> V
+				</div>
+				<div class="meter">
+				  <span class="meter-label">Temp 1</span>
+				  <span id="temp1Value">--</span> °C
+				</div>
+				<div class="meter">
+				  <span class="meter-label">Temp 2</span>
+				  <span id="temp2Value">--</span> °C
+				</div>
+			  </div>
+			  <div class="live-actions">
+				<button id="readLiveBtn">Read</button>
+			  </div>
+			</div>
 
             <div class="sine-block">
               <div class="sine-title">Periodical movement</div>
@@ -199,60 +205,70 @@
 
 			  <div class="tab-pane" id="info-tab">
 			    <div class="main-content">
-            <div class="fw-block">
-              <div class="fw-title">Firmware update</div>
+					<div class="fw-block">
+					  <div class="fw-title">Firmware update</div>
 
-              <div class="fw-row">
-                <div class="fw-label">HEX file</div>
-      
-                <div class="fw-file-area">
-                  <span id="fwFileName" class="fw-filename">No file selected</span>
-                  <button id="fwBrowseBtn" class="fw-browse-btn">Browse…</button>
-                  <input type="file" id="fwFileInput" accept=".hex" style="display:none">
-                </div>
-              </div>
+					  <div class="fw-row">
+						<div class="fw-label">HEX file</div>
+			  
+						<div class="fw-file-area">
+						  <span id="fwFileName" class="fw-filename">No file selected</span>
+						  <button id="fwBrowseBtn" class="fw-browse-btn">Browse…</button>
+						  <input type="file" id="fwFileInput" accept=".hex" style="display:none">
+						</div>
+					  </div>
 
-              <div class="fw-actions">
-                <button id="fwUploadBtn" class="fw-upload-btn">Upload</button>
-              </div>
-            </div>  
-            
-            <div id="infoBlock" class="info-block">
-              <div class="info-row">
-                <div class="info-label">Serial Number</div>
-                <input type="text" id="serialNumber" class="info-input" maxlength="32" readonly>
-                <button class="info-read-btn" id="serialReadBtn">Read</button>
-              </div>
-
-              <div class="info-row">
-                <div class="info-label">PN Number</div>
-                <input type="text" id="pnNumber" class="info-input" maxlength="32" readonly>
-                <button class="info-read-btn" id="pnReadBtn">Read</button>
-              </div>
-
-              <div class="info-row">
-                <div class="info-label">FW Version</div>
-                <input type="text" id="fwVersion" class="info-input" maxlength="32" readonly>
-                <button class="info-read-btn" id="fwReadBtn">Read</button>
-              </div>
-
-              <div class="info-row">
-                <div class="info-label">HW Revision</div>
-                <input type="text" id="hwRevision" class="info-input" maxlength="32" readonly>
-                <button class="info-read-btn" id="hwReadBtn">Read</button>
-              </div>
-            </div>        
+					  <div class="fw-actions">
+						<button id="fwUploadBtn" class="fw-upload-btn">Upload</button>
+					  </div>
+					</div>  
 					
-            <div id="revBlock" class="rev-block">
-              <div class="rev-row">
-                <div class="rev-label">Revision String</div>
-                <textarea id="revText" class="rev-textarea"></textarea>
-              </div>            
-              <div class="rev-actions">
-                <button id="revReadBtn" class="rev-read-btn">Read</button>
-              </div>
-            </div>
-          </div>
+					<div id="infoBlock" class="info-block">
+					  <div class="info-row">
+						<div class="info-label">Serial Number</div>
+						<input type="text" id="serialNumber" class="info-input" maxlength="32" readonly>
+						<button class="info-read-btn" id="serialReadBtn">Read</button>
+					  </div>
+
+					  <div class="info-row">
+						<div class="info-label">PN Number</div>
+						<input type="text" id="pnNumber" class="info-input" maxlength="32" readonly>
+						<button class="info-read-btn" id="pnReadBtn">Read</button>
+					  </div>
+
+					  <div class="info-row">
+						<div class="info-label">FW Version</div>
+						<input type="text" id="fwVersion" class="info-input" maxlength="32" readonly>
+						<button class="info-read-btn" id="fwReadBtn">Read</button>
+					  </div>
+
+					  <div class="info-row">
+						<div class="info-label">HW Revision</div>
+						<input type="text" id="hwRevision" class="info-input" maxlength="32" readonly>
+						<button class="info-read-btn" id="hwReadBtn">Read</button>
+					  </div>
+					</div>        
+							
+					<div class="wt-block">
+					  <div class="wt-row">
+						<div class="wt-label">Working Time</div>
+						<div class="wt-field">
+						  <input id="workingTime" class="wt-input" type="text" value="0000:00:00" readonly>
+						  <button id="wtReadBtn" class="wt-read-btn">Read</button>
+						</div>
+					  </div>
+					</div>
+					
+					<div id="revBlock" class="rev-block">
+					  <div class="rev-row">
+						<div class="rev-label">Revision String</div>
+						<textarea id="revText" class="rev-textarea"></textarea>
+					  </div>            
+					  <div class="rev-actions">
+						<button id="revReadBtn" class="rev-read-btn">Read</button>
+					  </div>
+					</div>
+				  </div>
 			  </div>
 
 			  <div class="tab-pane" id="script-tab">
@@ -279,6 +295,26 @@
 		  </div>		
 		</div>
 	</div>
+
+	<div id="errorOverlay" class="modal-overlay hidden">
+	  <div class="modal-dialog">
+		<div class="modal-icon">!</div>
+		<div class="modal-title">Error</div>
+		<div id="errorMessage" class="modal-text"></div>
+		<button id="errorCloseBtn" class="modal-close-btn">Close</button>
+	  </div>
+	</div>	
+	
+	<div id="progressOverlay" class="modal-overlay hidden">
+	  <div class="modal-dialog">
+		<div id="progressTitle" class="modal-title">Progress</div>
+		<div class="modal-text" id="progressText"></div>
+		<div class="progress-bar-outer">
+		  <div class="progress-bar-inner" id="progressBar"></div>
+		</div>
+	  </div>
+	</div>
+	
 	<script>
 		document.querySelectorAll('.tab-link').forEach(btn => {
 		  btn.addEventListener('click', function() {

@@ -57,10 +57,10 @@ function createSelectWindow() {
 
 function createMainWindow({ portPath, fwVersion }) {
     mainWindow = new BrowserWindow({
-        width: 1050,
-        height: 750,
-        minWidth: 1050,
-        minHeight: 750,
+        width: 1000,
+        height: 700,
+        minWidth: 1000,
+        minHeight: 670,
         resizable: true,
         autoHideMenuBar: true,
         webPreferences: {
@@ -83,32 +83,6 @@ function createMainWindow({ portPath, fwVersion }) {
 			fwVersion
 		});
     });
-}
-
-function createUploadWindow() {
-  if (!mainWindow) return;
-
-  uploadWindow = new BrowserWindow({
-    width: 400,
-    height: 140,
-    resizable: false,
-    parent: mainWindow,
-    modal: true,
-    frame: false,
-    transparent: true,
-    autoHideMenuBar: true,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
-    }
-  });
-
-  uploadWindow.setMenuBarVisibility(false);
-  uploadWindow.loadFile('upload.html');
-
-  uploadWindow.on('closed', () => {
-    uploadWindow = null;
-  });
 }
 
 app.whenReady().then(() => {
@@ -304,16 +278,6 @@ ipcMain.handle('read-file', async (_event, path) => {
   return fs.promises.readFile(path, 'utf-8');
 });
 
-// Perform the update (simulate or real)
-ipcMain.handle('perform-update', async (_event, hexContent) => {
-  // Example implementation: simulate upload with progress
-  for (let progress = 0; progress <= 100; progress++) {
-    uploadWindow.webContents.send('update-progress', progress);
-    await new Promise(r => setTimeout(r, 50)); // simulate delay
-  }
-  uploadWindow.webContents.send('update-complete');
-});
-
 ipcMain.handle('write-param', async (_event, { address, type, value }) => {
   if (!uart.isOpen()) {
     throw new Error('UART not open');
@@ -450,26 +414,19 @@ ipcMain.handle('read-status', async () => {
   return m ? parseInt(m[1], 10) : null;
 });
 
-ipcMain.handle('fw-open-upload-window', () => {
-  if (!uploadWindow) {
-    createUploadWindow();
-  }
-});
+ipcMain.handle('perform-update', async (event, hexContent) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
 
-// Create and show upload window
-ipcMain.on('open-upload-window', () => {
-  // if (!uploadWindow) {
-    // uploadWindow = new BrowserWindow({
-      // width: 400,
-      // height: 200,
-      // resizable: false,
-    // });
-    // uploadWindow.loadFile('upload.html');
-    // uploadWindow.on('closed', () => { uploadWindow = null; });
-  // }
-  if (!uploadWindow) {
-    createUploadWindow();
-  }  
+  // your chunking / flashing logic…
+  const totalSteps = chunks.length;
+  for (let i = 0; i < totalSteps; i++) {
+    // write chunk i...
+    const percent = Math.round(((i + 1) / totalSteps) * 100);
+    win.webContents.send('update-progress', {
+      percent,
+      text: `Uploading… ${percent}%`
+    });
+  }
 });
 
 app.on('before-quit', event => {

@@ -110,15 +110,15 @@ body {
 /* ---------- Left sidebar ---------- */
 
 .sidebar {
-    background: white;
-    padding: 18px;
-    border-radius: 10px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-width: 200px;
-    min-height: 0;
+  background: white;
+  padding: 18px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  min-width: 200px;
+  min-height: 0;
 }
 
 .sidebar h2 {
@@ -127,11 +127,7 @@ body {
 }
 
 .sidebar label {
-    font-size: 13px;
-    margin-top: 4px;
-    margin-bottom: 4px;
-    display: block;
-    color: #555;
+	margin-top: 10px;
 }
 
 .sidebar select {
@@ -148,7 +144,7 @@ body {
     -webkit-appearance: none;
     -moz-appearance: none;
     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    margin-bottom: 0px;
+    margin-bottom: 10px;
 }
 
 .sidebar input {
@@ -165,7 +161,7 @@ body {
     -webkit-appearance: none;
     -moz-appearance: none;
     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    margin-bottom: 0px;
+    margin-bottom: 10px;
 }
 
 .sidebar select:hover {
@@ -178,7 +174,7 @@ body {
 }
 
 .conn-settings {
-    margin-top: 4px;
+    /*margin-top: 4px;*/
 }
 
 .hidden {
@@ -207,26 +203,34 @@ body {
     transform: translateY(0);
 }
 
+/* meters directly above status box, centered */
 #statusContainer {
-	margin-top: auto;
-	display: flex; 
-	gap: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
 }
 
-/* Sidebar footer status box */
+/* new wrapper that sits at the bottom */
+.sidebar-footer {
+  margin-top: auto;              /* pushes footer to bottom */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* keep the status box pinned to bottom */
 .sidebar-status {
-    margin-top: auto;               /* push to bottom */
-    margin-left: -4px;
-    margin-right: -4px;
-    padding: 10px 12px;
-    height: 140px;                   /* fixed height */
-    border-radius: 8px;
-    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-    text-align: center;
-    display: block;
-    flex-direction: column;
-    justify-content: center;
+  margin-left: -4px;
+  margin-right: -4px;
+  padding: 10px 12px;
+  height: 140px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  text-align: center;
+  display: block;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .sidebar-status-title {
@@ -345,41 +349,47 @@ body {
 /* pill-style current value */
 .positionLabel {
   width: 80px;
-  display: flex;           /* make it flex */
-  align-items: center;     /* vertical centering (optional) */
-  justify-content: center; /* horizontal centering */
-  margin: 10px 0px 0px 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0 0 0;
   padding: 3px 14px;
   border-radius: 999px;
   background: #d6d6df;
-  box-shadow: 0 0 2px rgba(70,60,150,0.1);
+  border: 1px solid #b5b9e6;      /* subtle, darker border */
+  box-shadow: 0 0 2px rgba(70,60,150,0.08);
   font-size: 24px;
   text-align: center;
   cursor: pointer;
   user-select: none;
 }
 
-.meters {
-    display: flex;
-    gap: 24px;
-    margin-top: 5px;
-    flex-wrap: wrap;
+.meters-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;   /* center everything horizontally */
+  gap: 8px;
 }
 
 .meters-row {
-	display: flex; 
-	align-items: center; 
-	margin-top: 10px;
-	gap: 15px;	
+  display: flex;
+  gap: 15px;
+  justify-content: center;  /* meters row centered */
+  margin-top: 10px;
 }
 
 .meter {
-    background: #f6f6ff;
-    min-width: 80px;
-    border-radius: 6px;
-    padding: 6px;
-    box-shadow: 0 0 2px rgba(70,60,150,0.08);
-    text-align: center;
+  background: #f6f6ff;
+  min-width: 80px;
+  border-radius: 6px;
+  padding: 6px;
+  box-shadow: 0 0 2px rgba(70,60,150,0.08);
+  text-align: center;
+}
+
+.live-actions {
+  display: flex;
+  justify-content: center;  /* button centered under meters row */
 }
 
 .meter-label {
@@ -387,6 +397,17 @@ body {
     font-size: 13px;
     color: #667eea;
     margin-bottom: 2px;
+}
+
+#readLiveBtn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
 }
 
 .info-block {
@@ -402,9 +423,9 @@ body {
   box-sizing: border-box;      /* include padding in width */
 }
 
-#infoBlock {
-  display: none;      /* hidden until RS485/CAN selected */
-}
+/*#infoBlock {
+  display: none;      // hidden until RS485/CAN selected
+}*/
 
 .info-row {
   display: grid;
@@ -450,6 +471,75 @@ body {
 }
 
 .info-read-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.wt-block {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.wt-row {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.wt-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+
+.wt-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wt-input {
+  flex: 1;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid #ccd1ff;
+  font-size: 12px;
+  background-color: #f9f9ff;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.wt-input[readonly] {
+  cursor: default;
+}
+
+.wt-read-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.16);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.wt-read-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(102,126,234,0.35);
+}
+
+.wt-read-btn:active {
   transform: translateY(0);
   box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
@@ -727,19 +817,6 @@ body {
   text-align: right;
 }
 
-/* ---------- Right panel ---------- */
-
-.right-panel {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    min-width: 220px;
-    min-height: 0;
-}
-
 .right-header {
     display: flex;
     align-items: center;
@@ -754,8 +831,8 @@ body {
 }
 
 #deviceSelect {
-    flex: 0 0 130px;
-    max-width: 130px;
+    flex: 0 0 250px;
+    max-width: 250px;
     padding: 3px 5px;
     font-size: 12px;
     border-radius: 6px;
@@ -960,4 +1037,85 @@ body {
   width:80px;
   height:50px;
   padding:0px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal-dialog {
+  min-width: 260px;
+  max-width: 360px;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 16px 18px 14px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  text-align: center;
+}
+
+.modal-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #e53e3e;
+  color: #e53e3e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  margin: 0 auto 8px;
+  font-size: 20px;
+}
+
+.modal-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.modal-text {
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+}
+
+.modal-close-btn {
+  padding: 6px 18px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.16);
+}
+
+.progress-bar-outer {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: #e4e7ff;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.progress-bar-inner {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: width 0.2s ease;
 }

@@ -19,6 +19,11 @@ function collectConnectionConfig() {
   } else if (connType === 'CAN') {
     cfg.bitrate = document.getElementById('can-bitrate').value;
     cfg.id = document.getElementById('can-id').value;
+    const baseEl = document.getElementById('can-base-id');
+    if (baseEl) {
+      const val = parseInt(baseEl.value || '0', 16);
+      if (Number.isFinite(val)) cfg.baseId = val;
+    }
   }
 
   return cfg;
@@ -334,6 +339,7 @@ async function readInfoField(start, end) {
 document.addEventListener('DOMContentLoaded', () => {
   const rs485Id = document.getElementById('rs485-id');
   const canId = document.getElementById('can-id');
+  const canBaseIdInput = document.getElementById('can-base-id');
   const connType = document.getElementById('connType');
   const rs485Settings = document.getElementById('rs485-settings');
   const canSettings = document.getElementById('can-settings');
@@ -370,6 +376,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const hwReadBtn = document.getElementById('hwReadBtn');
   const pnReadBtn = document.getElementById('pnReadBtn');
 
+  const revText = document.getElementById('revText');
+  const revReadBtn = document.getElementById('revReadBtn');
+
+  const workingTimeInput = document.getElementById('workingTime');
+  const wtReadBtn = document.getElementById('wtReadBtn');
+  
   const sineAmpInput = document.getElementById('sineAmplitude');
   const sineFreqInput = document.getElementById('sineFrequency');
   const sineStartStop = document.getElementById('sineStartStopBtn');
@@ -386,12 +398,55 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const updateBtn = document.getElementById('updateBtn');  
 
+  const errorOverlay = document.getElementById('errorOverlay');
+  const errorMessage = document.getElementById('errorMessage');
+  const errorCloseBtn = document.getElementById('errorCloseBtn');
+  
+  const progressOverlay = document.getElementById('progressOverlay');
+  const progressTitle = document.getElementById('progressTitle');
+  const progressText = document.getElementById('progressText');
+  const progressBar = document.getElementById('progressBar');  
+
   let isConnected = false;
 
   // Function to update the Update button state based on isConnected
   function updateUpdateButtonState() {
     if (!updateBtn) return;
     updateBtn.disabled = !isConnected;
+  }
+
+  function showError(message) {
+    if (!errorOverlay || !errorMessage) {
+      alert(message); // fallback
+      return;
+    }
+    errorMessage.textContent = message;
+    errorOverlay.classList.remove('hidden');
+  }
+
+  if (errorCloseBtn && errorOverlay) {
+    errorCloseBtn.addEventListener('click', () => {
+      errorOverlay.classList.add('hidden');
+    });
+  }
+  
+  function showProgress(title, message) {
+    if (!progressOverlay || !progressTitle || !progressBar) return;
+    progressTitle.textContent = title || 'Progress';
+    if (progressText) progressText.textContent = message || '';
+    progressBar.style.width = '0%';
+    progressOverlay.classList.remove('hidden');
+  }
+
+  function updateProgress(currentStep, totalSteps) {
+    if (!progressBar || !totalSteps || totalSteps <= 0) return;
+    const ratio = Math.max(0, Math.min(1, currentStep / totalSteps));
+    progressBar.style.width = (ratio * 100).toFixed(1) + '%';
+  }
+
+  function hideProgress() {
+    if (!progressOverlay) return;
+    progressOverlay.classList.add('hidden');
   }
 
   // RS485 IDs
@@ -413,6 +468,45 @@ document.addEventListener('DOMContentLoaded', () => {
       canId.appendChild(opt);
     }
   }
+  
+	if (canBaseIdInput) {
+	  // initialize safely: 0x3E0 with lower 5 bits cleared
+	  let baseVal = 0x3E0 & ~0x1F;
+	  canBaseIdInput.value = baseVal.toString(16).toUpperCase();
+
+	  canBaseIdInput.addEventListener('input', () => {
+		// 1) keep only hex digits
+		let v = canBaseIdInput.value.toUpperCase().replace(/[^0-9A-F]/g, '');
+		if (v === '') {
+		  canBaseIdInput.value = '';
+		  return;
+		}
+
+		// 2) parse as hex
+		let num = parseInt(v, 16);
+		if (isNaN(num)) {
+		  num = baseVal;
+		}
+
+		// 3) clamp to [0x000, 0x7E0]
+		if (num > 0x7E0) num = 0x7E0;
+		if (num < 0) num = 0;
+
+		// 4) force lower 5 bits to 0
+		num &= ~0x1F;
+
+		// 5) remember and show as uppercase HEX
+		baseVal = num;
+		canBaseIdInput.value = num.toString(16).toUpperCase();
+	  });
+
+	  canBaseIdInput.addEventListener('blur', () => {
+		// ensure non-empty, valid HEX on blur
+		if (!canBaseIdInput.value) {
+		  canBaseIdInput.value = baseVal.toString(16).toUpperCase();
+		}
+	  });
+	}  
 
   // connection type (only device list + table, not right buttons except reset)
   if (connType) {
@@ -631,6 +725,85 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+	// --- Revision String (GVS -> VS:string_response) ---
+	if (revReadBtn && revText) {
+	  revReadBtn.addEventListener('click', async () => {
+		if (!isConnected) {
+		  alert('Not connected');
+		  return;
+		}
+
+		revReadBtn.disabled = true;
+		const oldLabel = revReadBtn.textContent;
+		revReadBtn.textContent = 'Reading…';
+
+		try {
+		  // Ask main process to send GVS and return the raw text response
+		  const line = await ipcRenderer.invoke('send-text-command', 'GVS');
+
+		  // Expect "VS:some text"
+		  let txt = typeof line === 'string' ? line.trim() : '';
+		  if (txt.startsWith('VS:')) {
+			txt = txt.slice(3);          // strip "VS:"
+		  }
+
+		  revText.value = txt || '';
+		} catch (e) {
+		  console.error('Revision read failed:', e);
+		  revText.value = 'Error reading revision';
+		} finally {
+		  revReadBtn.disabled = false;
+		  revReadBtn.textContent = oldLabel;
+		}
+	  });
+	}
+	
+	// --- Working Time (GWT -> WT:hhhh:mm:ss) ---
+	if (wtReadBtn && workingTimeInput) {
+	  wtReadBtn.addEventListener('click', async () => {
+		if (!isConnected) {
+		  showError ? showError('Not connected') : alert('Not connected');
+		  return;
+		}
+
+		wtReadBtn.disabled = true;
+		const oldLabel = wtReadBtn.textContent;
+		wtReadBtn.textContent = 'Reading…';
+
+		try {
+		  // ask main to send GWT and return the response line as string
+		  const line = await ipcRenderer.invoke('send-text-command', 'GWT');
+
+		  let txt = typeof line === 'string' ? line.trim() : '';
+
+		  // expect WT:hhhh:mm:ss
+		  if (txt.startsWith('WT:')) {
+			txt = txt.slice(3); // remove "WT:"
+		  }
+
+		  // basic validation/normalization
+		  const parts = txt.split(':');
+		  if (parts.length === 3) {
+			let [h, m, s] = parts;
+			h = h.padStart(4, '0');
+			m = m.padStart(2, '0');
+			s = s.padStart(2, '0');
+			workingTimeInput.value = `${h}:${m}:${s}`;
+		  } else {
+			workingTimeInput.value = '0000:00:00';
+			showError && showError('Invalid working time format from device.');
+		  }
+		} catch (e) {
+		  console.error('Working time read failed:', e);
+		  workingTimeInput.value = '0000:00:00';
+		  showError ? showError('Error reading working time.') : alert('Error reading working time.');
+		} finally {
+		  wtReadBtn.disabled = false;
+		  wtReadBtn.textContent = oldLabel;
+		}
+	  });
+	}	
+
   if (fwBrowseBtn && fwFileInput && fwFileName) {
     fwBrowseBtn.addEventListener('click', () => {
       fwFileInput.value = '';
@@ -647,24 +820,47 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (fwUploadBtn && fwFileInput) {
-    fwUploadBtn.addEventListener('click', async () => {
-      const file = fwFileInput.files && fwFileInput.files[0];
-      if (!file) {
-        console.log('No HEX file selected for upload');
-        return;
-      }
+	if (fwUploadBtn && fwFileInput) {
+	  fwUploadBtn.addEventListener('click', async () => {
+		const file = fwFileInput.files && fwFileInput.files[0];
+		if (!file) {
+		  console.log('No HEX file selected for upload');
+		  return;
+		}
 
-      console.log('HEX upload requested for file:', file.name);
+		console.log('HEX upload requested for file:', file.name);
 
-      // open modal progress window (simulated upload)
-      try {
-        await ipcRenderer.invoke('fw-open-upload-window');
-      } catch (e) {
-        console.error('Failed to open upload window:', e);
-      }
-    });
-  }
+		// Read file content in renderer (or in main if you prefer)
+		let hexContent;
+		try {
+		  hexContent = await ipcRenderer.invoke('read-file', file.path);
+		} catch (e) {
+		  console.error('Failed to read HEX file:', e);
+		  showError && showError('Failed to read HEX file: ' + e.message);
+		  return;
+		}
+
+		fwUploadBtn.disabled = true;
+
+		// Show modal progress
+		showProgress('Firmware update', `Uploading ${file.name}…`);
+		updateProgress(0, 100);
+
+		try {
+		  // Ask main to perform update (it will emit progress events)
+		  await ipcRenderer.invoke('perform-update', hexContent);
+
+		  updateProgress(100, 100);
+		} catch (e) {
+		  console.error('Firmware upload failed:', e);
+		  showError ? showError('Firmware upload failed: ' + e.message)
+					: alert('Firmware upload failed: ' + e.message);
+		} finally {
+		  hideProgress();
+		  fwUploadBtn.disabled = false;
+		}
+	  });
+	}
 
   // load devices.json
   try {
@@ -802,6 +998,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		writeBtn.disabled = true;
 
+		showProgress('Writing parameters', 'Writing EEPROM parameters…');
+		const total = paramsToWrite.length;
+		let step = 0;
+
 		try {
 		  for (const p of paramsToWrite) {
 			await ipcRenderer.invoke('write-param', {
@@ -809,12 +1009,17 @@ document.addEventListener('DOMContentLoaded', () => {
 			  type: p.type,
 			  value: p.value
 			});
+
+			step += 1;
+			updateProgress(step, total);
 		  }
 		  console.log('All parameters written successfully');
 		} catch (e) {
 		  console.error('Write failed:', e);
-		  alert('Error while writing parameters: ' + e.message);
+		  showError ? showError('Error while writing parameters: ' + e.message)
+					: alert('Error while writing parameters: ' + e.message);
 		} finally {
+		  hideProgress();
 		  writeBtn.disabled = false;
 		}
 	  });
@@ -965,23 +1170,48 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 	updateBtn.addEventListener('click', async () => {
-	  // 1. Open file dialog to select hex file
-	  const { canceled, filePaths } = await ipcRenderer.invoke('select-hex-file');
-	  if (canceled || !filePaths || filePaths.length === 0) {
-		return; // User canceled
+	  try {
+		const { canceled, filePaths } = await ipcRenderer.invoke('select-hex-file');
+		if (canceled || !filePaths || filePaths.length === 0) {
+		  return;
+		}
+		const filePath = filePaths[0];
+
+		const hexContent = await ipcRenderer.invoke('read-file', filePath);
+
+		// Show modal progress in main window
+		showProgress('Firmware update', 'Uploading firmware…');
+		// Start at 0
+		updateProgress(0, 100); // will be updated by events
+
+		// Tell main to start update; it will emit progress events
+		await ipcRenderer.invoke('perform-update', hexContent);
+
+		// On success, optionally fill bar to 100%
+		updateProgress(100, 100);
+	  } catch (e) {
+		console.error('Firmware update failed:', e);
+		showError ? showError('Firmware update failed: ' + e.message)
+				  : alert('Firmware update failed: ' + e.message);
+	  } finally {
+		hideProgress();
 	  }
-	  const filePath = filePaths[0];
+	});   
 
-	  // 2. Read file content
-	  const hexContent = await ipcRenderer.invoke('read-file', filePath);
+	ipcRenderer.on('update-progress', (_event, payload) => {
+	  // payload: { current, total, text? } or { percent }
+	  if (!progressBar) return;
 
-	  // 3. Open the upload window with progress bar
-	  ipcRenderer.send('open-upload-window');
+	  if (payload && typeof payload.percent === 'number') {
+		progressBar.style.width = `${Math.max(0, Math.min(100, payload.percent))}%`;
+	  } else if (payload && typeof payload.current === 'number' && typeof payload.total === 'number') {
+		updateProgress(payload.current, payload.total);
+	  }
 
-	  // 4. Send the file to the device, monitor progress
-	  // Implement your device update logic on main process
-	  ipcRenderer.invoke('perform-update', hexContent);
-	});    
+	  if (payload && payload.text && progressText) {
+		progressText.textContent = payload.text;
+	  }
+	});
 
   // port name from small window
   ipcRenderer.on('selected-port', (_event, data) => {

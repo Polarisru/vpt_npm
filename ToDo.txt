@@ -1,0 +1,13 @@
+More Visio-look:
+	Periodical movement: offset and speed. Speed is not really neccessary	
+	Identify servo - read EEPROM @0xF0, type is encoded there
+	Set actual position as Zero Position: FW change in VPT needed
+	Periodically reading of info parameters, how??
+	
+VPT FW
+	Add Base ID setup
+	Add RS485 subtype setup
+	Add one decimal position to SCL
+	
+GUI:
+	Motor position in 0.1° steps
