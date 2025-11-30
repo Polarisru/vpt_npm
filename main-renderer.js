@@ -1223,6 +1223,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   let currentRunner = null;
+  let scriptRunning = false;
 
   // Run script
   if (scriptRunBtn && scriptInput && scriptOutput) {
@@ -1260,8 +1261,19 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         
         sendAndWait: async (command, matcher, timeout) => {
-          return await ipcRenderer.invoke('uart-send-and-wait', { command, timeout });
-        },
+          // Ignore matcher since IPC can't pass functions
+          // Just pass command and timeout
+          //return await ipcRenderer.invoke('uart-send-wait', command, timeout || 3000);
+          //console.log(`[Renderer] sendAndWait called: cmd="${command}", timeout=${timeout}`);
+          try {
+            const result = await ipcRenderer.invoke('uart-send-wait', command, timeout || 3000);
+            //console.log(`[Renderer] sendAndWait result:`, result);
+            return result;
+          } catch (error) {
+            //console.error(`[Renderer] sendAndWait error:`, error);
+            throw error;
+          }          
+        },        
         
         emitter: {
           on: () => {},

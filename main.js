@@ -65,7 +65,8 @@ function createMainWindow({ portPath, fwVersion }) {
         autoHideMenuBar: true,
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false
+            contextIsolation: false,
+            backgroundThrottling: false
         }
     });
 
@@ -457,6 +458,14 @@ app.on('before-quit', event => {
 ipcMain.handle('uart-open', (_e, portPath, baud) => uart.open(portPath, baud));
 ipcMain.handle('uart-close', () => uart.close());
 ipcMain.handle('uart-send', (_e, cmd) => uart.send(cmd));
-ipcMain.handle('uart-send-wait', (_e, cmd, timeoutMs) =>
-    uart.sendAndWait(cmd, () => true, timeoutMs)
-);
+//ipcMain.handle('uart-send-wait', (_e, cmd, timeoutMs) =>
+//    uart.sendAndWait(cmd, () => true, timeoutMs)
+//);
+ipcMain.handle('uart-send-wait', async (_e, cmd, timeoutMs) => {
+  try {
+    const result = await uart.sendAndWait(cmd, () => true, timeoutMs || 3000);
+    return result;
+  } catch (error) {
+    throw error;
+  }
+});

@@ -22,8 +22,7 @@ LABEL sample_loop
 SET sample_count = sample_count + 1
 
 # Request voltage
-SENDNW GVS
-RECV VS:{voltage}
+SENDRECV GUS US:{voltage}
 
 # Update statistics
 SET total_voltage = total_voltage + voltage

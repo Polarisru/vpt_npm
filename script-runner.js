@@ -47,14 +47,13 @@ class ScriptRunner {
       case 'SEND':
         return { type: 'SEND', text: tokens.slice(1).join(' '), waitForOk: true };
         
-      case 'SENDNW':
-        return { type: 'SEND', text: tokens.slice(1).join(' '), waitForOk: false };
-        
-      case 'RECV':
-        return { type: 'RECV', pattern: tokens.slice(1).join(' ') };
+      case 'SENDRECV':
+        const command = tokens[1];
+        const pattern = tokens.slice(2).join(' ');
+        return { type: 'SENDRECV', command: command, pattern: pattern };
         
       case 'WAIT':
-        return { type: 'WAIT', ms: parseInt(tokens[1]) };
+        return { type: 'WAIT', msExpr: tokens[1] };
         
       case 'SET':
         const varName = tokens[1];
@@ -120,8 +119,8 @@ class ScriptRunner {
       case 'SEND':
         await this.executeSEND(cmd);
         break;
-      case 'RECV':
-        await this.executeRECV(cmd);
+      case 'SENDRECV':
+        await this.executeSENDRECV(cmd);
         break;
       case 'WAIT':
         await this.executeWAIT(cmd);
@@ -161,28 +160,31 @@ class ScriptRunner {
     }
   }
 
-  async executeRECV(cmd) {
+  async executeSENDRECV(cmd) {
     const varMatch = cmd.pattern.match(/\{(\w+)\}/);
     if (!varMatch) {
-      throw new Error(`RECV pattern must contain variable: ${cmd.pattern}`);
+      throw new Error(`SENDRECV pattern must contain variable: ${cmd.pattern}`);
     }
-    
+
     const varName = varMatch[1];
     const regexPattern = cmd.pattern.replace(/\{(\w+)\}/g, '([\\d\\.\\-]+)');
     const regex = new RegExp(regexPattern);
+
+    this.logWithTimestamp(`TX: ${cmd.command}`);
     
     try {
-      const response = await this.waitForResponse(regex, 5000);
+      const response = await this.uart.sendAndWait(cmd.command, () => true, 1000);
+      this.logWithTimestamp(`RX: ${response.trim()}`);
       
       const match = response.match(regex);
+      
       if (match && match[1]) {
         this.variables[varName] = parseFloat(match[1]);
-        this.logWithTimestamp(`RX: ${response.trim()} -> ${varName} = ${this.variables[varName]}`);
       } else {
         throw new Error(`Failed to extract value from: ${response}`);
       }
     } catch (error) {
-      throw new Error(`Timeout waiting for response matching: ${cmd.pattern}`);
+      throw new Error(`Command "${cmd.command}" failed or timeout`);
     }
   }
 
@@ -206,7 +208,9 @@ class ScriptRunner {
   }
 
   async executeWAIT(cmd) {
-    await new Promise(resolve => setTimeout(resolve, cmd.ms));
+    // Evaluate the expression to get actual milliseconds
+    const ms = this.evaluateExpression(cmd.msExpr);
+    await new Promise(resolve => setTimeout(resolve, ms));
   }
 
   executeSET(cmd) {
