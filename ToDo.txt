@@ -1,5 +1,5 @@
 More Visio-look:
-	Periodical movement: offset and speed. Speed is not really neccessary	
+	Periodical movement: offset and speed. Speed is not really neccessary   DONE	
 	Identify servo - read EEPROM @0xF0, type is encoded there               LATER
 	Periodically reading of info parameters, how??                          LATER
 	
@@ -9,6 +9,7 @@ VPT FW
 	Add one decimal position to SCL
   Send raw command is not ready yet
   Set as ZeroPos command
+  Get status command (errors)
 	
 GUI:
 	Motor position in 0.1° steps              DONE
@@ -18,8 +19,16 @@ GUI:
   Progress bar for Read EEPROM parameters   DONE
   Add error messages everywhere             DONE
   EEPROM parameters input is boring         DONE
-  Writing EEPROM parameters is wrong??
-  Periodic reading of VPT parameters
+  Periodic reading of VPT parameters        DONE
   Implement scripting                       DONE
   Raw command block invisible for PWM       DONE
   Revision string block invisible for PWM   DONE
+  Disable movement after disconnect         DONE
+  Add RS485 subtype
+  Writing EEPROM parameters is wrong??
+  Show VPT status
+  Update VPT
+  Upload firmware
+  
+Infrastructure
+  Create device parameters

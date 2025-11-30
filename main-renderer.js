@@ -280,48 +280,6 @@ function collectConnectionConfig() {
   return cfg;
 }
 
-let statusTimer = null;
-let sineRunning = false; // set this true/false together with sine Start/Stop
-
-async function pollStatusOnce() {
-  console.log('Tick');
-  if (!isConnected || sineRunning) return;
-
-  try {
-    const [v, t] = await Promise.all([
-      ipcRenderer.invoke('read-supply'),
-      ipcRenderer.invoke('read-temperature'),
-	    //ipcRenderer.invoke('read-status')
-    ]);
-    updateStatusFields(v, t);
-	if (connectionHint) {
-      if (typeof s === 'number' && s === 0) {
-        connectionHint.textContent = 'Connected';
-      } else {
-        connectionHint.textContent = 'ERROR';
-      }
-    }
-  } catch (e) {
-    console.error('Status poll failed:', e);
-    updateStatusFields(null, null);
-	if (connectionHint) connectionHint.textContent = 'ERROR';
-  }
-}
-
-function startStatusPolling() {
-  console.log('Timer started');
-  if (statusTimer) clearInterval(statusTimer);
-  statusTimer = setInterval(pollStatusOnce, 1000);
-}
-
-function stopStatusPolling() {
-  console.log('Timer stopped');
-  if (statusTimer) {
-    clearInterval(statusTimer);
-    statusTimer = null;
-  }
-}
-
 async function readInfoField(start, end) {
   const txt = await ipcRenderer.invoke('read-ascii-range', { start, end });
   return txt.trim();
@@ -376,6 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const wtReadBtn = document.getElementById('wtReadBtn');
   
   const sineAmpInput = document.getElementById('sineAmplitude');
+  const sineOffsetInput = document.getElementById('sineOffset');
   const sineFreqInput = document.getElementById('sineFrequency');
   const sineStartStop = document.getElementById('sineStartStopBtn');
   const sineWaveform = document.getElementById('sineWaveform');
@@ -408,6 +367,47 @@ document.addEventListener('DOMContentLoaded', () => {
   const progressBar = document.getElementById('progressBar');  
 
   let isConnected = false;
+
+  let statusTimer = null;
+
+  async function pollStatusOnce() {
+    console.log('Tick');
+    if (!isConnected || sineRunning) return;
+
+    try {
+      const [v, t] = await Promise.all([
+        ipcRenderer.invoke('read-supply'),
+        ipcRenderer.invoke('read-temperature'),
+        //ipcRenderer.invoke('read-status')
+      ]);
+      updateStatusFields(v, t);
+    if (connectionHint) {
+        if (typeof s === 'number' && s === 0) {
+          connectionHint.textContent = 'Connected';
+        } else {
+          connectionHint.textContent = 'ERROR';
+        }
+      }
+    } catch (e) {
+      console.error('Status poll failed:', e);
+      updateStatusFields(null, null);
+    if (connectionHint) connectionHint.textContent = 'ERROR';
+    }
+  }
+
+  function startStatusPolling() {
+    console.log('Timer started');
+    if (statusTimer) clearInterval(statusTimer);
+    statusTimer = setInterval(pollStatusOnce, 1000);
+  }
+
+  function stopStatusPolling() {
+    console.log('Timer stopped');
+    if (statusTimer) {
+      clearInterval(statusTimer);
+      statusTimer = null;
+    }
+  }
 
   function showConnectTypeBlocks(connType) {
     // show info only for RS485 and CAN
@@ -652,6 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // re-enable controls
     if (sineWaveform) sineWaveform.disabled = false;
     if (sineAmpInput) sineAmpInput.disabled = false;
+    if (sineOffsetInput) sineOffsetInput.disabled = false;
     if (sineFreqInput) sineFreqInput.disabled = false;
   }
 
@@ -661,20 +662,27 @@ document.addEventListener('DOMContentLoaded', () => {
         // Start
         let amp = parseFloat(sineAmpInput?.value || '0');
         let freq = parseFloat(sineFreqInput?.value || '0');
+        let offset = parseFloat(sineOffsetInput?.value || '0');
         let wave = sineWaveform?.value || 'sine';
 
         if (!Number.isFinite(amp) || amp < 0) amp = 0;
         if (!Number.isFinite(freq) || freq < 0.1) freq = 0.1;
+        if (!Number.isFinite(offset)) offset = 0;
 
         // Clamp amplitude to slider range
         const minVal = parseFloat(slider.min ?? '-90');
         const maxVal = parseFloat(slider.max ?? '90');
-        const center = (minVal + maxVal) / 2;
-        const maxAmp = Math.min(Math.abs(maxVal - center), Math.abs(center - minVal));
-        if (amp > maxAmp) amp = maxAmp;
+        //const center = (minVal + maxVal) / 2;
+        //const maxAmp = Math.min(Math.abs(maxVal - center), Math.abs(center - minVal));
+        //if (amp > maxAmp) amp = maxAmp;
+        
+        // Ensure offset ± amp stays within bounds
+        if (offset - amp < minVal) offset = minVal + amp;
+        if (offset + amp > maxVal) offset = maxVal - amp;
 
         if (sineAmpInput) sineAmpInput.value = amp.toString();
         if (sineFreqInput) sineFreqInput.value = freq.toString();
+        if (sineOffsetInput) sineOffsetInput.value = offset.toString();
         if (sineWaveform && !['sine', 'rect', 'saw'].includes(wave)) {
           wave = 'sine';
           sineWaveform.value = 'sine';
@@ -683,6 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // disable controls while running
         if (sineWaveform) sineWaveform.disabled = true;
         if (sineAmpInput) sineAmpInput.disabled = true;
+        if (sineOffsetInput) sineOffsetInput.disabled = true;
         if (sineFreqInput) sineFreqInput.disabled = true;
 
         sineRunning = true;
@@ -693,20 +702,21 @@ document.addEventListener('DOMContentLoaded', () => {
         sineTimer = setInterval(() => {
           const tSec = (performance.now() - sineStartTime) / 1000;
           const phase = (freq * tSec) % 1; // 0..1 within each period
-          let offset = 0;
+          let waveValue = 0;
 
           if (wave === 'sine') {
             // -1..1
-            offset = Math.sin(2 * Math.PI * phase);
+            waveValue = Math.sin(2 * Math.PI * phase);
           } else if (wave === 'rect') {
             // +1 for first half, -1 for second half
-            offset = phase < 0.5 ? 1 : -1;
+            waveValue = phase < 0.5 ? 1 : -1;
           } else if (wave === 'saw') {
             // ramps from -1 to +1 over period
-            offset = 2 * phase - 1;
+            waveValue = 2 * phase - 1;
           }
 
-          const angle = center + amp * offset;
+          // offset is the center position, amp is the amplitude
+          const angle = offset + amp * waveValue;
 
           slider.value = angle.toFixed(1);
           updatePositionLabel();
@@ -933,7 +943,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		  try {
 			await ipcRenderer.invoke('conn-init', cfg);
 			isConnected = true;
-			//startStatusPolling();
+			startStatusPolling();
 			connectBtn.textContent = 'Disconnect';
 			if (contentOverlay) contentOverlay.classList.add('hidden');
 			if (connectionHint) connectionHint.textContent = 'Connected';
@@ -956,6 +966,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		  isConnected = false;
 		  stopStatusPolling();
+      stopSine();
 		  updateStatusFields(null, null);
 		  connectBtn.textContent = 'Connect';
 		  if (contentOverlay) 
