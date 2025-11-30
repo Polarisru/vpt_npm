@@ -55,88 +55,79 @@ function buildParamTable(device) {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  if (!device || !Array.isArray(device.eeprom)) {
-    return;
-  }
+  if (!device || !Array.isArray(device.eeprom)) return;
 
-	device.eeprom.forEach(param => {
-	  const tr = document.createElement('tr');
+  device.eeprom.forEach(param => {
+    const tr = document.createElement('tr');
 
-	  const nameTd = document.createElement('td');
-	  const label = param.unit ? `${param.name}, ${param.unit}` : param.name;
-	  nameTd.textContent = label;
+    // Name column
+    const nameTd = document.createElement('td');
+    const label = param.unit ? `${param.name}, ${param.unit}` : param.name;
+    nameTd.textContent = label;
 
-	  const valueTd = document.createElement('td');
-	  const input = document.createElement('input');
-	  input.type = 'number';
+    // Value column
+    const valueTd = document.createElement('td');
+    const input = document.createElement('input');
+    input.type = 'number';
 
-	  // store multiplier (default 1)
-	  const mult = typeof param.mult === 'number' && param.mult > 0 ? param.mult : 1;
+    // Store multiplier, default = 1
+    const mult = (typeof param.mult === 'number' && param.mult !== 0) ? param.mult : 1;
 
-	  // limits in raw units
-	  if (typeof param.min === 'number') input.min = (param.min * mult).toString();
-	  if (typeof param.max === 'number') input.max = (param.max * mult).toString();
+    // Set min/max attributes for browser validation (optional visual cues)
+    if (typeof param.min === 'number') input.min = (param.min / mult).toString();
+    if (typeof param.max === 'number') input.max = (param.max / mult).toString();
 
-	  // default value in scaled units
-	  if (typeof param.dflt !== 'undefined') {
-		input.value = (param.dflt * mult).toString();
-	  }
+    // Set default value in scaled units
+    if (typeof param.dflt !== 'undefined') {
+      input.value = (param.dflt / mult).toString();
+    }
 
-	  input.dataset.address = param.address;
-	  input.dataset.type = param.type;
-	  input.dataset.min = param.min;
-	  input.dataset.max = param.max;
-	  input.dataset.name = param.name;
-	  input.dataset.mult = String(mult);
+    // Store metadata
+    input.dataset.address = param.address;
+    input.dataset.type = param.type;
+    input.dataset.min = param.min;
+    input.dataset.max = param.max;
+    input.dataset.name = param.name;
+    input.dataset.mult = String(mult);
 
-	  // clamp in scaled domain
-	  input.addEventListener('input', () => {
-		const min = Number(input.dataset.min);
-		const max = Number(input.dataset.max);
-		const m = Number(input.dataset.mult) || 1;
+    // Remove 'input' event listener - allow free editing
+    // Only validate on 'blur' when user finishes editing
+    input.addEventListener('blur', () => {
+      const min = Number(input.dataset.min);
+      const max = Number(input.dataset.max);
+      const m = Number(input.dataset.mult) || 1;
+      let val = input.value === '' ? NaN : Number(input.value);
 
-		let val = input.value === '' ? NaN : Number(input.value);
-		if (!isNaN(val)) {
-		  let raw = val / m;
-		  if (!isNaN(min) && raw < min) raw = min;
-		  if (!isNaN(max) && raw > max) raw = max;
-		  input.value = String(raw * m);
-		}
-	  });
+      if (isNaN(val)) {
+        // If empty or invalid, restore to default or min
+        let raw;
+        if (typeof param.dflt !== 'undefined') {
+          raw = param.dflt;
+        } else if (!isNaN(min)) {
+          raw = min;
+        } else if (!isNaN(max)) {
+          raw = max;
+        } else {
+          return;
+        }
+        input.value = String(raw / m);
+        return;
+      }
 
-	  input.addEventListener('blur', () => {
-		const min = Number(input.dataset.min);
-		const max = Number(input.dataset.max);
-		const m = Number(input.dataset.mult) || 1;
+      // Convert to raw units and clamp
+      let raw = val * m;
+      if (!isNaN(min) && raw < min) raw = min;
+      if (!isNaN(max) && raw > max) raw = max;
 
-		let val = input.value === '' ? NaN : Number(input.value);
-		if (isNaN(val)) {
-		  let raw;
-		  if (typeof param.dflt !== 'undefined') {
-			raw = param.dflt;
-		  } else if (!isNaN(min)) {
-			raw = min;
-		  } else if (!isNaN(max)) {
-			raw = max;
-		  } else {
-			return;
-		  }
-		  input.value = String(raw * m);
-		  return;
-		}
+      // Update with clamped value
+      input.value = String(raw / m);
+    });
 
-		let raw2 = val / m;
-		if (!isNaN(min) && raw2 < min) raw2 = min;
-		if (!isNaN(max) && raw2 > max) raw2 = max;
-		input.value = String(raw2 * m);
-	  });
-
-	  valueTd.appendChild(input);
-	  tr.appendChild(nameTd);
-	  tr.appendChild(valueTd);
-	  tbody.appendChild(tr);
-	});
-
+    valueTd.appendChild(input);
+    tr.appendChild(nameTd);
+    tr.appendChild(valueTd);
+    tbody.appendChild(tr);
+  });
 }
 
 // left sidebar enable/disable (except Connect)
@@ -418,6 +409,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let isConnected = false;
 
+  function showConnectTypeBlocks(connType) {
+    // show info only for RS485 and CAN
+    if (infoBlock) {
+      if (connType === 'RS485' || connType === 'CAN') {
+        infoBlock.style.display = 'block';
+      } else {
+        infoBlock.style.display = 'none';
+      }
+    }
+    
+    if (rawBlock) {
+      if (connType === 'RS485' || connType === 'CAN') {
+        rawBlock.style.display = 'block';
+      } else {
+        rawBlock.style.display = 'none';
+      }
+    }
+
+    if (revBlock) {
+      if (connType === 'RS485' || connType === 'CAN') {
+        revBlock.style.display = 'block';
+      } else {
+        revBlock.style.display = 'none';
+      }
+    }
+  }
+  
   // Function to update the Update button state based on isConnected
   function updateUpdateButtonState() {
     if (!updateBtn) return;
@@ -544,24 +562,8 @@ document.addEventListener('DOMContentLoaded', () => {
         canSettings.classList.remove('hidden');
       }
 
-      // show info only for RS485 and CAN
-      if (infoBlock) {
-        if (connType.value === 'RS485' || connType.value === 'CAN') {
-          infoBlock.style.display = 'block';
-        } else {
-          infoBlock.style.display = 'none';
-        }
-      }
-      
-      if (rawBlock) {
-        if (connType.value === 'RS485' || connType.value === 'CAN') {
-          rawBlock.classList.remove('hidden');
-        } else {
-          rawBlock.classList.add('hidden');
-        }
-      }
-
       currentConnType = connType.value;
+      showConnectTypeBlocks(currentConnType);
       fillDeviceSelectForType(currentConnType);
       updatePositionSliderRange(currentConnType);
       clearParamTable();
@@ -572,13 +574,14 @@ document.addEventListener('DOMContentLoaded', () => {
     currentConnType = connType.value;
 
     // initial state on load
-    if (infoBlock) {
+    showConnectTypeBlocks(currentConnType);
+    /*if (infoBlock) {
       if (currentConnType === 'RS485' || currentConnType === 'CAN') {
         infoBlock.style.display = 'block';
       } else {
         infoBlock.style.display = 'none';
       }
-    }
+    }*/
   }
 
 
@@ -772,7 +775,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		} catch (e) {
 		  //console.error('Revision read failed:', e);
 		  //revText.value = 'Error reading revision';
-      showError ? showError('Revision read failed: ' + e) : alert('Revision read failed: ' + e);
+      showError ? showError('Revision read failed: ' + e) 
+          : alert('Revision read failed: ' + e);
 		} finally {
 		  revReadBtn.disabled = false;
 		  revReadBtn.textContent = oldLabel;
@@ -818,7 +822,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		} catch (e) {
 		  console.error('Working time read failed:', e);
 		  workingTimeInput.value = '0000:00:00';
-		  showError ? showError('Error reading working time.') : alert('Error reading working time.');
+		  showError ? showError('Error reading working time.') 
+          : alert('Error reading working time.');
 		} finally {
 		  wtReadBtn.disabled = false;
 		  wtReadBtn.textContent = oldLabel;
@@ -858,7 +863,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		  hexContent = await ipcRenderer.invoke('read-file', file.path);
 		} catch (e) {
 		  console.error('Failed to read HEX file:', e);
-		  showError && showError('Failed to read HEX file: ' + e.message);
+      const cleanMessage = e.message.split('Error: ').pop();
+		  showError ? showError('Failed to read HEX file: ' + cleanMessage)
+          : alert('Failed to read HEX file: ' + cleanMessage);
 		  return;
 		}
 
@@ -875,8 +882,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		  updateProgress(100, 100);
 		} catch (e) {
 		  console.error('Firmware upload failed:', e);
-		  showError ? showError('Firmware upload failed: ' + e.message)
-					: alert('Firmware upload failed: ' + e.message);
+      const cleanMessage = e.message.split('Error: ').pop();
+		  showError ? showError('Firmware upload failed: ' + cleanMessage)
+					: alert('Firmware upload failed: ' + cleanMessage);
 		} finally {
 		  hideProgress();
 		  fwUploadBtn.disabled = false;
@@ -941,18 +949,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		} else {
       stopScriptAndResetUI();
 		  try {
-			await ipcRenderer.invoke('conn-power', false);
+        await ipcRenderer.invoke('conn-power', false);
 		  } catch (e) {
-			console.error('PWR0 failed:', e);
+        console.error('PWR0 failed:', e);
 		  }
 
 		  isConnected = false;
 		  stopStatusPolling();
 		  updateStatusFields(null, null);
 		  connectBtn.textContent = 'Connect';
-		  if (contentOverlay) contentOverlay.classList.remove('hidden');
+		  if (contentOverlay) 
+        contentOverlay.classList.remove('hidden');
 		  if (connectionHint)
-			connectionHint.textContent = 'Select connection and press Connect';
+        connectionHint.textContent = 'Select connection and press Connect';
 		  setSidebarEnabled(true);
 
 		  // Enable/disable Update button according to new state
@@ -1040,8 +1049,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		  console.log('All parameters written successfully');
 		} catch (e) {
 		  console.error('Write failed:', e);
-		  showError ? showError('Error while writing parameters: ' + e.message)
-					: alert('Error while writing parameters: ' + e.message);
+      const cleanMessage = e.message.split('Error: ').pop();
+		  showError ? showError('Error while writing parameters: ' + cleanMessage)
+					: alert('Error while writing parameters: ' + cleanMessage);
 		} finally {
 		  hideProgress();
 		  writeBtn.disabled = false;
@@ -1079,7 +1089,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		  console.log('All parameters read from device');
 		} catch (e) {
 		  console.error('Read failed:', e);
-		  alert('Error while reading parameters: ' + e.message);
+      // Get just the last part after "Error: "
+      const cleanMessage = e.message.split('Error: ').pop();
+		  showError ? showError('Error while reading parameters: ' + cleanMessage) 
+          : alert('Error while reading parameters: ' + cleanMessage);
 		} finally {
       hideProgress();
 		  readBtn.disabled = false;
@@ -1193,9 +1206,10 @@ document.addEventListener('DOMContentLoaded', () => {
         await ipcRenderer.invoke('send-raw-command', { bytes });
         // optional: some UI feedback
       } catch (e) {
-        //alert('Raw command error: ' + e.message);
-        //console.error('Raw command failed:', e);
-        showError ? showError('Raw command error: ' + e.message) : alert('Raw command error: ' + e.message);
+        console.error('Raw command failed:', e);
+        const cleanMessage = e.message.split('Error: ').pop();
+        showError ? showError('Raw command error: ' + cleanMessage) 
+            : alert('Raw command error: ' + cleanMessage);
       } finally {
         rawSendBtn.disabled = false;
       }
@@ -1231,7 +1245,9 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsText(file);
       } catch (e) {
         console.error('Failed to read script file:', e);
-        showError && showError('Failed to read script file: ' + e.message);
+        const cleanMessage = e.message.split('Error: ').pop();
+        showError ? showError('Failed to read script file: ' + cleanMessage)
+            : alert('Failed to read script file: ' + cleanMessage);
       }
     });
   }
@@ -1331,7 +1347,9 @@ document.addEventListener('DOMContentLoaded', () => {
         await ipcRenderer.invoke('write-file', { path: filePath, content: output });
       } catch (e) {
         console.error('Failed to save output:', e);
-        showError && showError('Failed to save output: ' + e.message);
+        const cleanMessage = e.message.split('Error: ').pop();
+        showError ? showError('Failed to save output: ' + cleanMessage)
+            : alert('Failed to save output: ' + cleanMessage);
       }
     });
   }
@@ -1358,8 +1376,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		updateProgress(100, 100);
 	  } catch (e) {
 		console.error('Firmware update failed:', e);
-		showError ? showError('Firmware update failed: ' + e.message)
-				  : alert('Firmware update failed: ' + e.message);
+    const cleanMessage = e.message.split('Error: ').pop();
+		showError ? showError('Firmware update failed: ' + cleanMessage)
+				  : alert('Firmware update failed: ' + cleanMessage);
 	  } finally {
 		hideProgress();
 	  }
