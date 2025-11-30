@@ -1,6 +1,6 @@
 // main-renderer.js
 
-console.log('===== main-renderer.js LOADED =====');
+const ScriptRunner = require('./script-runner.js');
 
 const fs = require('fs');
 const path = require('path');
@@ -215,12 +215,12 @@ function updateStatusFields(voltage, temperature) {
 function updatePositionSliderRange(type) {
   const slider = document.getElementById('positionSlider');
   if (!slider) return;
-  console.log("Type: ", type);
+
   if (type === 'PWM') {
-    slider.min = '45';
+    slider.min = '-45';
     slider.max = '45';
   } else if (type === 'RS485' || type === 'CAN') {
-    slider.min = '170';
+    slider.min = '-170';
     slider.max = '170';
   }
 
@@ -354,7 +354,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const devicePositionLabel = document.getElementById('devicePositionLabel');
 
   const connectBtn = document.getElementById('connectBtn');
-  console.log('connectBtn element:', connectBtn);
   const readBtn = document.getElementById('readParamsBtn');
   const writeBtn = document.getElementById('writeParamsBtn');
   const saveBtn = document.getElementById('saveToFileBtn');
@@ -400,6 +399,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const fwUploadBtn = document.getElementById('fwUploadBtn');
   
   const updateBtn = document.getElementById('updateBtn');  
+  
+  const scriptFileInput = document.getElementById('scriptFileInput');
+  const scriptBrowseBtn = document.getElementById('scriptBrowseBtn');
+  const scriptRunBtn = document.getElementById('scriptRunBtn');
+  const scriptSaveOutputBtn = document.getElementById('scriptSaveOutputBtn');
+  const scriptInput = document.getElementById('scriptInput');
+  const scriptOutput = document.getElementById('scriptOutput');
 
   const errorOverlay = document.getElementById('errorOverlay');
   const errorMessage = document.getElementById('errorMessage');
@@ -1178,6 +1184,129 @@ document.addEventListener('DOMContentLoaded', () => {
         showError ? showError('Raw command error: ' + e.message) : alert('Raw command error: ' + e.message);
       } finally {
         rawSendBtn.disabled = false;
+      }
+    });
+  }
+  
+  // Browse and load script
+  if (scriptBrowseBtn && scriptFileInput) {
+    scriptBrowseBtn.addEventListener('click', () => {
+      scriptFileInput.click();
+    });
+
+    scriptFileInput.addEventListener('change', async () => {
+      const file = scriptFileInput.files && scriptFileInput.files[0];
+      if (!file) return;
+
+      try {
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+          if (scriptInput) {
+            scriptInput.value = e.target.result;
+            // Clear previous output
+            if (scriptOutput) scriptOutput.value = '';
+          }
+        };
+        
+        reader.onerror = (e) => {
+          console.error('Failed to read script file:', e);
+          showError && showError('Failed to read script file');
+        };
+        
+        reader.readAsText(file);
+      } catch (e) {
+        console.error('Failed to read script file:', e);
+        showError && showError('Failed to read script file: ' + e.message);
+      }
+    });
+  }
+  
+  let currentRunner = null;
+
+  // Run script
+  if (scriptRunBtn && scriptInput && scriptOutput) {
+    scriptRunBtn.addEventListener('click', async () => {
+      if (!isConnected) {
+        showError && showError('Not connected');
+        return;
+      }
+
+      const script = scriptInput.value.trim();
+      if (!script) {
+        showError && showError('Script is empty');
+        return;
+      }
+
+      // Disable buttons during execution
+      if (scriptBrowseBtn) scriptBrowseBtn.disabled = true;
+      if (scriptRunBtn) scriptRunBtn.disabled = true;
+      if (scriptSaveOutputBtn) scriptSaveOutputBtn.disabled = true;
+
+      // Clear previous output
+      scriptOutput.value = '';
+
+      const logFn = (msg) => {
+        scriptOutput.value += msg + '\n';
+        scriptOutput.scrollTop = scriptOutput.scrollHeight;
+      };
+
+      // Create IPC-based UART wrapper
+      const uartWrapper = {
+        isOpen: () => isConnected,
+        
+        send: async (command) => {
+          await ipcRenderer.invoke('uart-send', command);
+        },
+        
+        sendAndWait: async (command, matcher, timeout) => {
+          return await ipcRenderer.invoke('uart-send-and-wait', { command, timeout });
+        },
+        
+        emitter: {
+          on: () => {},
+          removeListener: () => {}
+        }
+      };
+
+      try {
+        currentRunner = new ScriptRunner(script, uartWrapper, logFn);
+        await currentRunner.run();
+      } catch (e) {
+        console.error('Script execution failed:', e);
+        logFn(`ERROR: ${e.message}`);
+      } finally {
+        currentRunner = null;
+        // Always re-enable buttons after execution (success or error)
+        if (scriptBrowseBtn) scriptBrowseBtn.disabled = false;
+        if (scriptRunBtn) scriptRunBtn.disabled = false;
+        if (scriptSaveOutputBtn) scriptSaveOutputBtn.disabled = false;
+      }
+    });
+  }
+  
+  // Save output to file
+  if (scriptSaveOutputBtn && scriptOutput) {
+    scriptSaveOutputBtn.addEventListener('click', async () => {
+      const output = scriptOutput.value;
+      if (!output) {
+        showError && showError('No output to save');
+        return;
+      }
+
+      try {
+        const { canceled, filePath } = await ipcRenderer.invoke('save-dialog', {
+          title: 'Save Script Output',
+          defaultPath: 'script-output.txt',
+          filters: [{ name: 'Text Files', extensions: ['txt'] }]
+        });
+
+        if (canceled || !filePath) return;
+
+        await ipcRenderer.invoke('write-file', { path: filePath, content: output });
+      } catch (e) {
+        console.error('Failed to save output:', e);
+        showError && showError('Failed to save output: ' + e.message);
       }
     });
   }

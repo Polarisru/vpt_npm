@@ -276,23 +276,24 @@
 			  </div>
 
 			  <div class="tab-pane" id="script-tab">
-				  <div class="fw-row">
-					<div class="fw-label">Script file</div>
-					<div class="fw-file-area">
-					  <span id="scriptFileName" class="fw-filename">No file selected</span>
-					  <button id="scriptBrowseBtn" class="fw-browse-btn">Browse</button>
-					  <input type="file" id="scriptFileInput" style="display:none">
-					</div>
-				  </div>
+          <div class="script-container">
+            <div class="script-section">
+              <label>Script:</label>
+              <textarea id="scriptInput" rows="12" placeholder="Load a script file..."></textarea>
+            </div>
+            
+            <div class="output-section">
+              <label>Output:</label>
+              <textarea id="scriptOutput" rows="12" readonly placeholder="Output will appear here..."></textarea>
+            </div>
+          </div>
 
-				  <div class="script-textarea-row">
-					<textarea id="scriptText" class="script-textarea" placeholder="Enter or edit script here..."></textarea>
-				  </div>
-
-				  <div class="script-actions">
-					<button id="scriptRunBtn" class="sine-btn">Run</button>
-					<button id="scriptSaveOutputBtn" class="sine-btn">Save output</button>
-				  </div>
+          <div class="script-controls">
+            <input type="file" id="scriptFileInput" accept=".txt,.script" style="display: none;">
+            <button id="scriptBrowseBtn" class="script-btn">Browse Script</button>
+            <button id="scriptRunBtn" class="script-btn">Run</button>
+            <button id="scriptSaveOutputBtn" class="script-btn">Save Output</button>
+          </div>
 			  </div>
 
 			</div>

@@ -945,42 +945,72 @@ body {
   opacity: 1; /* avoid extra fading if browser applies it */
 }
 
-.script-block {
+.script-container {
   display: flex;
   flex-direction: column;
+  gap: 10px;
   height: 100%;
-  min-height: 0;
 }
 
-.script-textarea-row {
-  flex: 1 1 auto;
+.script-section, .output-section {
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  margin-top: 8px;
+  flex: 1;
 }
 
-.script-textarea {
-  flex: 1 1 auto;
+.script-section label, .output-section label {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #463c96;
+}
+
+#scriptInput, #scriptOutput {
   width: 100%;
-  resize: none;  /* disable manual resize since it fills available space */
-  padding: 6px 8px;
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #d6d6df;
   border-radius: 6px;
-  border: 1px solid #ccd1ff;
-  font-size: 12px;
-  font-family: monospace;
-  background-color: #f9f9ff;
-  color: #333;
-  box-sizing: border-box;
-  overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  resize: none;
 }
 
-.script-actions {
-  margin-top: auto;  /* pushes buttons to bottom */
+#scriptOutput {
+  background: #f8f8fa;
+  color: #333;
+}
+
+.script-controls {
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding-top: 8px;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.script-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.script-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(102,126,234,0.35);
+}
+
+.script-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.script-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #999 0%, #666 100%);
 }
 
 /* ---------- Center+Right overlay (disabled state) ---------- */

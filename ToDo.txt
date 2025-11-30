@@ -1,6 +1,6 @@
 More Visio-look:
 	Periodical movement: offset and speed. Speed is not really neccessary	
-	Identify servo - read EEPROM @0xF0, type is encoded there
+	Identify servo - read EEPROM @0xF0, type is encoded there   
 	Periodically reading of info parameters, how??
 	
 VPT FW
@@ -19,3 +19,5 @@ GUI:
   Add error messages everywhere
   EEPROM parameters input is boring
   Writing EEPROM parameters is wrong??
+  Periodic reading of VPT parameters
+  Implement scripting

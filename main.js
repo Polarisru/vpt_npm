@@ -77,12 +77,12 @@ function createMainWindow({ portPath, fwVersion }) {
     });
 
     mainWindow.webContents.on('did-finish-load', () => {
-        // Send both port and FW version to main window renderer
-		mainWindow.webContents.send('selected-port', {
-			portPath,
-			fwVersion
-		});
-    });
+      // Send both port and FW version to main window renderer
+      mainWindow.webContents.send('selected-port', {
+        portPath,
+			  fwVersion
+		  });
+    }); 
 }
 
 app.whenReady().then(() => {
@@ -427,6 +427,20 @@ ipcMain.handle('perform-update', async (event, hexContent) => {
       text: `Uploading… ${percent}%`
     });
   }
+});
+
+ipcMain.handle('get-uart-instance', async (event) => {
+  // Return your uart object or wrapper
+  return uartInstance;  // adjust to your implementation
+});
+
+ipcMain.handle('save-dialog', async (event, options) => {
+  const { canceled, filePath } = await dialog.showSaveDialog(options);
+  return { canceled, filePath };
+});
+
+ipcMain.handle('write-file', async (event, { path, content }) => {
+  await fs.promises.writeFile(path, content, 'utf8');
 });
 
 app.on('before-quit', event => {

@@ -180,7 +180,49 @@
     },
     {
       "name": "DA15-RS485",
-      "type": "RS485"
+      "type": "RS485",
+      "eeprom": [
+        {
+          "name": "Kd",
+          "address": 32,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 30
+        },
+        {
+          "name": "Kp",
+          "address": 33,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 60
+        },	
+        {
+          "name": "Ko",
+          "address": 35,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 0
+        },
+        {
+          "name": "PWM_Min",
+          "address": 34,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 40
+        },
+        {
+          "name": "PWM_Max",
+          "address": 36,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 255
+        }      
+      ]
     },
     {
       "name": "DA15-CAN",
