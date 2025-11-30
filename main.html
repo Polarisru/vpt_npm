@@ -291,8 +291,8 @@
           <div class="script-controls">
             <input type="file" id="scriptFileInput" accept=".txt,.script" style="display: none;">
             <button id="scriptBrowseBtn" class="script-btn">Browse Script</button>
-            <button id="scriptRunBtn" class="script-btn">Run</button>
             <button id="scriptSaveOutputBtn" class="script-btn">Save Output</button>
+            <button id="scriptRunBtn" class="script-btn">Run</button>
           </div>
 			  </div>
 
@@ -319,17 +319,6 @@
 		</div>
 	  </div>
 	</div>
-	
-	<script>
-		document.querySelectorAll('.tab-link').forEach(btn => {
-		  btn.addEventListener('click', function() {
-			document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
-			document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-			this.classList.add('active');
-			document.getElementById(this.dataset.tab).classList.add('active');
-		  });
-		});
-	</script>
   
   <script src="main-renderer.js"></script>  
 </body>

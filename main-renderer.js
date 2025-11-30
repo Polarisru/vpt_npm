@@ -457,6 +457,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!progressOverlay) return;
     progressOverlay.classList.add('hidden');
   }
+  
+  function stopScriptAndResetUI() {
+    if (scriptRunning && currentRunner) {
+      currentRunner.stop();
+    }
+    scriptRunning = false;
+    currentRunner = null;
+    
+    if (scriptRunBtn) scriptRunBtn.textContent = 'Run';
+    if (scriptBrowseBtn) scriptBrowseBtn.disabled = false;
+    if (scriptSaveOutputBtn) scriptSaveOutputBtn.disabled = false;
+    if (scriptRunBtn) scriptRunBtn.disabled = false;
+  }
 
   // RS485 IDs
   if (rs485Id) {
@@ -926,6 +939,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (connectionHint) connectionHint.textContent = '111';//'Connection failed';
 		  }
 		} else {
+      stopScriptAndResetUI();
 		  try {
 			await ipcRenderer.invoke('conn-power', false);
 		  } catch (e) {
@@ -1228,6 +1242,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Run script
   if (scriptRunBtn && scriptInput && scriptOutput) {
     scriptRunBtn.addEventListener('click', async () => {
+      // If script is already running -> this acts as Stop
+      if (scriptRunning && currentRunner) {
+        currentRunner.stop();           // uses ScriptRunner.stop()
+        scriptRunning = false;
+        scriptRunBtn.textContent = 'Run';
+        // Re-enable other buttons
+        if (scriptBrowseBtn) scriptBrowseBtn.disabled = false;
+        if (scriptSaveOutputBtn) scriptSaveOutputBtn.disabled = false;
+        return;
+      }
+
+      // Start script
       if (!isConnected) {
         showError && showError('Not connected');
         return;
@@ -1239,10 +1265,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Disable buttons during execution
+      // Disable browse & save, but keep Run (now "Stop") enabled
       if (scriptBrowseBtn) scriptBrowseBtn.disabled = true;
-      if (scriptRunBtn) scriptRunBtn.disabled = true;
       if (scriptSaveOutputBtn) scriptSaveOutputBtn.disabled = true;
+      scriptRunBtn.textContent = 'Stop';
+      scriptRunning = true;
 
       // Clear previous output
       scriptOutput.value = '';
@@ -1252,29 +1279,14 @@ document.addEventListener('DOMContentLoaded', () => {
         scriptOutput.scrollTop = scriptOutput.scrollHeight;
       };
 
-      // Create IPC-based UART wrapper
       const uartWrapper = {
         isOpen: () => isConnected,
-        
         send: async (command) => {
           await ipcRenderer.invoke('uart-send', command);
         },
-        
         sendAndWait: async (command, matcher, timeout) => {
-          // Ignore matcher since IPC can't pass functions
-          // Just pass command and timeout
-          //return await ipcRenderer.invoke('uart-send-wait', command, timeout || 3000);
-          //console.log(`[Renderer] sendAndWait called: cmd="${command}", timeout=${timeout}`);
-          try {
-            const result = await ipcRenderer.invoke('uart-send-wait', command, timeout || 3000);
-            //console.log(`[Renderer] sendAndWait result:`, result);
-            return result;
-          } catch (error) {
-            //console.error(`[Renderer] sendAndWait error:`, error);
-            throw error;
-          }          
-        },        
-        
+          return await ipcRenderer.invoke('uart-send-wait', command, timeout || 3000);
+        },
         emitter: {
           on: () => {},
           removeListener: () => {}
@@ -1288,10 +1300,11 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Script execution failed:', e);
         logFn(`ERROR: ${e.message}`);
       } finally {
+        // Script finished or failed
+        scriptRunning = false;
+        scriptRunBtn.textContent = 'Run';
         currentRunner = null;
-        // Always re-enable buttons after execution (success or error)
         if (scriptBrowseBtn) scriptBrowseBtn.disabled = false;
-        if (scriptRunBtn) scriptRunBtn.disabled = false;
         if (scriptSaveOutputBtn) scriptSaveOutputBtn.disabled = false;
       }
     });
@@ -1369,18 +1382,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // port name from small window
   ipcRenderer.on('selected-port', (_event, data) => {
-	const { portPath, fwVersion } = typeof data === 'string' ? { portPath: data, fwVersion: null } : data;
+    const { portPath, fwVersion } = typeof data === 'string' ? { portPath: data, fwVersion: null } : data;
     
-	const portLabel = document.getElementById('portName');
+    const portLabel = document.getElementById('portName');
     if (portLabel) {
-		portLabel.textContent = portPath;
-	}
+      portLabel.textContent = portPath;
+    }
 	
-	if (fwVersion) {
-		const vptVerElem = document.getElementById('vptVer');
-		if (vptVerElem) {
-			vptVerElem.textContent = 'Ver. ' + fwVersion;
-		}
-	}	
+    if (fwVersion) {
+      const vptVerElem = document.getElementById('vptVer');
+      if (vptVerElem) {
+        vptVerElem.textContent = 'Ver. ' + fwVersion;
+      }
+    }	
   });
+  
+  // Tab switching
+  document.querySelectorAll('.tab-link').forEach(btn => {
+    btn.addEventListener('click', function() {
+      stopScriptAndResetUI();
+      document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById(this.dataset.tab).classList.add('active');
+    });
+  });  
 });
