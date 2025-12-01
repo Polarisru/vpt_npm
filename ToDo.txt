@@ -4,11 +4,11 @@ More Visio-look:
   Periodically reading of info parameters, how??                          LATER
 	
 VPT FW
-  Add Base ID setup
-  Add RS485 subtype setup
-  Add one decimal position to SCL
+  Add Base ID setup                         To check!
+  Add RS485 subtype setup                   To check!
+  Add one decimal position to SCL           To check!
   Send raw command is not ready yet
-  Set as ZeroPos command
+  Set as ZeroPos command                    To check!
   Get status command (errors)
 	
 GUI:
@@ -24,7 +24,7 @@ GUI:
   Raw command block invisible for PWM       DONE
   Revision string block invisible for PWM   DONE
   Disable movement after disconnect         DONE
-  Add RS485 subtype
+  Add RS485 subtype                         To check!
   Writing EEPROM parameters is wrong??
   Show VPT status
   Update VPT

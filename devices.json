@@ -94,7 +94,9 @@
           "min": 800,
           "max": 2200,
           "dflt": 1000,
-          "unit": "us"
+          "unit": "us",
+          "mult": 4,
+          "offset": 988
         },
         {
           "name": "Max_us",
@@ -103,7 +105,9 @@
           "min": 800,
           "max": 2200,
           "dflt": 2000,
-          "unit": "us"
+          "unit": "us",
+          "mult": 4,
+          "offset": 988
         },
         {
           "name": "Options",
@@ -120,7 +124,9 @@
           "min": 800,
           "max": 2200,
           "dflt": 1500,
-          "unit": "us"
+          "unit": "us",
+          "mult": 4,
+          "offset": 988          
         },
         {
           "name": "Neutral",
@@ -137,7 +143,9 @@
           "min": 1000,
           "max": 2000,
           "dflt": 1500,
-          "unit": "us"
+          "unit": "us",
+          "mult": 4,
+          "offset": 988          
         },
         {
           "name": "SaverTime",
