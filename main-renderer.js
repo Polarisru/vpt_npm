@@ -15,9 +15,16 @@ function collectConnectionConfig() {
   const connType = document.getElementById('connType').value;
   const cfg = { type: connType };
 
+  const currentEl = document.getElementById('currentLimit');
+  if (currentEl) {
+    const val = parseFloat(currentEl.value || '0');
+    if (Number.isFinite(val)) cfg.current = val;
+  }
+
   if (connType === 'RS485') {
     cfg.baud = document.getElementById('rs485-baud').value;
     cfg.id = document.getElementById('rs485-id').value;
+    cfg.subtype = document.getElementById('rs485-subtype').value;
   } else if (connType === 'CAN') {
     cfg.bitrate = document.getElementById('can-bitrate').value;
     cfg.id = document.getElementById('can-id').value;
@@ -257,27 +264,6 @@ function parseHexBytes(str, expectedLen) {
     bytes.push(parseInt(clean.slice(i, i + 2), 16));
   }
   return bytes;
-}
-
-function collectConnectionConfig() {
-  const connType = document.getElementById('connType').value;
-  const cfg = { type: connType };
-
-  const currentEl = document.getElementById('currentLimit');
-  if (currentEl) {
-    const val = parseFloat(currentEl.value || '0');
-    if (Number.isFinite(val)) cfg.current = val;
-  }
-
-  if (connType === 'RS485') {
-    cfg.baud = document.getElementById('rs485-baud').value;
-    cfg.id = document.getElementById('rs485-id').value;
-  } else if (connType === 'CAN') {
-    cfg.bitrate = document.getElementById('can-bitrate').value;
-    cfg.id = document.getElementById('can-id').value;
-  }
-
-  return cfg;
 }
 
 async function readInfoField(start, end) {
@@ -1018,7 +1004,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		  } catch (e) {
       console.log('catch block entered');
 			console.error('Connection init failed:', e);
-			if (connectionHint) connectionHint.textContent = '111';//'Connection failed';
+			if (connectionHint) connectionHint.textContent = 'Connection failed';
 		  }
 		} else {
       stopScriptAndResetUI();

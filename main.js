@@ -182,7 +182,10 @@ ipcMain.handle('conn-init', async (_event, cfg) => {
     const baud = cfg.baud;
     if (!baud) throw new Error('Missing RS485 baud');
     await sendOk('SB' + String(baud));
-
+    // SSIx where x = rs485-subtype value
+    const subtype = cfg.rs485-subtype;
+    if (!subtype) throw new Error('Missing RS485 subtype');
+    await sendOk('SSI' + String(subtype));
     // SIDx where x = rs485-id value
     const id = cfg.id;
     if (!id) throw new Error('Missing RS485 ID');
@@ -194,7 +197,10 @@ ipcMain.handle('conn-init', async (_event, cfg) => {
       throw new Error('Invalid CAN bitrate: ' + cfg.bitrate);
     }
     await sendOk('SB' + String(bitrate));
-
+    // SBIx where x = can-base-id value
+    const base_id = cfg.baseId;
+    if (!base_id) throw new Error('Missing CAN base ID');
+    await sendOk('SBI' + String(base_id));
     // SIDx where x = can-id value
     const id = cfg.id;
     if (!id) throw new Error('Missing CAN ID');
