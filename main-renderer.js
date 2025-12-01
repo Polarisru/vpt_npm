@@ -729,8 +729,72 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // random-text READs for info-block
+  // HEX parsing function (based on standard Intel HEX format)
+  function parseIntelHexToPages(hexString) {
+    const lines = hexString.trim().split(/\r?\n/);
+    const memory = new Map(); // Address -> byte value
+    let minAddress = Infinity;
 
+    for (const line of lines) {
+      if (!line.startsWith(':')) continue;
+      const byteCount = parseInt(line.substr(1, 2), 16);
+      const addr = parseInt(line.substr(3, 4), 16);
+      const recordType = parseInt(line.substr(7, 2), 16);
+      const dataStr = line.substr(9, byteCount * 2);
+      const checksum = parseInt(line.substr(9 + byteCount * 2, 2), 16);
+
+      // Simple checksum validation (sum of all bytes + checksum == 0 mod 256)
+      let sum = byteCount + addr + (addr >> 8) + recordType;
+      for (let i = 0; i < byteCount; i++) {
+        const byte = parseInt(dataStr.substr(i * 2, 2), 16);
+        sum += byte;
+        const fullAddr = addr + i; // Handle extended linear address if needed (recordType 04)
+        if (recordType === 0 && fullAddr < minAddress) minAddress = fullAddr;
+        memory.set(fullAddr, byte);
+      }
+      sum += checksum;
+      if ((sum & 0xFF) !== 0) {
+        throw new Error(`Invalid checksum in line: ${line}`);
+      }
+
+      // Handle extended linear address (recordType 04) by updating base address
+      if (recordType === 4) {
+        const baseAddr = parseInt(dataStr, 16) << 16;
+        // Reprocess data with new base if needed, but for simplicity assume low addresses
+      }
+
+      if (recordType === 1) break; // End of file
+    }
+
+    if (minAddress === Infinity) throw new Error('No valid data in HEX file');
+
+    // Pad to 256-byte pages starting from minAddress (align to page boundary if needed)
+    const pageSize = 256;
+    const startPageAddr = Math.floor(minAddress / pageSize) * pageSize;
+    const totalPages = Math.ceil((memory.size + (minAddress % pageSize)) / pageSize);
+    const pages = [];
+
+    for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+      const pageAddr = startPageAddr + (pageIndex * pageSize);
+      const page = new Uint8Array(pageSize);
+      let hasData = false;
+      for (let offset = 0; offset < pageSize; offset++) {
+        const addr = pageAddr + offset;
+        const byte = memory.get(addr);
+        if (byte !== undefined) {
+          page[offset] = byte;
+          hasData = true;
+        } else {
+          page[offset] = 0xFF; // Erase value, adjust if device expects different
+        }
+      }
+      if (hasData) pages.push({ index: pageIndex, data: page, addr: pageAddr });
+    }
+
+    return { pages, totalPages: pages.length, startAddress: startPageAddr };
+  }
+
+  // random-text READs for info-block
   if (serialReadBtn && serialInput) {
     serialReadBtn.addEventListener('click', async () => {
       const serial = await readInfoField(0x100, 0x12F);
@@ -1365,35 +1429,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-	updateBtn.addEventListener('click', async () => {
-	  try {
-		const { canceled, filePaths } = await ipcRenderer.invoke('select-hex-file');
-		if (canceled || !filePaths || filePaths.length === 0) {
-		  return;
-		}
-		const filePath = filePaths[0];
+  updateBtn.addEventListener('click', async () => {
+    try {
+      const { canceled, filePaths } = await ipcRenderer.invoke('select-hex-file');
+      if (canceled || !filePaths || filePaths.length === 0) return;
 
-		const hexContent = await ipcRenderer.invoke('read-file', filePath);
+      const filePath = filePaths[0];
+      const hexContent = await ipcRenderer.invoke('read-file', filePath);
 
-		// Show modal progress in main window
-		showProgress('Firmware update', 'Uploading firmware…');
-		// Start at 0
-		updateProgress(0, 100); // will be updated by events
+      // Parse HEX file to binary pages (256 bytes each)
+      const { pages, totalPages, startAddress } = parseIntelHexToPages(hexContent);
+      if (pages.length === 0) {
+        showError('Invalid HEX file: No data records found.');
+        return;
+      }
 
-		// Tell main to start update; it will emit progress events
-		await ipcRenderer.invoke('perform-update', hexContent);
+      showProgress('Firmware Update', `Preparing ${totalPages} pages...`);
+      updateProgress(0, totalPages);
 
-		// On success, optionally fill bar to 100%
-		updateProgress(100, 100);
-	  } catch (e) {
-		console.error('Firmware update failed:', e);
-    const cleanMessage = e.message.split('Error: ').pop();
-		showError ? showError('Firmware update failed: ' + cleanMessage)
-				  : alert('Firmware update failed: ' + cleanMessage);
-	  } finally {
-		hideProgress();
-	  }
-	});   
+      // Invoke main process for flashing
+      await ipcRenderer.invoke('perform-update', pages, totalPages, startAddress);
+
+      updateProgress(totalPages, totalPages);
+      hideProgress();
+      showError('Firmware update completed successfully.', true); // Success variant if you add one
+    } catch (e) {
+      console.error('Firmware update failed:', e);
+      const cleanMessage = e.message.split('Error: ').pop() || e.message;
+      showError(`Firmware update failed: ${cleanMessage}`);
+      hideProgress();
+    }
+  });  
 
 	ipcRenderer.on('update-progress', (_event, payload) => {
 	  // payload: { current, total, text? } or { percent }

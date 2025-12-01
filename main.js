@@ -415,19 +415,76 @@ ipcMain.handle('read-status', async () => {
   return m ? parseInt(m[1], 10) : null;
 });
 
-ipcMain.handle('perform-update', async (event, hexContent) => {
-  const win = BrowserWindow.fromWebContents(event.sender);
+// Add to ipcMain handlers
+ipcMain.handle('perform-update', async (event, pages, totalPages, startAddress) => {
+  if (!uart.isOpen()) throw new Error('UART not open');
 
-  // your chunking / flashing logic…
-  const totalSteps = chunks.length;
-  for (let i = 0; i < totalSteps; i++) {
-    // write chunk i...
-    const percent = Math.round(((i + 1) / totalSteps) * 100);
-    win.webContents.send('update-progress', {
-      percent,
-      text: `Uploading… ${percent}%`
-    });
+  const win = BrowserWindow.fromWebContents(event.sender);
+  let successCount = 0;
+
+  try {
+    // Step 1: Send UPFW1234 (no response expected)
+    await uart.send('UPFW1234');
+    win.webContents.send('update-progress', { current: 0, total: totalPages, text: 'Entering bootloader...' });
+
+    // Step 2: Send BLS repeatedly until 'OK' or 5s timeout
+    const blsStart = Date.now();
+    let blsResponse = null;
+    while (Date.now() - blsStart < 5000) {
+      blsResponse = await uart.sendAndWait('BLS', (line) => line.trim() === 'OK', 1000);
+      if (blsResponse) break;
+      await new Promise(resolve => setTimeout(resolve, 100)); // Poll every 100ms
+    }
+    if (!blsResponse) throw new Error('Failed to enter bootloader: No OK response within 5s');
+
+    win.webContents.send('update-progress', { current: 0, total: totalPages, text: 'Flashing pages...' });
+
+    // Step 3: Flash each page
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      let attempts = 0;
+      let pageSuccess = false;
+
+      while (attempts < 3 && !pageSuccess) {
+        attempts++;
+
+        // 3.1: Send BLFxx (xx = page index as 2-digit HEX)
+        const pageIndexHex = page.index.toString(16).toUpperCase().padStart(2, '0');
+        await uart.send(`BLF${pageIndexHex}`);
+
+        // 3.2: Wait 10ms
+        await new Promise(resolve => setTimeout(resolve, 10));
+
+        // 3.3: Send 256-byte binary stream
+        await uart.writeBinary(page.data);
+
+        // 3.4: Wait for response 'OK'
+        const response = await uart.sendAndWait('', (line) => line.trim() === 'OK', 2000); // Empty send for response wait
+        if (response) {
+          pageSuccess = true;
+          successCount++;
+        } else {
+          console.warn(`Page ${page.index} attempt ${attempts} failed`);
+          if (attempts < 3) await new Promise(resolve => setTimeout(resolve, 100)); // Brief delay before retry
+        }
+      }
+
+      if (!pageSuccess) throw new Error(`Failed to flash page ${page.index} after 3 attempts`);
+
+      // Update progress after successful page
+      win.webContents.send('update-progress', { current: successCount, total: totalPages, text: `Flashed page ${successCount}/${totalPages}` });
+    }
+
+    // Step 4: Send BLQ to exit bootloader (no response)
+    await uart.send('BLQ');
+
+    win.webContents.send('update-progress', { current: totalPages, total: totalPages, text: 'Update complete' });
+  } catch (err) {
+    console.error('Firmware update error:', err);
+    throw new Error(`Firmware update failed: ${err.message}`);
   }
+
+  return true;
 });
 
 ipcMain.handle('get-uart-instance', async (event) => {

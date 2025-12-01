@@ -110,6 +110,19 @@ function send(cmd) {
     port.write('\x1B' + cmd + '\n');
 }
 
+function writeBinary(buffer) {
+  return new Promise((resolve, reject) => {
+    if (!port || !port.isOpen) {
+      return reject(new Error('Port not open'));
+    }
+    // buffer should be a Buffer or Uint8Array (Buffer.from OK)
+    port.write(Buffer.from(buffer), (err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+}
+
 function sendAndWait(cmd, matcher, delayMs = 1000) {
     return new Promise((resolve, reject) => {
         if (!isOpen()) {
@@ -138,5 +151,6 @@ module.exports = {
     send,
     sendAndWait,
     onLine,
-    isOpen
+    isOpen,
+    writeBinary
 };
