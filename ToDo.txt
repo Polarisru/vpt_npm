@@ -6,10 +6,10 @@ More Visio-look:
 VPT FW
   Add Base ID setup                         To check!
   Add RS485 subtype setup                   To check!
-  Add one decimal position to SCL           To check!
-  Send raw command is not ready yet
+  Add one decimal position to SCL           DONE
+  Send raw command                          To check!
   Set as ZeroPos command                    To check!
-  Get status command (errors)
+  Get status command (errors)               DONE
 	
 GUI:
 	Motor position in 0.1° steps              DONE
@@ -24,7 +24,12 @@ GUI:
   Raw command block invisible for PWM       DONE
   Revision string block invisible for PWM   DONE
   Disable movement after disconnect         DONE
-  Add RS485 subtype                         To check!
+  Add RS485 subtype                         DONE
+  Show SW version                           DONE
+  Raw command response not shown            DONE
+  Raw command response format               DONE
+  Get revision string, wrong error          DONE
+  Problem with getting revision and wtime
   Writing EEPROM parameters is wrong??
   Show VPT status
   Update VPT

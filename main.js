@@ -186,7 +186,7 @@ ipcMain.handle('conn-init', async (_event, cfg) => {
     if (!baud) throw new Error('Missing RS485 baud');
     await sendOk('SB' + String(baud));
     // SSIx where x = rs485-subtype value
-    const subtype = cfg.rs485-subtype;
+    const subtype = cfg.subtype;
     if (!subtype) throw new Error('Missing RS485 subtype');
     await sendOk('SSI' + String(subtype));
     // SIDx where x = rs485-id value
@@ -375,16 +375,34 @@ ipcMain.handle('read-ascii-range', async (_event, { start, end }) => {
 
 ipcMain.handle('send-raw-command', async (_event, { bytes }) => {
   if (!uart.isOpen()) throw new Error('UART not open');
-  // bytes: array of numbers 0..255
-  // Build command string, e.g. "RCxx yy zz ..." or directly hex frame
   const hex = bytes.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('');
-  // Assuming device expects just hex bytes as one command:
-  const cmd = 'RAW' + hex; // adjust if protocol needs prefix
+  const cmd = 'RAW' + hex;
   const resp = await uart.sendAndWait(
     cmd,
-    line => line.trim() === 'OK',
+    line => {
+      const trimmed = line.trim();
+      // Accept OK or any line that's not the echo of the command
+      return trimmed.length > 0;
+    },
     800
   );
+  return resp.trim();
+});
+
+ipcMain.handle('send-text-command', async (_event, command) => {
+  if (!uart.isOpen()) throw new Error('UART not open');
+  
+  const resp = await uart.sendAndWait(
+    command,
+    line => {
+      const trimmed = line.trim();
+      // Accept any non-empty line that contains a colon (response format)
+      // or is not the command echo
+      return trimmed.length > 0 && trimmed.includes(':');
+    },
+    800
+  );
+  
   return resp;
 });
 

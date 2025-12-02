@@ -366,6 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const rawBlock = document.getElementById('rawBlock');
   const rawCommandInput = document.getElementById('rawCommandInput');
+  const rawCommandResponse = document.getElementById('rawCommandResponse');
   const rawSendBtn = document.getElementById('rawSendBtn');
 
   const fwFileName  = document.getElementById('fwFileName');
@@ -872,10 +873,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		  revText.value = txt || '';
 		} catch (e) {
-		  //console.error('Revision read failed:', e);
-		  //revText.value = 'Error reading revision';
-      showError ? showError('Revision read failed: ' + e) 
-          : alert('Revision read failed: ' + e);
+      const cleanMessage = e.message.split('Error: ').pop();
+      showError ? showError('Revision read failed: ' + cleanMessage) 
+          : alert('Revision read failed: ' + cleanMessage);
 		} finally {
 		  revReadBtn.disabled = false;
 		  revReadBtn.textContent = oldLabel;
@@ -1175,7 +1175,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		  for (const inp of Array.from(inputs)) {
 			const address = Number(inp.dataset.address);
 			const type = inp.dataset.type;
-			const mult = Number(inp.dataset.mult) || 1;
 
       const raw = await readParamFromDevice(address, type);
       const mult = Number(inp.dataset.mult) || 1;
@@ -1291,6 +1290,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function formatHexWithSpaces(hexString) {
+    // Remove any existing spaces
+    const clean = hexString.replace(/\s+/g, '');
+    // Add space every 2 characters
+    return clean.match(/.{1,2}/g)?.join(' ') ?? '';
+  }
+  
   if (rawSendBtn && rawCommandInput) {
     rawSendBtn.addEventListener('click', async () => {
       try {
@@ -1307,8 +1313,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         rawSendBtn.disabled = true;
 
-        await ipcRenderer.invoke('send-raw-command', { bytes });
-        // optional: some UI feedback
+        const response = await ipcRenderer.invoke('send-raw-command', { bytes });
+        rawCommandResponse.value = formatHexWithSpaces(response);
       } catch (e) {
         console.error('Raw command failed:', e);
         const cleanMessage = e.message.split('Error: ').pop();
