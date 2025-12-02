@@ -250,11 +250,20 @@ body {
     word-break: break-all;
 }
 
-.sidebar-status-vptver {
+.sidebar-status-ver {
     font-size: 13px;
     font-weight: 600;
     color: #333;
     margin-bottom: 2px;
+    word-break: break-all;
+}
+
+.sidebar-status-ver {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+    text-align: center;
     word-break: break-all;
 }
 

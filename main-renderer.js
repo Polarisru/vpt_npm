@@ -1522,6 +1522,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }	
   });
   
+  ipcRenderer.on('app-version', (event, ver) => {
+    const swVerElem = document.getElementById('swVer');
+    if (swVerElem) {
+      swVerElem.textContent = `Ver. ${ver}`;
+    }
+  });  
+  
   // Tab switching
   document.querySelectorAll('.tab-link').forEach(btn => {
     btn.addEventListener('click', function() {

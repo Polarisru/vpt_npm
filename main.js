@@ -83,6 +83,9 @@ function createMainWindow({ portPath, fwVersion }) {
         portPath,
 			  fwVersion
 		  });
+      // send app version from package.json
+      const appVersion = app.getVersion();
+      mainWindow.webContents.send('app-version', appVersion);
     }); 
 }
 
