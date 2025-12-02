@@ -95,7 +95,7 @@
           "max": 2200,
           "dflt": 1000,
           "unit": "us",
-          "mult": 4,
+          "div": 4,
           "offset": 988
         },
         {
@@ -106,7 +106,7 @@
           "max": 2200,
           "dflt": 2000,
           "unit": "us",
-          "mult": 4,
+          "div": 4,
           "offset": 988
         },
         {
@@ -125,7 +125,7 @@
           "max": 2200,
           "dflt": 1500,
           "unit": "us",
-          "mult": 4,
+          "div": 4,
           "offset": 988          
         },
         {
@@ -144,7 +144,7 @@
           "max": 2000,
           "dflt": 1500,
           "unit": "us",
-          "mult": 4,
+          "div": 4,
           "offset": 988          
         },
         {
@@ -196,7 +196,7 @@
           "type": "uint8",
           "min": 0,
           "max": 255,
-          "dflt": 30
+          "dflt": 50
         },
         {
           "name": "Kp",
@@ -204,10 +204,10 @@
           "type": "uint8",
           "min": 0,
           "max": 255,
-          "dflt": 60
+          "dflt": 100
         },	
         {
-          "name": "Ko",
+          "name": "Ki",
           "address": 35,
           "type": "uint8",
           "min": 0,
@@ -229,7 +229,153 @@
           "min": 0,
           "max": 255,
           "dflt": 255
-        }      
+        },
+        {
+          "name": "Neutral",
+          "address": 50,
+          "type": "int16",
+          "min": -2048,
+          "max": 2047,
+          "dflt": 0
+        },
+        {
+          "name": "Station_ID",
+          "address": 48,
+          "type": "uint8",
+          "min": 1,
+          "max": 30,
+          "dflt": 1
+        },
+        {
+          "name": "P_Sensor_DB",
+          "address": 40,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 1
+        },
+        {
+          "name": "D_Sensor_DB",
+          "address": 64,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 1
+        },
+        {
+          "name": "I_Sensor_DB",
+          "address": 65,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 1
+        },
+        {
+          "name": "Start_Behavior",
+          "address": 43,
+          "type": "uint8",
+          "min": 1,
+          "max": 255,
+          "dflt": 6
+        },
+        {
+          "name": "Loss_Behavior",
+          "address": 44,
+          "type": "uint8",
+          "min": 1,
+          "max": 255,
+          "dflt": 0
+        },
+        {
+          "name": "SaverTime",
+          "address": 38,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 1
+        },
+        {
+          "name": "SaverFrame",
+          "address": 39,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 57
+        },
+        {
+          "name": "PWM_Safe",
+          "address": 37,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 255
+        },	
+        {
+          "name": "Loss_time",
+          "address": 53,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 0   
+        },
+        {
+          "name": "Loss_pos",
+          "address": 54,
+          "type": "int16",
+          "min": -2048,
+          "max": 2047,
+          "dflt": 0
+        },
+        {
+          "name": "CCW_Scaling",
+          "address": 67,
+          "type": "uint8",
+          "min": 10,
+          "max": 200,
+          "dflt": 100,
+          "unit": "%"
+        },
+        {
+          "name": "CW_Scaling",
+          "address": 68,
+          "type": "uint8",
+          "min": 10,
+          "max": 200,
+          "dflt": 100,
+          "unit": "%"
+        },
+        {
+          "name": "Options",
+          "address": 69,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 1
+        },        
+        {
+          "name": "TC_Kp",
+          "address": 70,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 0
+        },
+        {
+          "name": "TC_Temp_SP",
+          "address": 71,
+          "type": "uint8",
+          "min": 0,
+          "max": 250,
+          "dflt": 80
+        },
+        {
+          "name": "TC_MaxPWM",
+          "address": 72,
+          "type": "uint8",
+          "min": 0,
+          "max": 255,
+          "dflt": 55
+        }
       ]
     },
     {

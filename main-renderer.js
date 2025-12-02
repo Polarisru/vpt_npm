@@ -77,16 +77,35 @@ function buildParamTable(device) {
     const input = document.createElement('input');
     input.type = 'number';
 
-    // Store multiplier, default = 1
+    // Scaling parameters
     const mult = (typeof param.mult === 'number' && param.mult !== 0) ? param.mult : 1;
+    const div = (typeof param.div === 'number' && param.div !== 0) ? param.div : 1;
+    const offset = (typeof param.offset === 'number') ? param.offset : 0;
+    
+    // Helper: raw -> displayed
+    function rawToDisplay(raw) {
+      // raw is in device units already; apply mult, then offset/div if present
+      const scaled = raw / mult;
+      return (scaled / div) + offset;
+    }
 
-    // Set min/max attributes for browser validation (optional visual cues)
-    if (typeof param.min === 'number') input.min = (param.min / mult).toString();
-    if (typeof param.max === 'number') input.max = (param.max / mult).toString();
+    // Helper: displayed -> raw
+    function displayToRaw(display) {
+      const scaled = (display - offset) * div;
+      return scaled * mult;
+    }
 
-    // Set default value in scaled units
+    // Set min/max for browser validation based on displayed units
+    if (typeof param.min === 'number') {
+      input.min = rawToDisplay(param.min).toString();
+    }
+    if (typeof param.max === 'number') {
+      input.max = rawToDisplay(param.max).toString();
+    }
+
+    // Set default value in displayed units
     if (typeof param.dflt !== 'undefined') {
-      input.value = (param.dflt / mult).toString();
+      input.value = rawToDisplay(param.dflt).toString();
     }
 
     // Store metadata
@@ -96,6 +115,8 @@ function buildParamTable(device) {
     input.dataset.max = param.max;
     input.dataset.name = param.name;
     input.dataset.mult = String(mult);
+    input.dataset.div = String(div);
+    input.dataset.offset = String(offset);
 
     // Remove 'input' event listener - allow free editing
     // Only validate on 'blur' when user finishes editing
@@ -103,10 +124,22 @@ function buildParamTable(device) {
       const min = Number(input.dataset.min);
       const max = Number(input.dataset.max);
       const m = Number(input.dataset.mult) || 1;
-      let val = input.value === '' ? NaN : Number(input.value);
+      const d = Number(input.dataset.div) || 1;
+      const off = Number(input.dataset.offset) || 0;
 
-      if (isNaN(val)) {
-        // If empty or invalid, restore to default or min
+      // Local helpers reusing same math as above
+      const rawToDisplay = (raw) => {
+        const scaled = raw / m;
+        return (scaled / d) + off;
+      };
+      const displayToRaw = (display) => {
+        const scaled = (display - off) * d;
+        return scaled * m;
+      };
+
+      let displayVal = input.value === '' ? NaN : Number(input.value);
+      if (isNaN(displayVal)) {
+        // Restore default or min/max, using raw
         let raw;
         if (typeof param.dflt !== 'undefined') {
           raw = param.dflt;
@@ -117,17 +150,17 @@ function buildParamTable(device) {
         } else {
           return;
         }
-        input.value = String(raw / m);
+        input.value = String(rawToDisplay(raw));
         return;
       }
 
-      // Convert to raw units and clamp
-      let raw = val * m;
+      // Convert to raw, clamp in raw domain
+      let raw = displayToRaw(displayVal);
       if (!isNaN(min) && raw < min) raw = min;
       if (!isNaN(max) && raw > max) raw = max;
 
-      // Update with clamped value
-      input.value = String(raw / m);
+      // Update with clamped display value
+      input.value = String(rawToDisplay(raw));
     });
 
     valueTd.appendChild(input);
@@ -170,8 +203,14 @@ function collectCurrentParams() {
   const inputs = document.querySelectorAll('#paramTable tbody input');
   return Array.from(inputs).map(inp => {
     const mult = Number(inp.dataset.mult) || 1;
-    const scaled = Number(inp.value);
-    const raw = scaled / mult;
+    const div = Number(inp.dataset.div) || 1;
+    const offset = Number(inp.dataset.offset) || 0;
+
+    const displayVal = Number(inp.value);
+    // value = (param - offset) / div per your definition, then * mult to go to raw
+    const scaled = (displayVal - offset) * div;
+    const raw = scaled * mult;
+
     return {
       name: inp.dataset.name,
       address: Number(inp.dataset.address),
@@ -1138,11 +1177,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			const type = inp.dataset.type;
 			const mult = Number(inp.dataset.mult) || 1;
 
-			const raw = await readParamFromDevice(address, type);
-			const scaled = raw * mult;
+      const raw = await readParamFromDevice(address, type);
+      const mult = Number(inp.dataset.mult) || 1;
+      const div = Number(inp.dataset.div) || 1;
+      const offset = Number(inp.dataset.offset) || 0;
 
-			inp.value = String(scaled);
-			inp.dispatchEvent(new Event('blur')); // reuse clamping/formatting
+      // param (display) = value / div + offset, and value = raw / mult
+      const displayVal = (raw / mult) / div + offset;
+      inp.value = String(displayVal);
+      inp.dispatchEvent(new Event('blur'));
       
       step += 1;
 			updateProgress(step, total);
