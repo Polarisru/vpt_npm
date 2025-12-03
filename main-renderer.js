@@ -863,7 +863,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		try {
 		  // Ask main process to send GVS and return the raw text response
-		  const line = await ipcRenderer.invoke('send-text-command', 'GVS');
+		  //const line = await ipcRenderer.invoke('send-text-command', 'GVS');
+      const line = await ipcRenderer.invoke('send-text-command', { cmd: 'GVS', prefix: 'VS:' });
 
 		  // Expect "VS:some text"
 		  let txt = typeof line === 'string' ? line.trim() : '';
@@ -897,7 +898,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		try {
 		  // ask main to send GWT and return the response line as string
-		  const line = await ipcRenderer.invoke('send-text-command', 'GWT');
+		  //const line = await ipcRenderer.invoke('send-text-command', 'GWT');
+      const line = await ipcRenderer.invoke('send-text-command', { cmd: 'GWT', prefix: 'WT:' });
 
 		  let txt = typeof line === 'string' ? line.trim() : '';
 

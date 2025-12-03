@@ -9,6 +9,14 @@ let selectWindow;
 let mainWindow;
 let uploadWindow = null;
 
+// UART queue to serialize all sendAndWait calls
+let uartQueue = Promise.resolve();
+
+function queuedSendAndWait(cmd, matcher, timeoutMs = 1000) {
+  uartQueue = uartQueue.then(() => uart.sendAndWait(cmd, matcher, timeoutMs));
+  return uartQueue;
+}
+
 async function sendPwr0OnExit() {
   if (!uart.isOpen()) {
     console.log('sendPwr0OnExit: UART not open, skipping PWR0');
@@ -18,7 +26,7 @@ async function sendPwr0OnExit() {
   console.log('sendPwr0OnExit: trying to send PWR0');
 
   try {
-    await uart.sendAndWait(
+    await queuedSendAndWait(
       'PWR0',
       line => {
         console.log('sendPwr0OnExit got line:', line);
@@ -114,15 +122,15 @@ ipcMain.on('port-selected', async (event, portPath) => {
     await uart.open(portPath, baud);
 
     // 2) Send "ID" and expect exact "VPT"
-    const idResp = await uart.sendAndWait(
+    const idResp = await queuedSendAndWait(
       'ID',
       line => line.trim() === 'VPT',
       800
     );
     console.log('ID response:', idResp);
 
-    // 3) Send "VN" and expect "Nx.y"
-    const vnResp = await uart.sendAndWait(
+    // 3) Send "VN" and expect "N:x.y"
+    const vnResp = await queuedSendAndWait(
       'VN',
       line => /^N:\d+\.\d+$/.test(line.trim()),
       800
@@ -151,7 +159,7 @@ ipcMain.on('port-selected', async (event, portPath) => {
   }
 });
 
-// cfg = { type: 'PWM'|'RS485'|'CAN', baud?, id?, bitrate? }
+// cfg = { type: 'PWM'|'RS485'|'CAN', baud?, id?, bitrate?, subtype?, baseId?, current? }
 ipcMain.handle('conn-init', async (_event, cfg) => {
   if (!uart.isOpen()) {
     throw new Error('UART not open');
@@ -168,7 +176,7 @@ ipcMain.handle('conn-init', async (_event, cfg) => {
 
   // Helper: send command and expect "OK"
   async function sendOk(cmd) {
-    const resp = await uart.sendAndWait(
+    const resp = await queuedSendAndWait(
       cmd,
       line => line.trim() === 'OK',
       800
@@ -179,7 +187,7 @@ ipcMain.handle('conn-init', async (_event, cfg) => {
   // 1) SIx
   await sendOk(siCmd);
 
-  // 2) Type-specific SBx / SIDx
+  // 2) Type-specific SBx / SIDx / etc.
   if (type === 'RS485') {
     // SBx where x = rs485-baud value
     const baud = cfg.baud;
@@ -227,7 +235,7 @@ ipcMain.handle('conn-power', async (_event, on) => {
   if (!uart.isOpen()) return false;
 
   const cmd = on ? 'PWR1' : 'PWR0';
-  await uart.sendAndWait(
+  await queuedSendAndWait(
     cmd,
     line => line.trim() === 'OK',
     800
@@ -244,7 +252,7 @@ ipcMain.handle('set-position', async (_event, degrees) => {
   const posStr = Number(degrees).toFixed(1);
   const cmd = 'DP' + posStr;
 
-  await uart.sendAndWait(
+  await queuedSendAndWait(
     cmd,
     line => line.trim() === 'OK',
     800
@@ -257,7 +265,7 @@ ipcMain.handle('read-device-position', async () => {
   if (!uart.isOpen()) throw new Error('UART not open');
 
   // Send "GPS", wait for a line starting with "PS:"
-  const resp = await uart.sendAndWait(
+  const resp = await queuedSendAndWait(
     'GPS',
     line => line.trim().startsWith('PS:'),
     800
@@ -267,9 +275,13 @@ ipcMain.handle('read-device-position', async () => {
 
 ipcMain.handle('uart-send-command', async (_event, command) => {
   try {
-    const resp = await uart.sendAndWait(
+    const resp = await queuedSendAndWait(
       command,
-      line => line.startsWith('UM:') || line.startsWith('CS:') || line.startsWith('TS:') || line === 'E.H',
+      line =>
+        line.startsWith('UM:') ||
+        line.startsWith('CS:') ||
+        line.startsWith('TS:') ||
+        line === 'E.H',  // ??? may be this should be ignored
       800
     );
     return resp;
@@ -305,7 +317,7 @@ ipcMain.handle('write-param', async (_event, { address, type, value }) => {
     const addrHex = addr.toString(16).toUpperCase().padStart(2, '0');
     const valHex = (byteVal & 0xFF).toString(16).toUpperCase().padStart(2, '0');
     const cmd = `WB${addrHex}:${valHex}`;
-    await uart.sendAndWait(
+    await queuedSendAndWait(
       cmd,
       line => line.trim() === 'OK',
       800
@@ -330,7 +342,7 @@ ipcMain.handle('read-byte', async (_event, address) => {
   const addrHex = address.toString(16).toUpperCase().padStart(2, '0');
   const cmd = `RB${addrHex}`;
 
-  const resp = await uart.sendAndWait(
+  const resp = await queuedSendAndWait(
     cmd,
     line => /^B:0x[0-9A-Fa-f]{2}$/.test(line.trim()),
     800
@@ -351,7 +363,7 @@ ipcMain.handle('read-ascii-range', async (_event, { start, end }) => {
 
   async function readByte(addr) {
     const cmd = 'RB' + addrHex(addr);
-    const resp = await uart.sendAndWait(
+    const resp = await queuedSendAndWait(
       cmd,
       line => /^B:0x[0-9A-Fa-f]{2}$/.test(line.trim()),
       800
@@ -369,7 +381,7 @@ ipcMain.handle('read-ascii-range', async (_event, { start, end }) => {
   }
 
   const chars = bytes.map(b => String.fromCharCode(b));
-  console.log("Text: ", chars.join(''));
+  console.log('Text: ', chars.join(''));
   return chars.join('');
 });
 
@@ -377,39 +389,35 @@ ipcMain.handle('send-raw-command', async (_event, { bytes }) => {
   if (!uart.isOpen()) throw new Error('UART not open');
   const hex = bytes.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join('');
   const cmd = 'RAW' + hex;
-  const resp = await uart.sendAndWait(
+  const resp = await queuedSendAndWait(
     cmd,
-    line => {
-      const trimmed = line.trim();
-      // Accept OK or any line that's not the echo of the command
-      return trimmed.length > 0;
-    },
+    line => line.trim().length > 0,
     800
   );
   return resp.trim();
 });
 
-ipcMain.handle('send-text-command', async (_event, command) => {
+// NEW: prefix-based text command
+ipcMain.handle('send-text-command', async (_event, { cmd, prefix }) => {
   if (!uart.isOpen()) throw new Error('UART not open');
-  
-  const resp = await uart.sendAndWait(
-    command,
-    line => {
-      const trimmed = line.trim();
-      // Accept any non-empty line that contains a colon (response format)
-      // or is not the command echo
-      return trimmed.length > 0 && trimmed.includes(':');
-    },
-    800
-  );
-  
+
+  const matcher = line => {
+    const t = line.trim();
+    if (!t) return false;
+    if (typeof prefix === 'string' && prefix.length > 0) {
+      return t.startsWith(prefix);
+    }
+    return false;
+  };
+
+  const resp = await queuedSendAndWait(cmd, matcher, 800);
   return resp;
 });
 
 ipcMain.handle('read-supply', async () => {
   if (!uart.isOpen()) throw new Error('UART not open');
 
-  const resp = await uart.sendAndWait(
+  const resp = await queuedSendAndWait(
     'GUS',
     line => /^US:-?\d+\.\d+$/.test(line.trim()),
     800
@@ -421,7 +429,7 @@ ipcMain.handle('read-supply', async () => {
 ipcMain.handle('read-temperature', async () => {
   if (!uart.isOpen()) throw new Error('UART not open');
 
-  const resp = await uart.sendAndWait(
+  const resp = await queuedSendAndWait(
     'GT',
     line => /^T:-?\d+\.\d+$/.test(line.trim()),
     800
@@ -433,7 +441,7 @@ ipcMain.handle('read-temperature', async () => {
 ipcMain.handle('read-status', async () => {
   if (!uart.isOpen()) throw new Error('UART not open');
 
-  const resp = await uart.sendAndWait(
+  const resp = await queuedSendAndWait(
     'GS',
     line => /^S:\d+$/.test(line.trim()),
     800
@@ -442,7 +450,7 @@ ipcMain.handle('read-status', async () => {
   return m ? parseInt(m[1], 10) : null;
 });
 
-// Add to ipcMain handlers
+// perform-update: keep uart.send / writeBinary, but use queuedSendAndWait for waits
 ipcMain.handle('perform-update', async (event, pages, totalPages, startAddress) => {
   if (!uart.isOpen()) throw new Error('UART not open');
 
@@ -458,7 +466,7 @@ ipcMain.handle('perform-update', async (event, pages, totalPages, startAddress) 
     const blsStart = Date.now();
     let blsResponse = null;
     while (Date.now() - blsStart < 5000) {
-      blsResponse = await uart.sendAndWait('BLS', (line) => line.trim() === 'OK', 1000);
+      blsResponse = await queuedSendAndWait('BLS', line => line.trim() === 'OK', 1000);
       if (blsResponse) break;
       await new Promise(resolve => setTimeout(resolve, 100)); // Poll every 100ms
     }
@@ -486,7 +494,7 @@ ipcMain.handle('perform-update', async (event, pages, totalPages, startAddress) 
         await uart.writeBinary(page.data);
 
         // 3.4: Wait for response 'OK'
-        const response = await uart.sendAndWait('', (line) => line.trim() === 'OK', 2000); // Empty send for response wait
+        const response = await queuedSendAndWait('', line => line.trim() === 'OK', 2000);
         if (response) {
           pageSuccess = true;
           successCount++;
