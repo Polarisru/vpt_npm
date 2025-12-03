@@ -9,12 +9,45 @@ let selectWindow;
 let mainWindow;
 let uploadWindow = null;
 
-// UART queue to serialize all sendAndWait calls
-let uartQueue = Promise.resolve();
+// Async lock for UART access
+class AsyncLock {
+  constructor() {
+    this.locked = false;
+    this.waiting = [];
+  }
 
-function queuedSendAndWait(cmd, matcher, timeoutMs = 1000) {
-  uartQueue = uartQueue.then(() => uart.sendAndWait(cmd, matcher, timeoutMs));
-  return uartQueue;
+  async acquire() {
+    if (!this.locked) {
+      this.locked = true;
+      return;
+    }
+
+    // Wait in line
+    await new Promise(resolve => this.waiting.push(resolve));
+  }
+
+  release() {
+    if (this.waiting.length > 0) {
+      // Wake up next waiter
+      const resolve = this.waiting.shift();
+      resolve();
+    } else {
+      this.locked = false;
+    }
+  }
+}
+
+const uartLock = new AsyncLock();
+
+async function queuedSendAndWait(cmd, matcher, timeoutMs = 1000) {
+  await uartLock.acquire();
+  
+  try {
+    const result = await uart.sendAndWait(cmd, matcher, timeoutMs);
+    return result;
+  } finally {
+    uartLock.release();
+  }
 }
 
 async function sendPwr0OnExit() {
@@ -400,7 +433,7 @@ ipcMain.handle('send-raw-command', async (_event, { bytes }) => {
 // NEW: prefix-based text command
 ipcMain.handle('send-text-command', async (_event, { cmd, prefix }) => {
   if (!uart.isOpen()) throw new Error('UART not open');
-
+  
   const matcher = line => {
     const t = line.trim();
     if (!t) return false;
@@ -409,7 +442,7 @@ ipcMain.handle('send-text-command', async (_event, { cmd, prefix }) => {
     }
     return false;
   };
-
+  
   const resp = await queuedSendAndWait(cmd, matcher, 800);
   return resp;
 });
@@ -450,7 +483,7 @@ ipcMain.handle('read-status', async () => {
   return m ? parseInt(m[1], 10) : null;
 });
 
-// perform-update: keep uart.send / writeBinary, but use queuedSendAndWait for waits
+// perform-update: keep uart.send / writeBinary
 ipcMain.handle('perform-update', async (event, pages, totalPages, startAddress) => {
   if (!uart.isOpen()) throw new Error('UART not open');
 
@@ -551,11 +584,11 @@ ipcMain.handle('uart-open', (_e, portPath, baud) => uart.open(portPath, baud));
 ipcMain.handle('uart-close', () => uart.close());
 ipcMain.handle('uart-send', (_e, cmd) => uart.send(cmd));
 //ipcMain.handle('uart-send-wait', (_e, cmd, timeoutMs) =>
-//    uart.sendAndWait(cmd, () => true, timeoutMs)
+//    queuedSendAndWait(cmd, () => true, timeoutMs)
 //);
 ipcMain.handle('uart-send-wait', async (_e, cmd, timeoutMs) => {
   try {
-    const result = await uart.sendAndWait(cmd, () => true, timeoutMs || 3000);
+    const result = await queuedSendAndWait(cmd, () => true, timeoutMs || 3000);
     return result;
   } catch (error) {
     throw error;
