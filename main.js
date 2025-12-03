@@ -9,27 +9,32 @@ let selectWindow;
 let mainWindow;
 let uploadWindow = null;
 
-// Async lock for UART access
-class AsyncLock {
+// Priority-based async lock
+class PriorityLock {
   constructor() {
     this.locked = false;
-    this.waiting = [];
+    this.highPriorityQueue = [];  // position, user commands
+    this.lowPriorityQueue = [];   // polling
   }
 
-  async acquire() {
+  async acquire(priority = 'high') {
     if (!this.locked) {
       this.locked = true;
       return;
     }
 
-    // Wait in line
-    await new Promise(resolve => this.waiting.push(resolve));
+    // Wait in appropriate queue
+    const queue = priority === 'high' ? this.highPriorityQueue : this.lowPriorityQueue;
+    await new Promise(resolve => queue.push(resolve));
   }
 
   release() {
-    if (this.waiting.length > 0) {
-      // Wake up next waiter
-      const resolve = this.waiting.shift();
+    // High priority first
+    if (this.highPriorityQueue.length > 0) {
+      const resolve = this.highPriorityQueue.shift();
+      resolve();
+    } else if (this.lowPriorityQueue.length > 0) {
+      const resolve = this.lowPriorityQueue.shift();
       resolve();
     } else {
       this.locked = false;
@@ -37,14 +42,23 @@ class AsyncLock {
   }
 }
 
-const uartLock = new AsyncLock();
+const uartLock = new PriorityLock();
 
+// High priority (default for all commands)
 async function queuedSendAndWait(cmd, matcher, timeoutMs = 1000) {
-  await uartLock.acquire();
-  
+  await uartLock.acquire('high');
   try {
-    const result = await uart.sendAndWait(cmd, matcher, timeoutMs);
-    return result;
+    return await uart.sendAndWait(cmd, matcher, timeoutMs);
+  } finally {
+    uartLock.release();
+  }
+}
+
+// Low priority (for polling only)
+async function pollingRequest(cmd, matcher, timeoutMs = 1000) {
+  await uartLock.acquire('low');
+  try {
+    return await uart.sendAndWait(cmd, matcher, timeoutMs);
   } finally {
     uartLock.release();
   }
@@ -288,7 +302,7 @@ ipcMain.handle('set-position', async (_event, degrees) => {
   await queuedSendAndWait(
     cmd,
     line => line.trim() === 'OK',
-    800
+    30
   );
 
   return true;
@@ -450,7 +464,7 @@ ipcMain.handle('send-text-command', async (_event, { cmd, prefix }) => {
 ipcMain.handle('read-supply', async () => {
   if (!uart.isOpen()) throw new Error('UART not open');
 
-  const resp = await queuedSendAndWait(
+  const resp = await pollingRequest(
     'GUS',
     line => /^US:-?\d+\.\d+$/.test(line.trim()),
     800
@@ -462,7 +476,7 @@ ipcMain.handle('read-supply', async () => {
 ipcMain.handle('read-temperature', async () => {
   if (!uart.isOpen()) throw new Error('UART not open');
 
-  const resp = await queuedSendAndWait(
+  const resp = await pollingRequest(
     'GT',
     line => /^T:-?\d+\.\d+$/.test(line.trim()),
     800
@@ -474,7 +488,7 @@ ipcMain.handle('read-temperature', async () => {
 ipcMain.handle('read-status', async () => {
   if (!uart.isOpen()) throw new Error('UART not open');
 
-  const resp = await queuedSendAndWait(
+  const resp = await pollingRequest(
     'GS',
     line => /^S:\d+$/.test(line.trim()),
     800
