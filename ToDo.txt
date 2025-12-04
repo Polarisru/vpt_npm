@@ -29,7 +29,8 @@ GUI:
   Raw command response not shown            DONE
   Raw command response format               DONE
   Get revision string, wrong error          DONE
-  Problem with getting revision and wtime
+  Problem with getting revision and wtime   DONE
+  Stop movement after changing tab          DONE
   Writing EEPROM parameters is wrong??
   Show VPT status
   Update VPT

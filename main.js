@@ -302,7 +302,7 @@ ipcMain.handle('set-position', async (_event, degrees) => {
   await queuedSendAndWait(
     cmd,
     line => line.trim() === 'OK',
-    30
+    100
   );
 
   return true;

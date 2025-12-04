@@ -397,8 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let statusTimer = null;
 
   async function pollStatusOnce() {
-    console.log('Tick');
-    if (!isConnected || sineRunning) return;
+    if (!isConnected /*|| sineRunning*/) return;
 
     try {
       const [v, t] = await Promise.all([
@@ -1541,10 +1540,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.tab-link').forEach(btn => {
     btn.addEventListener('click', function() {
       stopScriptAndResetUI();
+
+      // If we are leaving the Main tab, stop periodic movement
+      const targetTabId = this.dataset.tab; // 'main-tab', 'eeprom-tab', 'info-tab', 'script-tab'
+      if (typeof stopSine === 'function' && targetTabId !== 'main-tab') {
+        stopSine();
+      }
+
       document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
       this.classList.add('active');
-      document.getElementById(this.dataset.tab).classList.add('active');
+      document.getElementById(targetTabId).classList.add('active');
     });
-  });  
+  }); 
 });
