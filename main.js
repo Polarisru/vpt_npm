@@ -290,24 +290,6 @@ ipcMain.handle('conn-power', async (_event, on) => {
   return true;
 });
 
-// ipcMain.handle('set-position', async (_event, degrees) => {
-  // if (!uart.isOpen()) {
-    // throw new Error('UART not open');
-  // }
-
-  // // format with one decimal place, e.g. 12.3
-  // const posStr = Number(degrees).toFixed(1);
-  // const cmd = 'DP' + posStr;
-
-  // await queuedSendAndWait(
-    // cmd,
-    // line => line.trim() === 'OK',
-    // 100
-  // );
-
-  // return true;
-// });
-
 ipcMain.handle('set-position', async (_event, degrees) => {
   if (!uart.isOpen()) {
     throw new Error('UART not open');

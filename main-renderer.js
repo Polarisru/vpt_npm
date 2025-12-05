@@ -429,8 +429,12 @@ document.addEventListener('DOMContentLoaded', () => {
           if (connectionHint) {
             if (typeof s === 'number' && s === 0) { // Adjust '0' if your logic differs
               connectionHint.textContent = 'Connected';
+              connectionHint.style.color = '';      // '' to use CSS default
+              connectionHint.style.fontWeight = 'normal';
             } else {
               connectionHint.textContent = 'ERROR';
+              connectionHint.style.color = 'red';
+              connectionHint.style.fontWeight = 'bold';
             }
           }
           break;
@@ -447,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function startStatusPolling() {
     console.log('Timer started');
     if (statusTimer) clearInterval(statusTimer);
-    statusTimer = setInterval(pollStatusOnce, 1000);
+    statusTimer = setInterval(pollStatusOnce, 500);
   }
 
   function stopStatusPolling() {
@@ -488,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Function to update the Update button state based on isConnected
   function updateUpdateButtonState() {
     if (!updateBtn) return;
-    updateBtn.disabled = !isConnected;
+    updateBtn.disabled = isConnected;
   }
 
   function showError(message) {
@@ -638,17 +642,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let updatePositionLabel = null;
 
   if (slider && positionLabel) {
-    // const sendPosition = async () => {
-      // if (!isConnected) return;
-      // const degrees = parseFloat(slider.value || '0');
-      // try {
-        // await ipcRenderer.invoke('set-position', degrees);
-        // // optional: handle success
-      // } catch (e) {
-        // console.error('Failed to set position:', e);
-        // // optional: show error in UI
-      // }
-    // };
     const sendPosition = async () => {
       if (!isConnected) return;
       
@@ -1104,8 +1097,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		  connectBtn.textContent = 'Connect';
 		  if (contentOverlay) 
         contentOverlay.classList.remove('hidden');
-		  if (connectionHint)
-        connectionHint.textContent = 'Select connection and press Connect';
+		  if (connectionHint) {
+        connectionHint.textContent = 'Select connection type and press Connect';
+        connectionHint.style.color = '';      // '' to use CSS default
+        connectionHint.style.fontWeight = 'normal';
+      }
 		  setSidebarEnabled(true);
 
 		  // Enable/disable Update button according to new state
