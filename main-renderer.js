@@ -393,30 +393,54 @@ document.addEventListener('DOMContentLoaded', () => {
   const progressBar = document.getElementById('progressBar');  
 
   let isConnected = false;
-
   let statusTimer = null;
+  let pollStep = 0; // 0 = Voltage, 1 = Temp, 2 = Status
 
   async function pollStatusOnce() {
+    console.log('Tick');
     if (!isConnected /*|| sineRunning*/) return;
 
     try {
-      const [v, t] = await Promise.all([
-        ipcRenderer.invoke('read-supply'),
-        ipcRenderer.invoke('read-temperature'),
-        //ipcRenderer.invoke('read-status')
-      ]);
-      updateStatusFields(v, t);
-    if (connectionHint) {
-        if (typeof s === 'number' && s === 0) {
-          connectionHint.textContent = 'Connected';
-        } else {
-          connectionHint.textContent = 'ERROR';
-        }
+      switch (pollStep) {
+        // --- STEP 0: Voltage ---
+        case 0:
+          const v = await ipcRenderer.invoke('read-supply');
+          // Update only the voltage element
+          const vEl = document.getElementById('supplyValue'); 
+          if (vEl) {
+            vEl.textContent = (typeof v === 'number') ? v.toFixed(1) : '--.-';
+          }
+          break;
+
+        // --- STEP 1: Temperature ---
+        case 1:
+          const t = await ipcRenderer.invoke('read-temperature');
+          // Update only the temperature element
+          const tEl = document.getElementById('temperatureValue');
+          if (tEl) {
+            tEl.textContent = (typeof t === 'number') ? t.toFixed(1) : '--.-';
+          }
+          break;
+
+        // --- STEP 2: Status ---
+        case 2:
+          const s = await ipcRenderer.invoke('read-status');
+          // Update only connection hint
+          if (connectionHint) {
+            if (typeof s === 'number' && s === 0) { // Adjust '0' if your logic differs
+              connectionHint.textContent = 'Connected';
+            } else {
+              connectionHint.textContent = 'ERROR';
+            }
+          }
+          break;
       }
+
+      // Cycle to the next step: 0 -> 1 -> 2 -> 0 ...
+      pollStep = (pollStep + 1) % 3;
+
     } catch (e) {
-      console.error('Status poll failed:', e);
-      updateStatusFields(null, null);
-    if (connectionHint) connectionHint.textContent = 'ERROR';
+      console.error('Status poll step ' + pollStep + ' failed:', e);
     }
   }
 

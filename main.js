@@ -467,7 +467,7 @@ ipcMain.handle('read-supply', async () => {
   const resp = await pollingRequest(
     'GUS',
     line => /^US:-?\d+\.\d+$/.test(line.trim()),
-    800
+    100
   );
   const m = resp.trim().match(/^US:(-?\d+\.\d+)$/);
   return m ? parseFloat(m[1]) : null;
@@ -479,7 +479,7 @@ ipcMain.handle('read-temperature', async () => {
   const resp = await pollingRequest(
     'GT',
     line => /^T:-?\d+\.\d+$/.test(line.trim()),
-    800
+    100
   );
   const m = resp.trim().match(/^T:(-?\d+\.\d+)$/);
   return m ? parseFloat(m[1]) : null;
@@ -491,7 +491,7 @@ ipcMain.handle('read-status', async () => {
   const resp = await pollingRequest(
     'GS',
     line => /^S:\d+$/.test(line.trim()),
-    800
+    100
   );
   const m = resp.trim().match(/^S:(\d+)$/);
   return m ? parseInt(m[1], 10) : null;
