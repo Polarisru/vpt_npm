@@ -638,17 +638,36 @@ document.addEventListener('DOMContentLoaded', () => {
   let updatePositionLabel = null;
 
   if (slider && positionLabel) {
+    // const sendPosition = async () => {
+      // if (!isConnected) return;
+      // const degrees = parseFloat(slider.value || '0');
+      // try {
+        // await ipcRenderer.invoke('set-position', degrees);
+        // // optional: handle success
+      // } catch (e) {
+        // console.error('Failed to set position:', e);
+        // // optional: show error in UI
+      // }
+    // };
     const sendPosition = async () => {
       if (!isConnected) return;
+      
       const degrees = parseFloat(slider.value || '0');
+      
       try {
-        await ipcRenderer.invoke('set-position', degrees);
-        // optional: handle success
+        // Await the ACTUAL position returned by the device
+        const actualPos = await ipcRenderer.invoke('set-position', degrees);
+
+        // Update the label with the confirmed value from the device
+        if (devicePositionLabel && typeof actualPos === 'number') {
+          devicePositionLabel.textContent = actualPos.toFixed(1) + '°';
+        }
+        
       } catch (e) {
         console.error('Failed to set position:', e);
-        // optional: show error in UI
+        devicePositionLabel.textContent = '--.-°';
       }
-    };
+    };    
 
     updatePositionLabel = () => {
       positionLabel.textContent = parseFloat(slider.value).toFixed(1) + '°';

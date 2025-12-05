@@ -31,8 +31,10 @@ GUI:
   Get revision string, wrong error          DONE
   Problem with getting revision and wtime   DONE
   Stop movement after changing tab          DONE
+  Parameters requested not at once          To check!
+  DPR usage, actual position update         To check!
   Writing EEPROM parameters is wrong??
-  Show VPT status
+  Show VPT status                           To check!
   Update VPT
   Upload firmware
   

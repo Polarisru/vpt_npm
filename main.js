@@ -290,22 +290,49 @@ ipcMain.handle('conn-power', async (_event, on) => {
   return true;
 });
 
+// ipcMain.handle('set-position', async (_event, degrees) => {
+  // if (!uart.isOpen()) {
+    // throw new Error('UART not open');
+  // }
+
+  // // format with one decimal place, e.g. 12.3
+  // const posStr = Number(degrees).toFixed(1);
+  // const cmd = 'DP' + posStr;
+
+  // await queuedSendAndWait(
+    // cmd,
+    // line => line.trim() === 'OK',
+    // 100
+  // );
+
+  // return true;
+// });
+
 ipcMain.handle('set-position', async (_event, degrees) => {
   if (!uart.isOpen()) {
     throw new Error('UART not open');
   }
 
-  // format with one decimal place, e.g. 12.3
+  // Format with one decimal place, e.g. 12.3
   const posStr = Number(degrees).toFixed(1);
-  const cmd = 'DP' + posStr;
+  const cmd = 'DPR' + posStr;
 
-  await queuedSendAndWait(
+  // 1. Change Matcher: Expect "PS:..." response
+  // 2. Timeout: Increased to 80ms to be safe (30ms is risky with USB latency)
+  const resp = await queuedSendAndWait(
     cmd,
-    line => line.trim() === 'OK',
-    100
+    line => line.trim().startsWith('PS:'),
+    80
   );
 
-  return true;
+  // 3. Parse response "PS:12.3" -> 12.3
+  // Regex handles negative numbers and optional decimals
+  const match = resp.trim().match(/^PS:(-?\d+(?:\.\d+)?)$/);
+  if (match) {
+    return parseFloat(match[1]); // Return actual position to renderer
+  }
+
+  throw new Error(`Unexpected response format: ${resp}`);
 });
 
 ipcMain.handle('read-device-position', async () => {
