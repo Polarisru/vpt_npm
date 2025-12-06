@@ -115,7 +115,7 @@ function createMainWindow({ portPath, fwVersion }) {
         width: 1000,
         height: 700,
         minWidth: 1000,
-        minHeight: 670,
+        minHeight: 700,
         resizable: true,
         autoHideMenuBar: true,
         webPreferences: {

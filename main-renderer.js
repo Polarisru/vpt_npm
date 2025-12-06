@@ -30,8 +30,9 @@ function collectConnectionConfig() {
     cfg.id = document.getElementById('can-id').value;
     const baseEl = document.getElementById('can-base-id');
     if (baseEl) {
-      const val = parseInt(baseEl.value || '0', 16);
-      if (Number.isFinite(val)) cfg.baseId = val;
+      //const val = parseInt(baseEl.value || '0', 16);
+      //if (Number.isFinite(val)) cfg.baseId = val;
+      cfg.baseId = baseEl.value;
     }
   }
 
@@ -562,44 +563,80 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-	if (canBaseIdInput) {
-	  // initialize safely: 0x3E0 with lower 5 bits cleared
-	  let baseVal = 0x3E0 & ~0x1F;
-	  canBaseIdInput.value = baseVal.toString(16).toUpperCase();
+  if (canBaseIdInput) {
+    // initialize safely: 0x3E0 with lower 5 bits cleared
+    let baseVal = 0x3E0 & ~0x1F;
+    canBaseIdInput.value = baseVal.toString(16).toUpperCase();
 
-	  canBaseIdInput.addEventListener('input', () => {
-		// 1) keep only hex digits
-		let v = canBaseIdInput.value.toUpperCase().replace(/[^0-9A-F]/g, '');
-		if (v === '') {
-		  canBaseIdInput.value = '';
-		  return;
-		}
+    canBaseIdInput.addEventListener('input', () => {
+      // 1) keep only hex digits
+      let v = canBaseIdInput.value.toUpperCase().replace(/[^0-9A-F]/g, '');
+      if (v === '') {
+        // allow user to clear and start typing
+        return;
+      }
 
-		// 2) parse as hex
-		let num = parseInt(v, 16);
-		if (isNaN(num)) {
-		  num = baseVal;
-		}
+      // 2) parse as hex
+      let num = parseInt(v, 16);
+      if (isNaN(num)) {
+        // keep last good value, but don't overwrite while typing
+        return;
+      }
 
-		// 3) clamp to [0x000, 0x7E0]
-		if (num > 0x7E0) num = 0x7E0;
-		if (num < 0) num = 0;
+      // 3) clamp to [0x000, 0x7E0]
+      if (num > 0x7E0) num = 0x7E0;
+      if (num < 0)    num = 0;
 
-		// 4) force lower 5 bits to 0
-		num &= ~0x1F;
+      // 4) do NOT yet force lower 5 bits to 0 while typing
+      //    so user can enter any hex value; enforce on blur/commit
+      baseVal = num;
+      // do not rewrite value here, let the user’s typing stay as-is
+    });
 
-		// 5) remember and show as uppercase HEX
-		baseVal = num;
-		canBaseIdInput.value = num.toString(16).toUpperCase();
-	  });
+    canBaseIdInput.addEventListener('blur', () => {
+      // On commit, normalize and display canonical value
+      let v = canBaseIdInput.value.toUpperCase().replace(/[^0-9A-F]/g, '');
+      if (v === '') {
+        // restore last valid value
+        canBaseIdInput.value = baseVal.toString(16).toUpperCase();
+        return;
+      }
 
-	  canBaseIdInput.addEventListener('blur', () => {
-		// ensure non-empty, valid HEX on blur
-		if (!canBaseIdInput.value) {
-		  canBaseIdInput.value = baseVal.toString(16).toUpperCase();
-		}
-	  });
-	}  
+      let num = parseInt(v, 16);
+      if (isNaN(num)) {
+        num = baseVal;
+      }
+
+      if (num > 0x7E0) num = 0x7E0;
+      if (num < 0)     num = 0;
+
+      // force lower 5 bits to 0 only on blur
+      num &= ~0x1F;
+
+      baseVal = num;
+      canBaseIdInput.value = num.toString(16).toUpperCase();
+    });
+
+    // Optional: keyboard arrows (Up/Down) to change base ID in 0x20 steps
+    canBaseIdInput.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+
+      e.preventDefault();
+
+      let num = parseInt(canBaseIdInput.value || '0', 16);
+      if (isNaN(num)) num = baseVal;
+
+      if (e.key === 'ArrowUp')   num += 0x20;
+      if (e.key === 'ArrowDown') num -= 0x20;
+
+      if (num > 0x7E0) num = 0x7E0;
+      if (num < 0)     num = 0;
+
+      num &= ~0x1F;
+      baseVal = num;
+      canBaseIdInput.value = num.toString(16).toUpperCase();
+    });
+  }
 
   // connection type (only device list + table, not right buttons except reset)
   if (connType) {
