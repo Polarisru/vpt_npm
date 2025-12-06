@@ -452,6 +452,7 @@ body {
   grid-template-columns: 130px 1fr auto;  /* slightly wider label column */
   gap: 8px;                               /* more breathing room */
   align-items: center;
+  margin-bottom: 10px;
 }
 
 .info-label {
@@ -650,13 +651,7 @@ body {
   font-size: 13px;
   font-weight: 600;
   color: #444;
-  margin-bottom: 4px;
-}
-
-.sine-row-dual {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  margin-bottom: 0px;
 }
 
 .sine-field {
@@ -690,7 +685,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr auto;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 0px;
 }
 
 .sine-field-placeholder {
@@ -760,6 +755,17 @@ body {
   background-color: #f9f9ff;
   color: #333;
   box-sizing: border-box;
+}
+
+.logo-block {
+  margin-top: auto;      /* pushes it to the bottom of the parent */
+  text-align: right;
+}
+
+.logo-img {
+  height: 50px;
+  width: auto;
+  display: inline-block;
 }
 
 .fw-block {
@@ -1042,8 +1048,8 @@ body {
 .content-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(255,255,255,0.5);
-    backdrop-filter: blur(2px);
+    //background: rgba(255,255,255,0.5);
+    //backdrop-filter: blur(2px);
     z-index: 10;
     pointer-events: all;
 }
@@ -1054,7 +1060,7 @@ body {
 }
 
 .live-actions {
-  margin-top: 12px;
+  margin-top: 0px;
   text-align: right;
 }
 

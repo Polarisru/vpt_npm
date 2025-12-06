@@ -291,13 +291,13 @@ async function readParamFromDevice(address, type) {
   return low;
 }
 
-function parseHexBytes(str, expectedLen) {
+function parseHexBytes(str) {
   const clean = str.replace(/[\s,]+/g, '').toUpperCase();
   if (!/^[0-9A-F]*$/.test(clean)) {
     throw new Error('Only HEX digits 0-9, A-F are allowed');
   }
-  if (clean.length !== expectedLen * 2) {
-    throw new Error(`Enter exactly ${expectedLen} bytes (${expectedLen * 2} hex digits)`);
+  if (clean.length === 0 || clean.length % 2 !== 0) {
+    throw new Error('Enter an even number of hex digits (2 per byte)');
   }
   const bytes = [];
   for (let i = 0; i < clean.length; i += 2) {
@@ -1385,8 +1385,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const connTypeEl = document.getElementById('connType');
         const type = connTypeEl ? connTypeEl.value : 'PWM';
 
-        const expectedBytes = type === 'CAN' ? 8 : 4;
-        const bytes = parseHexBytes(rawCommandInput.value, expectedBytes);
+        const bytes = parseHexBytes(rawCommandInput.value);
+
+        if (type === 'CAN') {
+          // 1..8 bytes allowed
+          if (bytes.length < 1 || bytes.length > 8) {
+            throw new Error('CAN raw command must be 1 to 8 bytes (2–16 hex digits)');
+          }
+        } else {
+          // RS485 and others: fixed 4 bytes
+          if (bytes.length !== 4) {
+            throw new Error('RS485 raw command must be exactly 4 bytes (8 hex digits)');
+          }
+        }
 
         rawSendBtn.disabled = true;
 
@@ -1396,7 +1407,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Raw command failed:', e);
         const cleanMessage = e.message.split('Error: ').pop();
         showError ? showError('Raw command error: ' + cleanMessage) 
-            : alert('Raw command error: ' + cleanMessage);
+                  : alert('Raw command error: ' + cleanMessage);
       } finally {
         rawSendBtn.disabled = false;
       }

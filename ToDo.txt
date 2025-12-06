@@ -1,13 +1,13 @@
 More Visio-look:
   Periodical movement: offset and speed. Speed is not really neccessary   DONE	
-  Identify servo - read EEPROM @0xF0, type is encoded there               LATER
-  Periodically reading of info parameters, how??                          LATER
+  Identify servo - read EEPROM @0xF0, type is encoded there               Later!
+  Periodically reading of info parameters, how??                          Later!
 	
 VPT FW
   Add Base ID setup                         To check!
   Add RS485 subtype setup                   To check!
   Add one decimal position to SCL           DONE
-  Send raw command                          To check!
+  Send raw command                          DONE
   Set as ZeroPos command                    To check!
   Get status command (errors)               DONE
 	
@@ -36,12 +36,15 @@ GUI:
   Show VPT status                           DONE
   Inline comments in script file            DONE
   Loading a script if it's already loaded?  DONE
-  Writing EEPROM parameters is wrong??
+  Writing EEPROM parameters is wrong        DONE
+  Add Volz logo                             DONE
+  Set EEPROM parameters with div and offset
   Update VPT
   Upload firmware
   
 Infrastructure
-  Create device parameters
+  Create device parameters                  Later!
   Measure servo velocity script             DONE
   Measure servo non-linearity script        DONE
   Measure maximal current script            DONE
+  Check DA15-CAN parameters
