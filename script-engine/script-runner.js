@@ -39,39 +39,78 @@ class ScriptRunner {
       }
     });
   }
+  
+  // Remove inline comments: everything after '#' that is not inside {...}
+  stripInlineComment(text) {
+    let inBrace = false;
+    let result = '';
+
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+
+      if (ch === '{') {
+        inBrace = true;
+        result += ch;
+      } else if (ch === '}') {
+        inBrace = false;
+        result += ch;
+      } else if (ch === '#' && !inBrace) {
+        // Start of comment -> stop copying
+        break;
+      } else {
+        result += ch;
+      }
+    }
+
+    return result.trimEnd();
+  }
 
   parseLine(line, tokens) {
     const cmd = tokens[0].toUpperCase();
-    
+
     switch(cmd) {
-      case 'SEND':
-        return { type: 'SEND', text: tokens.slice(1).join(' '), waitForOk: true };
+      case 'SEND': {
+        const text = this.stripInlineComment(tokens.slice(1).join(' '));
+        return { type: 'SEND', text, waitForOk: true };
+      }
+      
+      case 'SENDRECV': {
+        const command = this.stripInlineComment(tokens[1]);
+        const patternRaw = tokens.slice(2).join(' ');
+        const pattern = this.stripInlineComment(patternRaw);
+        return { type: 'SENDRECV', command, pattern };
+      }
         
-      case 'SENDNW':
-        return { type: 'SEND', text: tokens.slice(1).join(' '), waitForOk: false };
-        
-      case 'RECV':
-        return { type: 'RECV', pattern: tokens.slice(1).join(' ') };
-        
-      case 'WAIT':
-        return { type: 'WAIT', ms: parseInt(tokens[1]) };
-        
-      case 'SET':
+      case 'WAIT': {
+        // Allow expressions like: WAIT 500, WAIT settle_ms, WAIT settle_ms + 100 # comment
+        const msRaw = tokens.slice(1).join(' ');
+        const msExpr = this.stripInlineComment(msRaw);
+        return { type: 'WAIT', msExpr };
+      }
+
+      case 'SET': {
         const varName = tokens[1];
-        const expr = tokens.slice(3).join(' ');
+        const exprRaw = tokens.slice(3).join(' ');
+        const expr = this.stripInlineComment(exprRaw);
         return { type: 'SET', variable: varName, expression: expr };
-        
-      case 'PRINT':
-        return { type: 'PRINT', text: tokens.slice(1).join(' ') };
-        
-      case 'IF':
-        const condition = tokens.slice(1, -2).join(' ');
+      }
+
+      case 'PRINT': {
+        const text = this.stripInlineComment(tokens.slice(1).join(' '));
+        return { type: 'PRINT', text };
+      }
+
+      case 'IF': {
+        // condition is tokens[1..-3], then "GOTO label"
+        const condRaw = tokens.slice(1, -2).join(' ');
+        const condition = this.stripInlineComment(condRaw);
         const gotoLabel = tokens[tokens.length - 1];
-        return { type: 'IF', condition: condition, label: gotoLabel };
-        
+        return { type: 'IF', condition, label: gotoLabel };
+      }
+
       case 'GOTO':
         return { type: 'GOTO', label: tokens[1] };
-        
+
       default:
         throw new Error(`Unknown command: ${cmd}`);
     }
@@ -119,8 +158,8 @@ class ScriptRunner {
       case 'SEND':
         await this.executeSEND(cmd);
         break;
-      case 'RECV':
-        await this.executeRECV(cmd);
+      case 'SENDRECV':
+        await this.executeSENDRECV(cmd);
         break;
       case 'WAIT':
         await this.executeWAIT(cmd);
@@ -160,28 +199,31 @@ class ScriptRunner {
     }
   }
 
-  async executeRECV(cmd) {
+  async executeSENDRECV(cmd) {
     const varMatch = cmd.pattern.match(/\{(\w+)\}/);
     if (!varMatch) {
-      throw new Error(`RECV pattern must contain variable: ${cmd.pattern}`);
+      throw new Error(`SENDRECV pattern must contain variable: ${cmd.pattern}`);
     }
-    
+
     const varName = varMatch[1];
     const regexPattern = cmd.pattern.replace(/\{(\w+)\}/g, '([\\d\\.\\-]+)');
     const regex = new RegExp(regexPattern);
+
+    this.logWithTimestamp(`TX: ${cmd.command}`);
     
     try {
-      const response = await this.waitForResponse(regex, 5000);
+      const response = await this.uart.sendAndWait(cmd.command, () => true, 1000);
+      this.logWithTimestamp(`RX: ${response.trim()}`);
       
       const match = response.match(regex);
+      
       if (match && match[1]) {
         this.variables[varName] = parseFloat(match[1]);
-        this.logWithTimestamp(`RX: ${response.trim()} -> ${varName} = ${this.variables[varName]}`);
       } else {
         throw new Error(`Failed to extract value from: ${response}`);
       }
     } catch (error) {
-      throw new Error(`Timeout waiting for response matching: ${cmd.pattern}`);
+      throw new Error(`Command "${cmd.command}" failed or timeout`);
     }
   }
 
@@ -205,7 +247,9 @@ class ScriptRunner {
   }
 
   async executeWAIT(cmd) {
-    await new Promise(resolve => setTimeout(resolve, cmd.ms));
+    // Evaluate the expression to get actual milliseconds
+    const ms = this.evaluateExpression(cmd.msExpr);
+    await new Promise(resolve => setTimeout(resolve, ms));
   }
 
   executeSET(cmd) {
@@ -257,10 +301,23 @@ class ScriptRunner {
       return this.variables[varName];
     });
   }
+  
+  substituteVarsInExpression(expr) {
+    // First replace {var} style
+    let result = this.substituteVars(expr);
+    
+    // Then replace bare variable names (alphanumeric identifiers)
+    // Match whole words that are variable names
+    return result.replace(/\b([a-z_]\w*)\b/gi, (match) => {
+      if (match in this.variables) {
+        return this.variables[match];
+      }
+      return match;  // leave it if not a variable
+    });
+  }  
 
   evaluateExpression(expr) {
-    const substituted = this.substituteVars(expr);
-    
+    const substituted = this.substituteVarsInExpression(expr);
     try {
       // Provide common math functions
       return new Function(

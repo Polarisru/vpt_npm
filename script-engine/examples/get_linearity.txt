@@ -1,0 +1,69 @@
+# Non-linearity measurement script (bi-directional)
+
+# --- CONFIGURATION ---
+SET start_pos = -90.0      # start position in deg
+SET end_pos   =  90.0      # end position in deg
+SET step_deg  =  10.0      # step size magnitude in deg (always positive)
+SET settle_ms =  500       # wait after each DP command (ms)
+
+# --- INITIALIZATION ---
+# Determine direction: +1 for forward, -1 for backward
+SET dir = 1
+IF end_pos < start_pos GOTO set_dir_neg
+GOTO dir_done
+
+LABEL set_dir_neg
+SET dir = -1
+
+LABEL dir_done
+# Effective step with sign
+SET step = step_deg * dir
+
+# Current target and max error
+SET target    = start_pos
+SET max_err   = 0.0
+SET sample_ix = 0
+
+PRINT Non-linearity test from {start_pos} to {end_pos} step {step_deg} deg
+
+# Move to start position first
+PRINT Moving to start position {start_pos} deg
+SEND DP{start_pos}
+WAIT {settle_ms}
+
+LABEL sweep_loop
+  # Termination condition depends on direction
+  IF dir > 0 && target > end_pos + 0.0001 GOTO done
+  IF dir < 0 && target < end_pos - 0.0001 GOTO done
+
+  PRINT [{sample_ix}] Commanding target {target} deg
+
+  # Command target position
+  SEND DP{target}
+
+  # Wait for servo to reach the position
+  WAIT {settle_ms}
+
+  # Read actual position: GPS -> PS:{pos}
+  SENDRECV GPS PS:{pos}
+
+  # Compute error = actual - target (deg)
+  SET err = pos - target
+  SET abs_err = ABS(err)
+
+  PRINT Target={target} deg, Actual={pos} deg, Error={err} deg
+
+  # Track maximum absolute error
+  SET max_err = MAX(max_err, abs_err)
+
+  # Next step in the correct direction
+  SET target = target + step
+  SET sample_ix = sample_ix + 1
+  GOTO sweep_loop
+
+LABEL done
+PRINT ----------------------------------------
+PRINT Non-linearity measurement completed
+PRINT Max absolute error = {max_err} deg
+PRINT Samples measured  = {sample_ix}
+PRINT Finished at {timestamp}

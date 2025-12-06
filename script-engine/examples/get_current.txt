@@ -1,0 +1,29 @@
+# Peak current measurement script
+
+# --- CONFIGURATION ---
+SET start_pos = -90.0     # deg
+SET end_pos   =  90.0     # deg
+SET settle_ms =  1000     # wait after each move (ms)
+
+PRINT Peak current test from {start_pos} to {end_pos} deg
+
+# --- MOVE TO START ---
+PRINT Moving to start position {start_pos} deg
+SEND DP{start_pos}
+WAIT {settle_ms}
+
+# Reset peak current (ignore response)
+PRINT Resetting peak current
+SEND GCP
+
+# --- MOVE TO END ---
+PRINT Moving to end position {end_pos} deg
+SEND DP{end_pos}
+WAIT {settle_ms}
+
+# --- READ PEAK CURRENT ---
+# Assume device answers e.g. CP:12.3  (adjust pattern if prefix differs)
+SENDRECV GCP CP:{peak}
+
+PRINT Peak current from {start_pos} to {end_pos} deg is {peak} A
+PRINT Finished at {timestamp}

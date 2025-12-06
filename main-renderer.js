@@ -1385,11 +1385,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Clear previous output
             if (scriptOutput) scriptOutput.value = '';
           }
+          // Allow re-selecting the same file later
+          scriptFileInput.value = '';
         };
         
         reader.onerror = (e) => {
           console.error('Failed to read script file:', e);
           showError && showError('Failed to read script file');
+          scriptFileInput.value = ''; // also clear on error
         };
         
         reader.readAsText(file);
@@ -1398,6 +1401,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const cleanMessage = e.message.split('Error: ').pop();
         showError ? showError('Failed to read script file: ' + cleanMessage)
             : alert('Failed to read script file: ' + cleanMessage);
+        scriptFileInput.value = '';
       }
     });
   }

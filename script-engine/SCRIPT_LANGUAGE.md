@@ -17,28 +17,15 @@ SEND DP{angle}
 
 ---
 
-### SENDNW command
-Sends a command without waiting for acknowledgment (No Wait).
+### SENDRECV command
+Sends a command and waits for a response matching a pattern and captures numeric value(s) into variable(s).
 
 **Syntax:**
-SENDNW command
+SENDRECV command
 
 **Examples:**
-SENDNW GPS
-SENDNW DP{target}
-
----
-
-### RECV command
-Waits for a response matching a pattern and captures numeric value(s) into variable(s).
-
-**Syntax:**
-RECV pattern:{variable}
-
-**Examples:**
-RECV PS:{position} # Captures: PS:45.2 -> position = 45.2
-RECV DP:{angle} # Captures: DP:90.0 -> angle = 90.0
-RECV TEMP:{temp} # Captures: TEMP:25.5 -> temp = 25.5
+SENDRECV GPS PS:{position} # Sends GPS and captures: PS:45.2 -> position = 45.2
+SENDRECV DPR{target} PS:{angle} # Sends DPR and captures: PS:90.0 -> angle = 90.0
 
 ---
 

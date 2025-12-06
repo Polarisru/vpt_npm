@@ -33,10 +33,15 @@ GUI:
   Stop movement after changing tab          DONE
   Parameters requested not at once          DONE
   DPR usage, actual position update         DONE
-  Writing EEPROM parameters is wrong??
   Show VPT status                           DONE
+  Inline comments in script file            DONE
+  Loading a script if it's already loaded?  DONE
+  Writing EEPROM parameters is wrong??
   Update VPT
   Upload firmware
   
 Infrastructure
   Create device parameters
+  Measure servo velocity script             DONE
+  Measure servo non-linearity script        DONE
+  Measure maximal current script            DONE

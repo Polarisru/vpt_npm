@@ -1,0 +1,95 @@
+# Measure rotation velocity between two angular points
+
+# --- CONFIGURATION ---
+# starting DP position (deg)
+SET start_pos = -90.0
+# ending DP position (deg)   
+SET end_pos   = 90.0
+
+# measuring positions must be between start_pos and end_pos
+# measuring position #1 (deg)
+SET meas1_pos = -30.0
+# measuring position #2 (deg)
+SET meas2_pos = 30.0
+
+# --- MOVE TO START AND THEN TO END ---
+PRINT Moving to start position {start_pos} deg
+SEND DP{start_pos}
+
+PRINT Waiting 3 seconds at start
+WAIT 3000
+
+PRINT Moving to end position {end_pos} deg
+SEND DP{end_pos}
+
+# --- INITIALIZE VARIABLES ---
+SET t1 = 0
+SET t2 = 0
+SET p1 = 0
+SET p2 = 0
+SET got_p1 = 0
+SET got_p2 = 0
+
+PRINT Starting fast position sampling...
+
+LABEL sample_loop
+  # Read current position: GPS -> PS:{pos}
+  SENDRECV GPS PS:{pos}
+
+  # Timestamp for this sample
+  SET now = {time_ms}
+
+  # Store first timestamp when passing meas1_pos
+  IF got_p1 == 0 && pos >= meas1_pos GOTO store_p1
+
+  # After p1 is taken, store timestamp when passing meas2_pos
+  IF got_p1 == 1 && got_p2 == 0 && pos >= meas2_pos GOTO store_p2
+
+  # Continue sampling until both points captured
+  IF got_p2 == 0 GOTO sample_loop
+  GOTO compute_velocity
+
+LABEL store_p1
+  SET got_p1 = 1
+  SET p1 = pos
+  SET t1 = now
+  PRINT Captured P1={p1} deg at t1={t1} ms
+  GOTO sample_loop
+
+LABEL store_p2
+  SET got_p2 = 1
+  SET p2 = pos
+  SET t2 = now
+  PRINT Captured P2={p2} deg at t2={t2} ms
+  GOTO compute_velocity
+
+# --- COMPUTE VELOCITY ---
+LABEL compute_velocity
+  # Sanity check
+  IF t2 <= t1 GOTO error_time
+
+  # degrees
+  SET dp = p2 - p1
+  # milliseconds  
+  SET dt_ms = t2 - t1
+  # seconds  
+  SET dt_s = dt_ms / 1000.0
+  # deg/s
+  SET vel_deg_per_s = dp / dt_s  
+
+  PRINT -----------------------------
+  PRINT Velocity measurement result:
+  PRINT P1={p1} deg at t1={t1} ms
+  PRINT P2={p2} deg at t2={t2} ms
+  PRINT DeltaPos={dp} deg, DeltaTime={dt_s} s
+  PRINT Velocity = {vel_deg_per_s} deg/s
+  PRINT -----------------------------
+
+  GOTO done
+
+LABEL error_time
+  PRINT ERROR: Invalid timestamps (t2 <= t1)
+  GOTO done
+
+LABEL done
+  PRINT Measurement script finished at {timestamp}

@@ -39,39 +39,78 @@ class ScriptRunner {
       }
     });
   }
+  
+  // Remove inline comments: everything after '#' that is not inside {...}
+  stripInlineComment(text) {
+    let inBrace = false;
+    let result = '';
+
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+
+      if (ch === '{') {
+        inBrace = true;
+        result += ch;
+      } else if (ch === '}') {
+        inBrace = false;
+        result += ch;
+      } else if (ch === '#' && !inBrace) {
+        // Start of comment -> stop copying
+        break;
+      } else {
+        result += ch;
+      }
+    }
+
+    return result.trimEnd();
+  }
 
   parseLine(line, tokens) {
     const cmd = tokens[0].toUpperCase();
-    
+
     switch(cmd) {
-      case 'SEND':
-        return { type: 'SEND', text: tokens.slice(1).join(' '), waitForOk: true };
+      case 'SEND': {
+        const text = this.stripInlineComment(tokens.slice(1).join(' '));
+        return { type: 'SEND', text, waitForOk: true };
+      }
+      
+      case 'SENDRECV': {
+        const command = this.stripInlineComment(tokens[1]);
+        const patternRaw = tokens.slice(2).join(' ');
+        const pattern = this.stripInlineComment(patternRaw);
+        return { type: 'SENDRECV', command, pattern };
+      }
         
-      case 'SENDRECV':
-        const command = tokens[1];
-        const pattern = tokens.slice(2).join(' ');
-        return { type: 'SENDRECV', command: command, pattern: pattern };
-        
-      case 'WAIT':
-        return { type: 'WAIT', msExpr: tokens[1] };
-        
-      case 'SET':
+      case 'WAIT': {
+        // Allow expressions like: WAIT 500, WAIT settle_ms, WAIT settle_ms + 100 # comment
+        const msRaw = tokens.slice(1).join(' ');
+        const msExpr = this.stripInlineComment(msRaw);
+        return { type: 'WAIT', msExpr };
+      }
+
+      case 'SET': {
         const varName = tokens[1];
-        // tokens[2] is '='
-        const expr = tokens.slice(3).join(' ');
+        const exprRaw = tokens.slice(3).join(' ');
+        const expr = this.stripInlineComment(exprRaw);
         return { type: 'SET', variable: varName, expression: expr };
-  
-      case 'PRINT':
-        return { type: 'PRINT', text: tokens.slice(1).join(' ') };
-        
-      case 'IF':
-        const condition = tokens.slice(1, -2).join(' ');
+      }
+
+      case 'PRINT': {
+        const text = this.stripInlineComment(tokens.slice(1).join(' '));
+        return { type: 'PRINT', text };
+      }
+
+      case 'IF': {
+        // condition is tokens[1..-3], then "GOTO label"
+        const condRaw = tokens.slice(1, -2).join(' ');
+        const condition = this.stripInlineComment(condRaw);
         const gotoLabel = tokens[tokens.length - 1];
-        return { type: 'IF', condition: condition, label: gotoLabel };
-        
+        return { type: 'IF', condition, label: gotoLabel };
+      }
+
       case 'GOTO':
         return { type: 'GOTO', label: tokens[1] };
-        
+
       default:
         throw new Error(`Unknown command: ${cmd}`);
     }
@@ -242,10 +281,18 @@ class ScriptRunner {
   substituteVars(text) {
     return text.replace(/\{(\w+)\}/g, (_, varName) => {
       // Built-in timestamp variables
-      if (varName === 'timestamp') return new Date().toISOString();
-      if (varName === 'time_ms') return Date.now();
-      if (varName === 'elapsed_ms') return Date.now() - this.startTime;
-      if (varName === 'elapsed_sec') return ((Date.now() - this.startTime) / 1000).toFixed(3);
+      if (varName === 'timestamp') {
+        return new Date().toISOString();
+      }
+      if (varName === 'time_ms') {
+        return Date.now();
+      }
+      if (varName === 'elapsed_ms') {
+        return Date.now() - this.startTime;
+      }
+      if (varName === 'elapsed_sec') {
+        return ((Date.now() - this.startTime) / 1000).toFixed(3);
+      }
       
       // User variables
       if (!(varName in this.variables)) {
@@ -272,6 +319,7 @@ class ScriptRunner {
   evaluateExpression(expr) {
     const substituted = this.substituteVarsInExpression(expr);
     try {
+      // Provide common math functions
       return new Function(
         'ABS', 'SQRT', 'POW', 'MIN', 'MAX', 'FLOOR', 'CEIL', 'ROUND',
         'return ' + substituted
