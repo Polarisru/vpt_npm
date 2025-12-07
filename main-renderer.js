@@ -98,15 +98,15 @@ function buildParamTable(device) {
 
     // Set min/max for browser validation based on displayed units
     if (typeof param.min === 'number') {
-      input.min = rawToDisplay(param.min).toString();
+      input.min = param.min.toString();//rawToDisplay(param.min).toString();
     }
     if (typeof param.max === 'number') {
-      input.max = rawToDisplay(param.max).toString();
+      input.max = param.max.toString();//rawToDisplay(param.max).toString();
     }
 
     // Set default value in displayed units
     if (typeof param.dflt !== 'undefined') {
-      input.value = rawToDisplay(param.dflt).toString();
+      input.value = param.dflt.toString();//rawToDisplay(param.dflt).toString();
     }
 
     // Store metadata
@@ -156,12 +156,15 @@ function buildParamTable(device) {
       }
 
       // Convert to raw, clamp in raw domain
-      let raw = displayToRaw(displayVal);
+      //let raw = displayToRaw(displayVal);
+      let raw = displayVal;
       if (!isNaN(min) && raw < min) raw = min;
       if (!isNaN(max) && raw > max) raw = max;
+      console.log('value=', raw, ' min=', min, ' max=', max);
 
       // Update with clamped display value
-      input.value = String(rawToDisplay(raw));
+      //input.value = String(rawToDisplay(raw));
+      input.value = String(raw);
     });
 
     valueTd.appendChild(input);
@@ -402,7 +405,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let pollStep = 0; // 0 = Voltage, 1 = Temp, 2 = Status
 
   async function pollStatusOnce() {
-    console.log('Tick');
     if (!isConnected /*|| sineRunning*/) return;
 
     try {
@@ -1292,6 +1294,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // param (display) = value / div + offset, and value = raw / mult
       const displayVal = (raw / mult) / div + offset;
+      console.log('Addr: ', address, ' raw=', raw, ' disp=', displayVal);
       inp.value = String(displayVal);
       inp.dispatchEvent(new Event('blur'));
       

@@ -38,7 +38,7 @@ GUI:
   Loading a script if it's already loaded?  DONE
   Writing EEPROM parameters is wrong        DONE
   Add Volz logo                             DONE
-  Set EEPROM parameters with div and offset
+  Set EEPROM parameters with div and offset DONE
   Update VPT                                DONE
   Upload firmware
   
@@ -47,4 +47,3 @@ Infrastructure
   Measure servo velocity script             DONE
   Measure servo non-linearity script        DONE
   Measure maximal current script            DONE
-  Check DA15-CAN parameters
