@@ -39,7 +39,7 @@ GUI:
   Writing EEPROM parameters is wrong        DONE
   Add Volz logo                             DONE
   Set EEPROM parameters with div and offset
-  Update VPT
+  Update VPT                                DONE
   Upload firmware
   
 Infrastructure

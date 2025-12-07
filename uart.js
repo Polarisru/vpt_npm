@@ -107,6 +107,7 @@ function send(cmd) {
         console.warn('UART send called but port not open');
         return;
     }
+    if (cmd === '') return;
     port.write('\x1B' + cmd + '\n');
 }
 

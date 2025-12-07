@@ -388,6 +388,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const errorMessage = document.getElementById('errorMessage');
   const errorCloseBtn = document.getElementById('errorCloseBtn');
   
+  const successOverlay   = document.getElementById('successOverlay');
+  const successMessage   = document.getElementById('successMessage');
+  const successCloseBtn  = document.getElementById('successCloseBtn');
+
   const progressOverlay = document.getElementById('progressOverlay');
   const progressTitle = document.getElementById('progressTitle');
   const progressText = document.getElementById('progressText');
@@ -504,12 +508,27 @@ document.addEventListener('DOMContentLoaded', () => {
     errorMessage.textContent = message;
     errorOverlay.classList.remove('hidden');
   }
-
+  
   if (errorCloseBtn && errorOverlay) {
     errorCloseBtn.addEventListener('click', () => {
       errorOverlay.classList.add('hidden');
     });
   }
+
+  function showSuccess(message) {
+    if (!successOverlay || !successMessage) {
+      alert(message); // fallback
+      return;
+    }
+    successMessage.textContent = message;
+    successOverlay.classList.remove('hidden');
+  }
+
+  if (successCloseBtn && successOverlay) {
+    successCloseBtn.addEventListener('click', () => {
+      successOverlay.classList.add('hidden');
+    });
+  }  
   
   function showProgress(title, message) {
     if (!progressOverlay || !progressTitle || !progressBar) return;
@@ -832,6 +851,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const lines = hexString.trim().split(/\r?\n/);
     const memory = new Map(); // Address -> byte value
     let minAddress = Infinity;
+    let segmentAddress = 0;
 
     for (const line of lines) {
       if (!line.startsWith(':')) continue;
@@ -846,22 +866,34 @@ document.addEventListener('DOMContentLoaded', () => {
       for (let i = 0; i < byteCount; i++) {
         const byte = parseInt(dataStr.substr(i * 2, 2), 16);
         sum += byte;
-        const fullAddr = addr + i; // Handle extended linear address if needed (recordType 04)
-        if (recordType === 0 && fullAddr < minAddress) minAddress = fullAddr;
-        memory.set(fullAddr, byte);
       }
       sum += checksum;
       if ((sum & 0xFF) !== 0) {
         throw new Error(`Invalid checksum in line: ${line}`);
       }
 
-      // Handle extended linear address (recordType 04) by updating base address
-      if (recordType === 4) {
-        const baseAddr = parseInt(dataStr, 16) << 16;
-        // Reprocess data with new base if needed, but for simplicity assume low addresses
+      if (recordType === 0) {
+        for (let i = 0; i < byteCount; i++) {
+          const byte = parseInt(dataStr.substr(i * 2, 2), 16);
+          let fullAddr = addr + i; // Handle extended linear address if needed (recordType 04)
+          fullAddr = fullAddr + segmentAddress;
+          if (fullAddr < minAddress) minAddress = fullAddr;
+          fullAddr = fullAddr - minAddress;
+          memory.set(fullAddr, byte);
+        }
       }
-
-      if (recordType === 1) break; // End of file
+      if (recordType === 1) {
+        // End of file
+        break;
+      }
+      if (recordType === 2) {
+        // Handle "Extended Segment Address"
+        segmentAddress = parseInt(dataStr, 16) << 4;
+      }
+      if (recordType === 4) {
+        // Handle "Extended Linear Address" by updating segment address
+        segmentAddress = parseInt(dataStr, 16) << 16;
+      }
     }
 
     if (minAddress === Infinity) throw new Error('No valid data in HEX file');
@@ -869,11 +901,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Pad to 256-byte pages starting from minAddress (align to page boundary if needed)
     const pageSize = 256;
     const startPageAddr = Math.floor(minAddress / pageSize) * pageSize;
-    const totalPages = Math.ceil((memory.size + (minAddress % pageSize)) / pageSize);
+    const totalPages = Math.ceil(memory.size / pageSize);
     const pages = [];
 
     for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
-      const pageAddr = startPageAddr + (pageIndex * pageSize);
+      const pageAddr = (pageIndex * pageSize);
       const page = new Uint8Array(pageSize);
       let hasData = false;
       for (let offset = 0; offset < pageSize; offset++) {
@@ -1579,7 +1611,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       updateProgress(totalPages, totalPages);
       hideProgress();
-      showError('Firmware update completed successfully.', true); // Success variant if you add one
+      showSuccess('Firmware update completed successfully.', true); // Success variant if you add one
     } catch (e) {
       console.error('Firmware update failed:', e);
       const cleanMessage = e.message.split('Error: ').pop() || e.message;

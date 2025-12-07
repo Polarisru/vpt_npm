@@ -1048,8 +1048,8 @@ body {
 .content-overlay {
     position: absolute;
     inset: 0;
-    //background: rgba(255,255,255,0.5);
-    //backdrop-filter: blur(2px);
+    background: rgba(255,255,255,0.5);
+    backdrop-filter: blur(2px);
     z-index: 10;
     pointer-events: all;
 }
@@ -1176,6 +1176,11 @@ body {
   font-weight: 800;
   margin: 0 auto 8px;
   font-size: 20px;
+}
+
+.modal-icon-success {
+  border-color: #38a169;
+  color: #38a169;
 }
 
 .modal-title {

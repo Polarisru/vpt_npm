@@ -506,6 +506,24 @@ ipcMain.handle('read-status', async () => {
   return m ? parseInt(m[1], 10) : null;
 });
 
+function crc16(pageData) {
+  const polynomial = 0x8005;
+  let crc = 0xFFFF;
+
+  for (let i = 0; i < pageData.length; i++) {
+    crc ^= (pageData[i] << 8);
+    for (let j = 0; j < 8; j++) {
+      if (crc & 0x8000) {
+        crc = (crc << 1) ^ polynomial;
+      } else {
+        crc = (crc << 1);
+      }
+      crc &= 0xFFFF;
+    }
+  }
+  return crc & 0xFFFF;
+}
+
 // perform-update: keep uart.send / writeBinary
 ipcMain.handle('perform-update', async (event, pages, totalPages, startAddress) => {
   if (!uart.isOpen()) throw new Error('UART not open');
@@ -516,19 +534,28 @@ ipcMain.handle('perform-update', async (event, pages, totalPages, startAddress) 
   try {
     // Step 1: Send UPFW1234 (no response expected)
     await uart.send('UPFW1234');
-    win.webContents.send('update-progress', { current: 0, total: totalPages, text: 'Entering bootloader...' });
+    win.webContents.send('update-progress', {
+      current: 0,
+      total: totalPages,
+      text: 'Entering bootloader...'
+    });
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     // Step 2: Send BLS repeatedly until 'OK' or 5s timeout
     const blsStart = Date.now();
     let blsResponse = null;
     while (Date.now() - blsStart < 5000) {
-      blsResponse = await queuedSendAndWait('BLS', line => line.trim() === 'OK', 1000);
+      blsResponse = await queuedSendAndWait('BLS', line => line.trim() === 'OK', 20);
       if (blsResponse) break;
-      await new Promise(resolve => setTimeout(resolve, 100)); // Poll every 100ms
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
     if (!blsResponse) throw new Error('Failed to enter bootloader: No OK response within 5s');
 
-    win.webContents.send('update-progress', { current: 0, total: totalPages, text: 'Flashing pages...' });
+    win.webContents.send('update-progress', {
+      current: 0,
+      total: totalPages,
+      text: 'Flashing pages...'
+    });
 
     // Step 3: Flash each page
     for (let i = 0; i < pages.length; i++) {
@@ -539,8 +566,8 @@ ipcMain.handle('perform-update', async (event, pages, totalPages, startAddress) 
       while (attempts < 3 && !pageSuccess) {
         attempts++;
 
-        // 3.1: Send BLFxx (xx = page index as 2-digit HEX)
-        const pageIndexHex = page.index.toString(16).toUpperCase().padStart(2, '0');
+        // 3.1: Send BLFxxx (xxx = page index as 3-digit HEX)
+        const pageIndexHex = page.index.toString(16).toUpperCase().padStart(3, '0');
         await uart.send(`BLF${pageIndexHex}`);
 
         // 3.2: Wait 10ms
@@ -556,20 +583,64 @@ ipcMain.handle('perform-update', async (event, pages, totalPages, startAddress) 
           successCount++;
         } else {
           console.warn(`Page ${page.index} attempt ${attempts} failed`);
-          if (attempts < 3) await new Promise(resolve => setTimeout(resolve, 100)); // Brief delay before retry
+          if (attempts < 3) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
         }
       }
 
-      if (!pageSuccess) throw new Error(`Failed to flash page ${page.index} after 3 attempts`);
+      if (!pageSuccess) {
+        throw new Error(`Failed to flash page ${page.index} after 3 attempts`);
+      }
 
-      // Update progress after successful page
-      win.webContents.send('update-progress', { current: successCount, total: totalPages, text: `Flashed page ${successCount}/${totalPages}` });
+      win.webContents.send('update-progress', {
+        current: successCount,
+        total: totalPages,
+        text: `Flashed page ${successCount}/${totalPages}`
+      });
     }
 
-    // Step 4: Send BLQ to exit bootloader (no response)
+    // Step 4: Verify each page with BLCxxx:yyyy
+    win.webContents.send('update-progress', {
+      current: 0,
+      total: totalPages,
+      text: 'Verifying pages...'
+    });
+
+    let verifyCount = 0;
+
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+
+      // 4.1: Calculate CRC16 for this page
+      const crc = crc16(page.data); // see helper above
+      const pageIndexHex = page.index.toString(16).toUpperCase().padStart(3, '0');
+      const crcHex = crc.toString(16).toUpperCase().padStart(4, '0');
+
+      // 4.2: Send BLCxxx:yyyy and wait for 'OK'
+      const cmd = `BLC${pageIndexHex}:${crcHex}`;
+      const verifyResp = await queuedSendAndWait(cmd, line => line.trim() === 'OK', 200);
+
+      if (!verifyResp) {
+        throw new Error(`Verification failed for page ${page.index} (CRC ${crcHex})`);
+      }
+
+      verifyCount++;
+      win.webContents.send('update-progress', {
+        current: verifyCount,
+        total: totalPages,
+        text: `Verified page ${verifyCount}/${totalPages}`
+      });
+    }
+
+    // Step 5: Send BLQ to exit bootloader (no response)
     await uart.send('BLQ');
 
-    win.webContents.send('update-progress', { current: totalPages, total: totalPages, text: 'Update complete' });
+    win.webContents.send('update-progress', {
+      current: totalPages,
+      total: totalPages,
+      text: 'Update complete'
+    });
   } catch (err) {
     console.error('Firmware update error:', err);
     throw new Error(`Firmware update failed: ${err.message}`);

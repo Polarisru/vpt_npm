@@ -436,7 +436,7 @@
           "type": "uint8",
           "min": 0,
           "max": 255,
-          "dflt": 2,
+          "dflt": 0,
           "unit": "sec",
           "mult": 0.1
         },

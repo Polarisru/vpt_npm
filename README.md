@@ -4,6 +4,9 @@ npm project for VPT GUI
 ## Run project
 npm start
 
+## Install npm on Linux
+sudo apt-get install nodejs npm
+
 ## Create a distributable
 Install Forge:
 npm install --save-dev @electron-forge/cli
