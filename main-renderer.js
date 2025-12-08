@@ -802,7 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sineAmpInput) sineAmpInput.value = amp.toString();
         if (sineFreqInput) sineFreqInput.value = freq.toString();
         if (sineOffsetInput) sineOffsetInput.value = offset.toString();
-        if (sineWaveform && !['sine', 'rect', 'saw'].includes(wave)) {
+        if (sineWaveform && !['sine', 'rect', 'tri', 'saw'].includes(wave)) {
           wave = 'sine';
           sineWaveform.value = 'sine';
         }
@@ -829,6 +829,16 @@ document.addEventListener('DOMContentLoaded', () => {
           } else if (wave === 'rect') {
             // +1 for first half, -1 for second half
             waveValue = phase < 0.5 ? 1 : -1;
+          } else if (wave === 'tri') {
+            // triangle: -1 -> +1 in first half, +1 -> -1 in second half
+            // phase in [0,1):
+            // 0..0.5: -1 -> +1 (slope +4)
+            // 0.5..1: +1 -> -1 (slope -4)
+            if (phase < 0.5) {
+              waveValue = -1 + 4 * phase;
+            } else {
+              waveValue = 3 - 4 * phase;
+            }            
           } else if (wave === 'saw') {
             // ramps from -1 to +1 over period
             waveValue = 2 * phase - 1;

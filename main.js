@@ -93,8 +93,8 @@ async function sendPwr0OnExit() {
 function createSelectWindow() {
     selectWindow = new BrowserWindow({
         width: 320,
-        height: 280,
-        resizable: false,
+        height: 300,
+        resizable: true,//false,
         autoHideMenuBar: true,
         webPreferences: {
             nodeIntegration: true,
@@ -134,6 +134,7 @@ function createMainWindow({ portPath, fwVersion }) {
 
     mainWindow.webContents.on('did-finish-load', () => {
       // Send both port and FW version to main window renderer
+      console.log('FW version: ', fwVersion);
       mainWindow.webContents.send('selected-port', {
         portPath,
 			  fwVersion
@@ -194,7 +195,7 @@ ipcMain.on('port-selected', async (event, arg) => {
 
       // Extract x.y from "N:x.y"
       const match = vnResp.trim().match(/^N:(\d+\.\d+)$/);
-      const fwVersion = match ? match[1] : '0.0';
+      fwVersion = match ? match[1] : '0.0';
     } else {
       // RECOVERY MODE: Skip handshake, force version 0.0
       console.log('Recovery mode: Skipping handshake.');
