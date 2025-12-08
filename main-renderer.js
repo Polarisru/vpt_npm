@@ -1637,7 +1637,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		progressText.textContent = payload.text;
 	  }
 	});
-
+  
   // port name from small window
   ipcRenderer.on('selected-port', (_event, data) => {
     const { portPath, fwVersion } = typeof data === 'string' ? { portPath: data, fwVersion: null } : data;
@@ -1646,13 +1646,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (portLabel) {
       portLabel.textContent = portPath;
     }
-	
+
     if (fwVersion) {
       const vptVerElem = document.getElementById('vptVer');
       if (vptVerElem) {
         vptVerElem.textContent = 'Ver. ' + fwVersion;
       }
-    }	
+
+      // CHECK FOR 0.0 VERSION (Recovery Mode)
+      if (fwVersion === '0.0') {
+        const connType = document.getElementById('connType');
+        const currentLimit = document.getElementById('currentLimit');
+        const connectBtn = document.getElementById('connectBtn');
+        const updateBtn = document.getElementById('updateBtn');
+
+        if (connType) connType.disabled = true;
+        if (currentLimit) currentLimit.disabled = true;
+        if (connectBtn) connectBtn.disabled = true;
+
+        // Force enable update button even if not "connected" in the normal sense
+        if (updateBtn) {
+          updateBtn.disabled = false;
+        }      
+      }
+    }
   });
   
   ipcRenderer.on('app-version', (event, ver) => {
