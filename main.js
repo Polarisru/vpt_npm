@@ -555,11 +555,23 @@ ipcMain.handle('perform-update', async (event, pages, totalPages, startAddress) 
     // Step 2: Send BLS repeatedly until 'OK' or 5s timeout
     const blsStart = Date.now();
     let blsResponse = null;
+
     while (Date.now() - blsStart < 5000) {
-      blsResponse = await queuedSendAndWait('BLS', line => line.trim() === 'OK', 20);
-      if (blsResponse) break;
+      try {
+        // Try sending BLS with a short but reasonable timeout (e.g. 100ms)
+        // If it times out, we just loop again
+        const res = await queuedSendAndWait('BLS', line => line.trim() === 'OK', 100);
+        if (res) {
+          blsResponse = res;
+          break;
+        }
+      } catch (e) {
+        // Ignore timeout errors here, just retry
+      }
+      // Brief pause before next attempt
       await new Promise(resolve => setTimeout(resolve, 50));
     }
+
     if (!blsResponse) throw new Error('Failed to enter bootloader: No OK response within 5s');
 
     win.webContents.send('update-progress', {
