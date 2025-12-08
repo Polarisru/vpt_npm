@@ -203,6 +203,15 @@ body {
     transform: translateY(0);
 }
 
+.connect-btn:disabled {
+  background: #ccc;          /* Gray background */
+  color: #777;               /* Dimmed text color */
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+  opacity: 0.6;              /* Faded appearance */
+}
+
 /* meters directly above status box, centered */
 #statusContainer {
   display: flex;

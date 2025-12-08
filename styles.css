@@ -41,7 +41,7 @@ h1 {
     font-size: 14px;
     border: 2px solid #e0e0e0;
     border-radius: 6px;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     background: white;
     cursor: pointer;
     transition: border-color 0.3s;
@@ -76,6 +76,10 @@ h1 {
 
 #connectBtn:active {
     transform: translateY(0);
+}
+
+.checkbox-container {
+  margin-bottom: 10px;
 }
 
 /* Status label under button */
