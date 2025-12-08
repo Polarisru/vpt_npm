@@ -666,7 +666,8 @@ ipcMain.handle('perform-update', async (event, pages, totalPages, startAddress) 
     });
   } catch (err) {
     console.error('Firmware update error:', err);
-    throw new Error(`Firmware update failed: ${err.message}`);
+    //throw new Error(`Firmware update failed: ${err.message}`);
+    throw err;
   }
 
   return true;
