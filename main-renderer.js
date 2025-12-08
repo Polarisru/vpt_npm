@@ -375,6 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const fwFileName  = document.getElementById('fwFileName');
   const fwBrowseBtn = document.getElementById('fwBrowseBtn');
+  const eeBrowseBtn = document.getElementById('eeBrowseBtn');
   const fwFileInput = document.getElementById('fwFileInput');
   const fwUploadBtn = document.getElementById('fwUploadBtn');
   
@@ -1063,6 +1064,23 @@ document.addEventListener('DOMContentLoaded', () => {
       fwFileName.textContent = file.name;
     });
   }
+  
+  if (eeBrowseBtn && eeFileInput && eeFileName) {
+    eeBrowseBtn.addEventListener('click', () => {
+      eeFileInput.value = '';
+      eeFileInput.click();
+    });
+
+    eeFileInput.addEventListener('change', () => {
+      const file = eeFileInput.files && eeFileInput.files[0];
+      if (!file) {
+        eeFileName.textContent = 'No file selected';
+        return;
+      }
+      eeFileName.textContent = file.name;
+    });
+  }
+  
 
   // FW upload button listener
   if (fwUploadBtn && fwFileInput) {
@@ -1673,8 +1691,8 @@ document.addEventListener('DOMContentLoaded', () => {
         vptVerElem.textContent = 'Ver. ' + fwVersion;
       }
 
-      // CHECK FOR 0.0 VERSION (Recovery Mode)
-      if (fwVersion === '0.0') {
+      // CHECK FOR 00.00 VERSION (Recovery Mode)
+      if (fwVersion === '00.00') {
         const connType = document.getElementById('connType');
         const currentLimit = document.getElementById('currentLimit');
         const connectBtn = document.getElementById('connectBtn');

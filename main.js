@@ -93,7 +93,7 @@ async function sendPwr0OnExit() {
 function createSelectWindow() {
     selectWindow = new BrowserWindow({
         width: 320,
-        height: 300,
+        height: 320,
         resizable: true,//false,
         autoHideMenuBar: true,
         webPreferences: {
@@ -174,7 +174,7 @@ ipcMain.on('port-selected', async (event, arg) => {
     // Open port
     await uart.open(portPath, baud);
     
-    let fwVersion = '0.0';
+    let fwVersion = '00.00';
 
     if (!isRecovery) {
       // NORMAL MODE: Do handshake    // 2) Send "ID" and expect exact "VPT"
@@ -195,7 +195,7 @@ ipcMain.on('port-selected', async (event, arg) => {
 
       // Extract x.y from "N:x.y"
       const match = vnResp.trim().match(/^N:(\d+\.\d+)$/);
-      fwVersion = match ? match[1] : '0.0';
+      fwVersion = match ? match[1] : '00.00';
     } else {
       // RECOVERY MODE: Skip handshake, force version 0.0
       console.log('Recovery mode: Skipping handshake.');

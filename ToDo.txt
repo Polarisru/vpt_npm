@@ -43,6 +43,7 @@ GUI:
   Wrong VPT firmware prevention             To check!
   Recovery mode                             To check!
   Upload firmware                           To check!
+  Disconnect if unpowered
   
 Infrastructure
   Create device parameters                  Later!
