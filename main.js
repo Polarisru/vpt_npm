@@ -536,7 +536,7 @@ function crc16(pageData) {
 }
 
 // perform-update: keep uart.send / writeBinary
-ipcMain.handle('perform-update', async (event, pages, totalPages, startAddress) => {
+ipcMain.handle('perform-update', async (event, pages, totalPages) => {
   if (!uart.isOpen()) throw new Error('UART not open');
 
   const win = BrowserWindow.fromWebContents(event.sender);
@@ -668,6 +668,102 @@ ipcMain.handle('perform-update', async (event, pages, totalPages, startAddress) 
     console.error('Firmware update error:', err);
     //throw new Error(`Firmware update failed: ${err.message}`);
     throw err;
+  }
+
+  return true;
+});
+
+ipcMain.handle('perform-upload', async (event, pages, totalPages) => {
+  if (!uart.isOpen()) throw new Error('UART not open');
+
+  const win = BrowserWindow.fromWebContents(event.sender);
+  let successCount = 0;
+
+  try {
+    win.webContents.send('update-progress', {
+      current: 0,
+      total: totalPages,
+      text: 'Entering bootloader...'
+    });
+
+    // Step 1: Send BLS repeatedly until 'OK' or 5s timeout
+    // (No UPFW command sent here)
+    const blsStart = Date.now();
+    let blsResponse = null;
+
+    while (Date.now() - blsStart < 5000) {
+      try {
+        // Short timeout 100ms as requested
+        const res = await queuedSendAndWait('BLS', line => line.trim() === 'OK', 100);
+        if (res) {
+          blsResponse = res;
+          break;
+        }
+      } catch (e) {
+        // ignore timeout and retry
+      }
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    if (!blsResponse) throw new Error('Failed to enter bootloader: No OK response within 5s');
+
+    win.webContents.send('update-progress', {
+      current: 0,
+      total: totalPages,
+      text: 'Flashing pages...'
+    });
+
+    // Step 2: Flash each page
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      let attempts = 0;
+      let pageSuccess = false;
+
+      while (attempts < 3 && !pageSuccess) {
+        attempts++;
+
+        // Send BLFxx (2-digit hex index) - reusing logic from perform-update
+        const pageIndexHex = page.index.toString(16).toUpperCase().padStart(2, '0');
+        await uart.send(`BLF${pageIndexHex}`);
+        await new Promise(resolve => setTimeout(resolve, 10));
+
+        await uart.writeBinary(page.data);
+
+        // Wait for response 'OK'
+        const response = await queuedSendAndWait('', line => line.trim() === 'OK', 2000);
+        
+        if (response) {
+          pageSuccess = true;
+          successCount++;
+        } else {
+          console.warn(`Page ${page.index} attempt ${attempts} failed`);
+          if (attempts < 3) await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+
+      if (!pageSuccess) {
+        throw new Error(`Failed to flash page ${page.index} after 3 attempts`);
+      }
+
+      win.webContents.send('update-progress', {
+        current: successCount,
+        total: totalPages,
+        text: `Flashed page ${successCount}/${totalPages}`
+      });
+    }
+
+    // Step 3: Send BLQ (no response expected/checked usually, or check logic if needed)
+    await uart.send('BLQ');
+
+    win.webContents.send('update-progress', {
+      current: totalPages,
+      total: totalPages,
+      text: 'Upload complete'
+    });
+
+  } catch (err) {
+    console.error('HEX upload error:', err);
+    throw err; // Let renderer catch it
   }
 
   return true;

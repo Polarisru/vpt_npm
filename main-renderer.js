@@ -1054,50 +1054,60 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-	if (fwUploadBtn && fwFileInput) {
-	  fwUploadBtn.addEventListener('click', async () => {
-		const file = fwFileInput.files && fwFileInput.files[0];
-		if (!file) {
-		  console.log('No HEX file selected for upload');
-		  return;
-		}
+  // FW upload button listener
+  if (fwUploadBtn && fwFileInput) {
+    fwUploadBtn.addEventListener('click', async () => {
+      const file = fwFileInput.files && fwFileInput.files[0];
+      if (!file) {
+        console.log('No HEX file selected for upload');
+        return;
+      }
 
-		console.log('HEX upload requested for file:', file.name);
+      // 1. Read file content
+      let hexContent;
+      try {
+        hexContent = await ipcRenderer.invoke('read-file', file.path);
+      } catch (e) {
+        console.error('Failed to read HEX file:', e);
+        showError('Failed to read HEX file: ' + e.message);
+        return;
+      }
 
-		// Read file content in renderer (or in main if you prefer)
-		let hexContent;
-		try {
-		  hexContent = await ipcRenderer.invoke('read-file', file.path);
-		} catch (e) {
-		  console.error('Failed to read HEX file:', e);
-      const cleanMessage = e.message.split('Error: ').pop();
-		  showError ? showError('Failed to read HEX file: ' + cleanMessage)
-          : alert('Failed to read HEX file: ' + cleanMessage);
-		  return;
-		}
+      // 2. Parse HEX to pages
+      try {
+        // Assuming parseIntelHexToPages is available in scope
+        const { pages, totalPages } = parseIntelHexToPages(hexContent);
+        
+        if (pages.length === 0) {
+          showError('Invalid HEX file: No data records found.');
+          return;
+        }
 
-		fwUploadBtn.disabled = true;
+        fwUploadBtn.disabled = true;
+        showProgress('Firmware update', `Uploading ${file.name}…`);
+        updateProgress(0, totalPages);
 
-		// Show modal progress
-		showProgress('Firmware update', `Uploading ${file.name}…`);
-		updateProgress(0, 100);
+        // 3. Invoke the NEW handler
+        await ipcRenderer.invoke('perform-upload', pages, totalPages);
 
-		try {
-		  // Ask main to perform update (it will emit progress events)
-		  await ipcRenderer.invoke('perform-update', hexContent);
+        updateProgress(totalPages, totalPages);
+        hideProgress();
+        if (typeof showSuccess === 'function') {
+           showSuccess('Firmware upload completed successfully.', true);
+        } else {
+           alert('Firmware upload completed successfully.');
+        }
 
-		  updateProgress(100, 100);
-		} catch (e) {
-		  console.error('Firmware upload failed:', e);
-      const cleanMessage = e.message.split('Error: ').pop();
-		  showError ? showError('Firmware upload failed: ' + cleanMessage)
-					: alert('Firmware upload failed: ' + cleanMessage);
-		} finally {
-		  hideProgress();
-		  fwUploadBtn.disabled = false;
-		}
-	  });
-	}
+      } catch (e) {
+        console.error('Firmware upload failed:', e);
+        const cleanMessage = e.message.split('Error: ').pop() || e.message;
+        showError(`Firmware upload failed: ${cleanMessage}`);
+      } finally {
+        hideProgress();
+        fwUploadBtn.disabled = false;
+      }
+    });
+  }
 
   // load devices.json
   try {
@@ -1610,7 +1620,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateProgress(0, totalPages);
 
       // Invoke main process for flashing
-      await ipcRenderer.invoke('perform-update', pages, totalPages, startAddress);
+      await ipcRenderer.invoke('perform-update', pages, totalPages);
 
       updateProgress(totalPages, totalPages);
       hideProgress();
