@@ -160,50 +160,61 @@ app.on('window-all-closed', () => {
 });
 
 // From small window: user chose a port and clicked Connect
-ipcMain.on('port-selected', async (event, portPath) => {
-  console.log('Port selected in renderer:', portPath);
+ipcMain.on('port-selected', async (event, arg) => {
+  // Handle both old (string) and new (object) formats for backward compatibility
+  const portPath = typeof arg === 'string' ? arg : arg.portPath;
+  const isRecovery = typeof arg === 'string' ? false : arg.recovery;
+
+  console.log('Port selected in renderer:', portPath, 'Recovery:', isRecovery);
+  
   const baud = 115200;
 
   try {
-    // 1) Open port
+    // Open port
     await uart.open(portPath, baud);
+    
+    let fwVersion = '0.0';
 
-    // 2) Send "ID" and expect exact "VPT"
-    const idResp = await queuedSendAndWait(
-      'ID',
-      line => line.trim() === 'VPT',
-      800
-    );
-    console.log('ID response:', idResp);
+    if (!isRecovery) {
+      // NORMAL MODE: Do handshake    // 2) Send "ID" and expect exact "VPT"
+      const idResp = await queuedSendAndWait(
+        'ID',
+        line => line.trim() === 'VPT',
+        800
+      );
+      console.log('ID response:', idResp);
 
-    // 3) Send "VN" and expect "N:x.y"
-    const vnResp = await queuedSendAndWait(
-      'VN',
-      line => /^N:\d+\.\d+$/.test(line.trim()),
-      800
-    );
-    console.log('VN response:', vnResp);
+      // 3) Send "VN" and expect "N:x.y"
+      const vnResp = await queuedSendAndWait(
+        'VN',
+        line => /^N:\d+\.\d+$/.test(line.trim()),
+        800
+      );
+      console.log('VN response:', vnResp);
 
-    // Extract x.y from "N:x.y"
-    const match = vnResp.trim().match(/^N:(\d+\.\d+)$/);
-    const fwVersion = match ? match[1] : '0.0';
-
+      // Extract x.y from "N:x.y"
+      const match = vnResp.trim().match(/^N:(\d+\.\d+)$/);
+      const fwVersion = match ? match[1] : '0.0';
+    } else {
+      // RECOVERY MODE: Skip handshake, force version 0.0
+      console.log('Recovery mode: Skipping handshake.');
+    }
     // Open main window and pass both port and FW version
     createMainWindow({ portPath, fwVersion });
 
     if (selectWindow) selectWindow.close();
   } catch (err) {
-    console.error('Device handshake failed:', err.message);
+    console.error('Connection failed:', err.message);
     uart.close();
-
-    // Tell renderer: VPT not connected
-    const msg = 'VPT not connected';
+    
+    const msg = isRecovery ? 'Recovery open failed' : 'VPT not connected';
+    
     if (selectWindow && selectWindow.webContents) {
       selectWindow.webContents.send('port-check-failed', msg);
     } else {
       event.sender.send('port-check-failed', msg);
     }
-  }
+  }  
 });
 
 // cfg = { type: 'PWM'|'RS485'|'CAN', baud?, id?, bitrate?, subtype?, baseId?, current? }

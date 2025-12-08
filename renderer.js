@@ -43,18 +43,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!connectBtn || !portSelect) return;
 
     connectBtn.addEventListener('click', () => {
-        const selectedPort = portSelect.value;
-        if (!selectedPort || selectedPort === 'No ports found') return;
+      const selectedPort = portSelect.value;
+      // Get checkbox state
+      const isRecovery = document.getElementById('recoveryMode').checked;
 
-        if (statusLabel) {
-            statusLabel.textContent = 'Checking device...';
-            statusLabel.classList.remove('ok', 'error');
-            statusLabel.classList.add('info');
-        }
+      if (!selectedPort || selectedPort === 'No ports found') return;
 
-        console.log('Selected port:', selectedPort);
-        ipcRenderer.send('port-selected', selectedPort);
-    }); 
+      if (statusLabel) {
+        statusLabel.textContent = isRecovery ? 'Opening in Recovery Mode...' : 'Checking device...';
+        statusLabel.classList.remove('ok', 'error');
+        statusLabel.classList.add('info');
+      }
+
+      console.log('Selected port:', selectedPort, 'Recovery:', isRecovery);
+      
+      // Send object instead of just string
+      ipcRenderer.send('port-selected', { portPath: selectedPort, recovery: isRecovery });
+    });    
 });
 
 // Error from main when device not available / timeout / access denied
