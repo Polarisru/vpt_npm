@@ -89,14 +89,14 @@
 		  <!-- Tabbed center panel -->
 		  <div class="center-panel">
 			<div class="tabs">
-			  <button class="tab-link active" data-tab="main-tab">Main</button>
+			  <button class="tab-link" data-tab="main-tab">Main</button>
 			  <button class="tab-link" data-tab="eeprom-tab">EEPROM</button>
-			  <button class="tab-link" data-tab="info-tab">Info</button>
+			  <button class="tab-link active" data-tab="info-tab">Info</button>
 			  <button class="tab-link" data-tab="script-tab">Script</button>
 			</div>
 
 			<div class="tab-panel">
-			  <div class="tab-pane active" id="main-tab">
+			  <div class="tab-pane" id="main-tab">
           <!-- your existing .main-content markup, without its outer wrapper -->
           <div class="main-content">
             <h2>Motor Position</h2>
@@ -229,20 +229,29 @@
 				</div>
 			  </div>
 
-			  <div class="tab-pane" id="info-tab">
+			  <div class="tab-pane active" id="info-tab">
 			    <div class="main-content">
 					<div class="fw-block">
 					  <div class="fw-title">Firmware update</div>
 
 					  <div class="fw-row">
-						<div class="fw-label">HEX file</div>
-			  
-						<div class="fw-file-area">
-						  <span id="fwFileName" class="fw-filename">No file selected</span>
-						  <button id="fwBrowseBtn" class="fw-browse-btn">Browse…</button>
-						  <input type="file" id="fwFileInput" accept=".hex" style="display:none">
-						</div>
+              <div class="fw-label">HEX file</div>
+          
+              <div class="fw-file-area">
+                <span id="fwFileName" class="fw-filename">No file selected</span>
+                <button id="fwBrowseBtn" class="fw-browse-btn">Browse…</button>
+                <input type="file" id="fwFileInput" accept=".hex" style="display:none">
+              </div>
 					  </div>
+					  <div class="fw-row">
+              <div class="fw-label">EEPROM file</div>
+          
+              <div class="fw-file-area">
+                <span id="eeFileName" class="fw-filename">No file selected</span>
+                <button id="eeBrowseBtn" class="fw-browse-btn">Browse…</button>
+                <input type="file" id="eeFileInput" accept=".eep" style="display:none">
+              </div>
+					  </div>            
 
 					  <div class="fw-actions">
 						<button id="fwUploadBtn" class="fw-upload-btn">Upload</button>
