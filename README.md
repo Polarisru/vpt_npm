@@ -6,6 +6,8 @@ npm start
 
 ## Install npm on Linux
 sudo apt-get install nodejs npm
+### To make an executable
+sudo apt-get install dpkg fakeroot rpm
 
 ## Create a distributable
 Install Forge:

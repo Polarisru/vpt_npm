@@ -40,8 +40,9 @@ GUI:
   Add Volz logo                             DONE
   Set EEPROM parameters with div and offset DONE
   Update VPT                                DONE
-  Wrong VPT firmware prevention
-  Upload firmware
+  Wrong VPT firmware prevention             To check!
+  Recovery mode                             To check!
+  Upload firmware                           To check!
   
 Infrastructure
   Create device parameters                  Later!
