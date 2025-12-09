@@ -433,16 +433,32 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- STEP 2: Status ---
         case 2:
           const s = await ipcRenderer.invoke('read-status');
-          // Update only connection hint
-          if (connectionHint) {
-            if (typeof s === 'number' && s === 0) { // Adjust '0' if your logic differs
-              connectionHint.textContent = 'Connected';
-              connectionHint.style.color = '';      // '' to use CSS default
-              connectionHint.style.fontWeight = 'normal';
+          if (s !== null) {
+            if ((s & 0x01) !== 0) {
+              console.warn('Device requested disconnect (Status Bit 0 set). Disconnecting...');
+              // Trigger the disconnect logic (same as clicking the button)
+              if (connectBtn && connectBtn.textContent === 'Disconnect') {
+                connectBtn.click();
+              }
+              showError('Device reset or not configured. Connection closed.');
             } else {
-              connectionHint.textContent = 'ERROR';
-              connectionHint.style.color = 'red';
-              connectionHint.style.fontWeight = 'bold';
+              // DISPLAY OTHER ERRORS (Mask out Bit 0)
+              // Pass (statusVal & ~0x01) to your visual indicator
+              const displayStatus = s & ~0x01;
+              
+              // Update only connection hint
+              if (connectionHint) {
+                //if (typeof s === 'number' && s === 0) { // Adjust '0' if your logic differs
+                if (displayStatus === 0) {
+                  connectionHint.textContent = 'Connected';
+                  connectionHint.style.color = '';      // '' to use CSS default
+                  connectionHint.style.fontWeight = 'normal';
+                } else {
+                  connectionHint.textContent = 'ERROR';
+                  connectionHint.style.color = 'red';
+                  connectionHint.style.fontWeight = 'bold';
+                }
+              }
             }
           }
           break;
