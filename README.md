@@ -17,5 +17,9 @@ npx electron-forge import
 Create:
 npm run make
 
-Open debug console:
+## Open debug console:
 Ctrl+Shift+I
+
+## Add UART port permissions
+sudo usermod -a -G dialout your_user
+sudo usermod -a -G tty your_user 

@@ -45,7 +45,8 @@ GUI:
   Recovery mode                             DONE
   Upload firmware                           To check!
   Disconnect if power off after reset       DONE
-  Disconnect if VPT is off
+  Disconnect if VPT is off                  DONE
+  Show error message if can't do connect
   
 Infrastructure
   Create device parameters                  Later!

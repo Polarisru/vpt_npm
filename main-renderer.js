@@ -418,6 +418,8 @@ document.addEventListener('DOMContentLoaded', () => {
           if (vEl) {
             vEl.textContent = (typeof v === 'number') ? v.toFixed(1) : '--.-';
           }
+          // Success -> reset miss counter
+          missedPolls = 0;
           break;
 
         // --- STEP 1: Temperature ---
@@ -428,12 +430,15 @@ document.addEventListener('DOMContentLoaded', () => {
           if (tEl) {
             tEl.textContent = (typeof t === 'number') ? t.toFixed(1) : '--.-';
           }
+          missedPolls = 0;
           break;
 
         // --- STEP 2: Status ---
         case 2:
           const s = await ipcRenderer.invoke('read-status');
           if (s !== null) {
+            // Got a valid status -> reset miss counter
+            missedPolls = 0;
             if ((s & 0x01) !== 0) {
               console.warn('Device requested disconnect (Status Bit 0 set). Disconnecting...');
               // Trigger the disconnect logic (same as clicking the button)
@@ -460,6 +465,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
               }
             }
+          } else {
+            // Treat null as a miss
+            missedPolls++;
           }
           break;
       }
@@ -469,6 +477,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (e) {
       console.error('Status poll step ' + pollStep + ' failed:', e);
+      // Any exception counting as a missed poll
+      missedPolls++;
+    }
+    
+      // If 9 consecutive polling failures, auto-disconnect
+    if (missedPolls >= 6) {
+      console.warn('No valid polling responses for 9 cycles. Disconnecting...');
+      if (connectBtn && connectBtn.textContent === 'Disconnect') {
+        connectBtn.click();
+      }
+      showError('Device not responding. Connection closed.');
+      missedPolls = 0; // reset after disconnect
     }
   }
 
