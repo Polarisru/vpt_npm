@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 //if (typeof s === 'number' && s === 0) { // Adjust '0' if your logic differs
                 if (displayStatus === 0) {
                   connectionHint.textContent = 'Connected';
-                  connectionHint.style.color = '';      // '' to use CSS default
+                  connectionHint.style.color = 'green';
                   connectionHint.style.fontWeight = 'normal';
                 } else {
                   connectionHint.textContent = 'ERROR';
@@ -1217,16 +1217,24 @@ document.addEventListener('DOMContentLoaded', () => {
 			startStatusPolling();
 			connectBtn.textContent = 'Disconnect';
 			if (contentOverlay) contentOverlay.classList.add('hidden');
-			if (connectionHint) connectionHint.textContent = 'Connected';
+			if (connectionHint) {
+        connectionHint.textContent = 'Connected';
+        connectionHint.style.color = 'green';
+        connectionHint.style.fontWeight = '';
+      }
 			setSidebarEnabled(false);
 
 			// Enable/disable Update button according to new state
 			updateUpdateButtonState();
 		  } catch (e) {
-      console.log('catch block entered');
-			console.error('Connection init failed:', e);
-			if (connectionHint) connectionHint.textContent = 'Connection failed';
-		  }
+        console.log('catch block entered');
+        console.error('Connection init failed:', e);
+        if (connectionHint) {
+          connectionHint.textContent = 'Connection failed';
+          connectionHint.style.color = 'red';
+          connectionHint.style.fontWeight = 'bold';
+        }
+      }
 		} else {
       stopScriptAndResetUI();
 		  try {
