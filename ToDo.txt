@@ -10,6 +10,7 @@ VPT FW
   Send raw command                          DONE
   Set as ZeroPos command                    To check!
   Get status command (errors)               DONE
+  BL: LED is not blinking
 	
 GUI:
 	Motor position in 0.1° steps              DONE
@@ -40,10 +41,11 @@ GUI:
   Add Volz logo                             DONE
   Set EEPROM parameters with div and offset DONE
   Update VPT                                DONE
-  Wrong VPT firmware prevention             To check!
-  Recovery mode                             To check!
+  Wrong VPT firmware prevention             DONE
+  Recovery mode                             DONE
   Upload firmware                           To check!
-  Disconnect if unpowered
+  Disconnect if power off after reset       DONE
+  Disconnect if VPT is off
   
 Infrastructure
   Create device parameters                  Later!

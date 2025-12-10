@@ -561,7 +561,7 @@ ipcMain.handle('perform-update', async (event, pages, totalPages) => {
       try {
         // Try sending BLS with a short but reasonable timeout (e.g. 100ms)
         // If it times out, we just loop again
-        const res = await queuedSendAndWait('BLS', line => line.trim() === 'OK', 100);
+        const res = await queuedSendAndWait('BLS', line => line.trim() === 'OK', 20);
         if (res) {
           blsResponse = res;
           break;
