@@ -228,9 +228,9 @@ ipcMain.handle('conn-init', async (_event, cfg) => {
 
   // Map connType -> SIx
   let siCmd = null;
-  if (type === 'PWM') siCmd = 'SI0';
-  else if (type === 'RS485') siCmd = 'SI1';
-  else if (type === 'CAN') siCmd = 'SI2';
+  if (type === 'PWM') siCmd = 'SI1';
+  else if (type === 'RS485') siCmd = 'SI2';
+  else if (type === 'CAN') siCmd = 'SI3';
   else throw new Error('Unknown connection type: ' + type);
 
   // Helper: send command and expect "OK"
