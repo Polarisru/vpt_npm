@@ -10,7 +10,7 @@ VPT FW
   Send raw command                          DONE
   Set as ZeroPos command                    To check!
   Get status command (errors)               DONE
-  BL: LED is not blinking
+  BL: LED is not blinking                   
 	
 GUI:
 	Motor position in 0.1° steps              DONE
@@ -43,11 +43,13 @@ GUI:
   Update VPT                                DONE
   Wrong VPT firmware prevention             DONE
   Recovery mode                             DONE
-  Upload firmware                           To check!
+  Upload firmware                           DONE
   Disconnect if power off after reset       DONE
   Disconnect if VPT is off                  DONE
   Show error message if can't do connect    DONE
   Check error messages                      Later!
+  Disable eeprom file for CAN
+  Reconnect after update?
   
 Infrastructure
   Create device parameters                  Later!
