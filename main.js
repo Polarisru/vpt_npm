@@ -753,7 +753,40 @@ ipcMain.handle('perform-upload', async (event, pages, totalPages) => {
       });
     }
 
-    // Step 3: Send BLQ (no response expected/checked usually, or check logic if needed)
+    // Step 3: Verify each page with BLCxxx:yyyy
+    win.webContents.send('update-progress', {
+      current: 0,
+      total: totalPages,
+      text: 'Verifying pages...'
+    });
+
+    let verifyCount = 0;
+
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+
+      // 3.1: Calculate CRC16 for this page
+      const crc = crc16(page.data); // see helper above
+      const pageIndexHex = page.index.toString(16).toUpperCase().padStart(2, '0');
+      const crcHex = crc.toString(16).toUpperCase().padStart(4, '0');
+
+      // 3.2: Send BLCxxx:yyyy and wait for 'OK'
+      const cmd = `BLC${pageIndexHex}:${crcHex}`;
+      const verifyResp = await queuedSendAndWait(cmd, line => line.trim() === 'OK', 200);
+
+      if (!verifyResp) {
+        throw new Error(`Verification failed for page ${page.index} (CRC ${crcHex})`);
+      }
+
+      verifyCount++;
+      win.webContents.send('update-progress', {
+        current: verifyCount,
+        total: totalPages,
+        text: `Verified page ${verifyCount}/${totalPages}`
+      });
+    }
+    
+    // Step 4: Send BLQ (no response expected/checked usually, or check logic if needed)
     await uart.send('BLQ');
 
     win.webContents.send('update-progress', {

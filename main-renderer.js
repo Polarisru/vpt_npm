@@ -1126,49 +1126,46 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('No HEX file selected for upload');
         return;
       }
+      
+      // Stop periodic status polling during upload
+      stopStatusPolling();
 
-      // 1. Read file content
-      let hexContent;
       try {
-        hexContent = await ipcRenderer.invoke('read-file', file.path);
-      } catch (e) {
-        console.error('Failed to read HEX file:', e);
-        showError('Failed to read HEX file: ' + e.message);
-        return;
-      }
+        // 1. Read file content
+        const hexContent = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result);
+          reader.onerror = e => reject(e);
+          reader.readAsText(file);
+        });
 
-      // 2. Parse HEX to pages
-      try {
-        // Assuming parseIntelHexToPages is available in scope
+        fwUploadBtn.disabled = true;
+        showProgress('Servo firmware update', `Uploading ${file.name}…`);
+        updateProgress(0, 100);
+
+        // 2. Parse HEX to pages
+        // parse + invoke perform-hex-upload / perform-update as you already do
         const { pages, totalPages } = parseIntelHexToPages(hexContent);
-        
-        if (pages.length === 0) {
+        if (!pages.length) {
           showError('Invalid HEX file: No data records found.');
           return;
         }
-
-        fwUploadBtn.disabled = true;
-        showProgress('Firmware update', `Uploading ${file.name}…`);
-        updateProgress(0, totalPages);
 
         // 3. Invoke the NEW handler
         await ipcRenderer.invoke('perform-upload', pages, totalPages);
 
         updateProgress(totalPages, totalPages);
-        hideProgress();
-        if (typeof showSuccess === 'function') {
-           showSuccess('Firmware upload completed successfully.', true);
-        } else {
-           alert('Firmware upload completed successfully.');
-        }
-
       } catch (e) {
-        console.error('Firmware upload failed:', e);
-        const cleanMessage = e.message.split('Error: ').pop() || e.message;
-        showError(`Firmware upload failed: ${cleanMessage}`);
+        console.error('Failed to read/upload HEX file:', e);
+        const cleanMessage = e.message?.split('Error: ').pop() || e.message;
+        showError(`Failed to read HEX file: ${cleanMessage}`);
       } finally {
         hideProgress();
         fwUploadBtn.disabled = false;
+        // Re-enable polling after upload (success or failure)
+        if (isConnected) {
+          startStatusPolling();
+        }
       }
     });
   }
@@ -1688,7 +1685,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      showProgress('Firmware Update', `Preparing ${totalPages} pages...`);
+      showProgress('VPT firmware update', `Preparing ${totalPages} pages...`);
       updateProgress(0, totalPages);
 
       // Invoke main process for flashing
@@ -1696,9 +1693,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       updateProgress(totalPages, totalPages);
       hideProgress();
-      showSuccess('Firmware update completed successfully.', true); // Success variant if you add one
+      showSuccess('VPT firmware update completed successfully.', true); // Success variant if you add one
     } catch (e) {
-      console.error('Firmware update failed:', e);
+      console.error('VPT firmware update failed:', e);
       const cleanMessage = e.message.split('Error: ').pop() || e.message;
       showError(`Firmware update failed: ${cleanMessage}`);
       hideProgress();
