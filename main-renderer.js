@@ -1316,26 +1316,36 @@ document.addEventListener('DOMContentLoaded', () => {
   if (readLiveBtn && voltageValueEl && currentValueEl && temp1ValueEl) {
     readLiveBtn.addEventListener('click', async () => {
 	  try {
-	    const voltageResp = await ipcRenderer.invoke('uart-send-command', 'GUM');
-	    const currentResp = await ipcRenderer.invoke('uart-send-command', 'GCS');
-	    const tempResp = await ipcRenderer.invoke('uart-send-command', 'GTS');
+	    // const voltageResp = await ipcRenderer.invoke('uart-send-command', 'GUM');
+	    // const currentResp = await ipcRenderer.invoke('uart-send-command', 'GCS');
+	    // const tempResp = await ipcRenderer.invoke('uart-send-command', 'GTS');
 
-	    function parseResponse(prefix, response) {
-		  if (!response) return '--.-';
-		  response = response.trim();
-		  if (response === 'E.H') return '--.-';
-		  const re = new RegExp(`^${prefix}:(\\d+\\.\\d+)$`);
-		  const m = response.match(re);
-		  return m ? m[1] : '--.-';
-	    }
+	    // function parseResponse(prefix, response) {
+		  // if (!response) return '--.-';
+		  // response = response.trim();
+		  // if (response === 'E.H') return '--.-';
+		  // const re = new RegExp(`^${prefix}:(\\d+\\.\\d+)$`);
+		  // const m = response.match(re);
+		  // return m ? m[1] : '--.-';
+	    // }
 
-	    const voltage = parseResponse('UM', voltageResp);
-	    const current = parseResponse('CS', currentResp);
-	    const temp = parseResponse('TS', tempResp);
+	    // const voltage = parseResponse('UM', voltageResp);
+	    // const current = parseResponse('CS', currentResp);
+	    // const temp = parseResponse('TS', tempResp);
 
-	    voltageValueEl.textContent = voltage;
-	    currentValueEl.textContent = current;
-	    temp1ValueEl.textContent = temp;
+	    // voltageValueEl.textContent = voltage;
+	    // currentValueEl.textContent = current;
+	    // temp1ValueEl.textContent = temp;
+      
+      // One call, clean data
+      const data = await ipcRenderer.invoke('read-live-metrics');
+      
+      // Helper for display
+      const fmt = (val) => (typeof val === 'number') ? val : '--.-';
+
+      voltageValueEl.textContent = fmt(data.voltage);
+      currentValueEl.textContent = fmt(data.current);
+      temp1ValueEl.textContent = fmt(data.temp);      
 	  } catch (e) {
 	    console.error('Failed to read live data:', e);
 	    voltageValueEl.textContent = '--.-';
