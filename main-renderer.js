@@ -787,7 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       try {
         // Await the ACTUAL position returned by the device
-        const actualPos = await ipcRenderer.invoke('set-position', degrees);
+        const actualPos = await devApi.setPosition(degrees);
 
         // Update the label with the confirmed value from the device
         if (devicePositionLabel && typeof actualPos === 'number') {
@@ -1248,7 +1248,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Modify your connectBtn click handler to call updateUpdateButtonState()
 	if (connectBtn) {
 	  connectBtn.addEventListener('click', async () => {
-    console.log('connectBtn click');
 		if (!isConnected) {
 		  const cfg = collectConnectionConfig();
 		  try {
@@ -1305,18 +1304,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   devicePositionLabel.addEventListener('click', async () => {
     try {
-      const resp = await devApi.readDevicePosition();
-      // Parse response: "PS:xxx.x"
-      const match = resp.trim().match(/^PS:(-?\d+\.\d+)$/);
-      if (!match) {
-        devicePositionLabel.textContent = '--.-°';
-        return;
-      }
-
-      const num = Number(match[1]);        // removes leading zeros
-      const value = num.toFixed(1);        // keep one decimal
-
-      devicePositionLabel.textContent = value + '°';
+      const pos = await devApi.readDevicePosition(); // number
+      devicePositionLabel.textContent = pos.toFixed(1) + '°';
     } catch (e) {
       devicePositionLabel.textContent = '--.-°';
       console.error('Failed to read device position:', e);

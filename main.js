@@ -514,20 +514,24 @@ ipcMain.handle('set-position', async (_event, degrees) => {
   if (!uart.isOpen()) {
     throw new Error('UART not open');
   }
-  await devSetPosition(degrees);
-  return true;
+  const pos = await devSetPosition(degrees);
+  return pos; // numeric position back to renderer
 });
 
 ipcMain.handle('read-device-position', async () => {
   if (!uart.isOpen()) throw new Error('UART not open');
 
-  // Send "GPS", wait for a line starting with "PS:"
   const resp = await queuedSendAndWait(
     'GPS',
     line => line.trim().startsWith('PS:'),
     800
   );
-  return resp;
+
+  const match = resp.trim().match(/^PS:(-?\d+\.\d+)$/);
+  if (!match) {
+    throw new Error('Unexpected GPS response: ' + resp);
+  }
+  return parseFloat(match[1]); // numeric position
 });
 
 ipcMain.handle('uart-send-command', async (_event, command) => {
@@ -638,7 +642,6 @@ ipcMain.handle('read-ascii-range', async (_event, { start, end }) => {
   }
 
   const chars = bytes.map(b => String.fromCharCode(b));
-  console.log('Text: ', chars.join(''));
   return chars.join('');
 });
 
