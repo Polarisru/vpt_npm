@@ -21,9 +21,26 @@ class MonitorManager {
       const tempEl = document.getElementById('temp1Value');
       // const temp2El = document.getElementById('temp2Value'); // If exists
 
-      if (voltEl) voltEl.textContent = fmt(data.voltage); // GUM
-      if (currEl) currEl.textContent = fmt(data.current); // GCS
-      if (tempEl) tempEl.textContent = fmt(data.temp);    // GTS
+      if (voltEl) {
+        // Voltage: 1 decimal place (e.g. "12.5")
+        voltEl.textContent = (typeof data.voltage === 'number') 
+          ? data.voltage.toFixed(1) 
+          : '--.-';
+      }
+
+      if (currEl) {
+        // Current: 2 decimal places (e.g. "0.45")
+        currEl.textContent = (typeof data.current === 'number') 
+          ? data.current.toFixed(2) 
+          : '--.--';
+      }
+
+      if (tempEl) {
+        // Temperature: Integer (e.g. "45")
+        tempEl.textContent = (typeof data.temp === 'number') 
+          ? data.temp.toFixed(0) 
+          : '--';
+      }
 
     } catch (e) {
       console.error('Failed to read live data:', e);
