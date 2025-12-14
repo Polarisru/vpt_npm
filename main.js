@@ -179,12 +179,59 @@ ipcMain.handle('read-live-metrics', async () => {
   return { voltage, current, temp };
 });
 
-ipcMain.handle('uart-send-wait', async (_e, cmd, timeoutMs) => {
+// ipcMain.handle('uart-send-wait', async (_e, cmd, timeoutMs) => {
+  // try {
+    // // using a generic matcher that accepts anything? 
+    // // The original code passed `() => true`, which resolves on first line
+    // const result = await deviceController.queuedSendAndWait(cmd, () => true, timeoutMs || 3000);
+    // return result;
+  // } catch (error) {
+    // throw error;
+  // }
+// });
+
+// REPLACE THIS HANDLER
+// ipcMain.handle('uart-send-wait', async (_e, cmd, matchStringOrTimeout, timeoutArg) => {
+  // let timeoutMs = 3000;
+  // // Default matcher: accepts ANY line (legacy behavior)
+  // let matcher = () => true; 
+
+  // // Check if 2nd argument is a string (the specific response we want, e.g. "OK")
+  // if (typeof matchStringOrTimeout === 'string') {
+    // const matchStr = matchStringOrTimeout.trim().toUpperCase();
+    // // Create a strict matcher for this string
+    // matcher = (line) => line.trim().toUpperCase() === matchStr;
+    
+    // // 3rd argument is the timeout
+    // if (typeof timeoutArg === 'number') {
+        // timeoutMs = timeoutArg;
+    // }
+  // } else if (typeof matchStringOrTimeout === 'number') {
+    // // Legacy call format: (cmd, timeout)
+    // timeoutMs = matchStringOrTimeout;
+  // }
+
+  // try {
+    // const result = await deviceController.queuedSendAndWait(cmd, matcher, timeoutMs);
+    // return result;
+  // } catch (error) {
+    // throw error;
+  // }
+// });
+ipcMain.handle('uart-send-wait', async (_e, cmd, matchStringOrTimeout, timeoutArg) => {
+  let timeoutMs = 3000;
+  let matcher = () => true; 
+
+  if (typeof matchStringOrTimeout === 'string') {
+    const matchStr = matchStringOrTimeout.trim().toUpperCase();
+    matcher = (line) => line.trim().toUpperCase() === matchStr;
+    if (typeof timeoutArg === 'number') timeoutMs = timeoutArg;
+  } else if (typeof matchStringOrTimeout === 'number') {
+    timeoutMs = matchStringOrTimeout;
+  }
+
   try {
-    // using a generic matcher that accepts anything? 
-    // The original code passed `() => true`, which resolves on first line
-    const result = await deviceController.queuedSendAndWait(cmd, () => true, timeoutMs || 3000);
-    return result;
+    return await deviceController.queuedSendAndWait(cmd, matcher, timeoutMs);
   } catch (error) {
     throw error;
   }

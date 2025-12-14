@@ -186,9 +186,10 @@ class ScriptRunner {
     if (cmd.waitForOk) {
       // Send and wait for "OK" acknowledgment
       try {
-        const response = await this.uart.sendAndWait(command, (line) => {
-          return line.trim().toUpperCase() === 'OK';
-        }, 3000);
+        // const response = await this.uart.sendAndWait(command, (line) => {
+          // return line.trim().toUpperCase() === 'OK';
+        // }, 3000);
+        const response = await this.uart.sendAndWait(command, 'OK', 3000);
         this.logWithTimestamp(`RX: ${response.trim()}`);
       } catch (error) {
         throw new Error(`Command "${command}" failed: no OK received`);
@@ -212,7 +213,8 @@ class ScriptRunner {
     this.logWithTimestamp(`TX: ${cmd.command}`);
     
     try {
-      const response = await this.uart.sendAndWait(cmd.command, () => true, 1000);
+      //const response = await this.uart.sendAndWait(cmd.command, () => true, 1000);
+      const response = await this.uart.sendAndWait(cmd.command, null, 1000);
       this.logWithTimestamp(`RX: ${response.trim()}`);
       
       const match = response.match(regex);

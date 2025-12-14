@@ -9,7 +9,46 @@ const { ipcRenderer } = require('electron');
 let allDevices = [];
 let currentConnType = 'PWM';
 
+// ---------- Device API (renderer) ----------
+
+const devApi = {
+  async connInit(cfg) {
+    return ipcRenderer.invoke('conn-init', cfg);
+  },
+  async connPower(on) {
+    return ipcRenderer.invoke('conn-power', on);
+  },
+  async setPosition(degrees) {
+    return ipcRenderer.invoke('set-position', degrees);
+  },
+  async readSupply() {
+    return ipcRenderer.invoke('read-supply');
+  },
+  async readTemperature() {
+    return ipcRenderer.invoke('read-temperature');
+  },
+  async readStatus() {
+    return ipcRenderer.invoke('read-status');
+  },
+  async readDevicePosition() {
+    return ipcRenderer.invoke('read-device-position');
+  },
+  async performUpdate(pages, totalPages) {
+    return ipcRenderer.invoke('perform-update', pages, totalPages);
+  },
+  async performUpload(pages, totalPages) {
+    return ipcRenderer.invoke('perform-upload', pages, totalPages);
+  }
+};
+
 // ---------- Helpers ----------
+
+function formatError(e) {
+  if (!e) return 'Unknown error';
+  const msg = e.message || String(e);
+  const parts = msg.split('Error: ');
+  return parts[parts.length - 1] || msg;
+}
 
 function collectConnectionConfig() {
   const connType = document.getElementById('connType').value;
@@ -404,6 +443,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let isConnected = false;
   let statusTimer = null;
   let pollStep = 0; // 0 = Voltage, 1 = Temp, 2 = Status
+  let missedPolls = 0;
+
+  const POLL_INTERVAL_MS = 500;
+  const MAX_MISSED_POLLS = 6;
 
   async function pollStatusOnce() {
     if (!isConnected /*|| sineRunning*/) return;
@@ -412,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
       switch (pollStep) {
         // --- STEP 0: Voltage ---
         case 0:
-          const v = await ipcRenderer.invoke('read-supply');
+          const v = await devApi.readSupply();
           // Update only the voltage element
           const vEl = document.getElementById('supplyValue'); 
           if (vEl) {
@@ -424,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- STEP 1: Temperature ---
         case 1:
-          const t = await ipcRenderer.invoke('read-temperature');
+          const t = await devApi.readTemperature();
           // Update only the temperature element
           const tEl = document.getElementById('temperatureValue');
           if (tEl) {
@@ -435,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- STEP 2: Status ---
         case 2:
-          const s = await ipcRenderer.invoke('read-status');
+          const s = await devApi.readStatus();
           if (s !== null) {
             // Got a valid status -> reset miss counter
             missedPolls = 0;
@@ -482,7 +525,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
       // If 9 consecutive polling failures, auto-disconnect
-    if (missedPolls >= 6) {
+    if (missedPolls >= MAX_MISSED_POLLS) {
       console.warn('No valid polling responses for 9 cycles. Disconnecting...');
       if (connectBtn && connectBtn.textContent === 'Disconnect') {
         connectBtn.click();
@@ -495,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function startStatusPolling() {
     console.log('Timer started');
     if (statusTimer) clearInterval(statusTimer);
-    statusTimer = setInterval(pollStatusOnce, 500);
+    statusTimer = setInterval(pollStatusOnce, POLL_INTERVAL_MS);
   }
 
   function stopStatusPolling() {
@@ -744,7 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       try {
         // Await the ACTUAL position returned by the device
-        const actualPos = await ipcRenderer.invoke('set-position', degrees);
+        const actualPos = await devApi.setPosition(degrees);
 
         // Update the label with the confirmed value from the device
         if (devicePositionLabel && typeof actualPos === 'number') {
@@ -1027,7 +1070,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		  revText.value = txt || '';
 		} catch (e) {
-      const cleanMessage = e.message.split('Error: ').pop();
+      const cleanMessage = formatError(e);
       showError ? showError('Revision read failed: ' + cleanMessage) 
           : alert('Revision read failed: ' + cleanMessage);
 		} finally {
@@ -1151,13 +1194,13 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // 3. Invoke the NEW handler
-        await ipcRenderer.invoke('perform-upload', pages, totalPages);
+        // 3. Invoke the Upload handler
+        await devApi.performUpload(pages, totalPages);
 
         updateProgress(totalPages, totalPages);
       } catch (e) {
         console.error('Failed to read/upload HEX file:', e);
-        const cleanMessage = e.message?.split('Error: ').pop() || e.message;
+        const cleanMessage = formatError(e);
         showError(`Failed to read HEX file: ${cleanMessage}`);
       } finally {
         hideProgress();
@@ -1205,24 +1248,23 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Modify your connectBtn click handler to call updateUpdateButtonState()
 	if (connectBtn) {
 	  connectBtn.addEventListener('click', async () => {
-    console.log('connectBtn click');
 		if (!isConnected) {
 		  const cfg = collectConnectionConfig();
 		  try {
-			await ipcRenderer.invoke('conn-init', cfg);
-			isConnected = true;
-			startStatusPolling();
-			connectBtn.textContent = 'Disconnect';
-			if (contentOverlay) contentOverlay.classList.add('hidden');
-			if (connectionHint) {
-        connectionHint.textContent = 'Connected';
-        connectionHint.style.color = 'green';
-        connectionHint.style.fontWeight = '';
-      }
-			setSidebarEnabled(false);
+        await devApi.connInit(cfg);
+        isConnected = true;
+        startStatusPolling();
+        connectBtn.textContent = 'Disconnect';
+        if (contentOverlay) contentOverlay.classList.add('hidden');
+        if (connectionHint) {
+          connectionHint.textContent = 'Connected';
+          connectionHint.style.color = 'green';
+          connectionHint.style.fontWeight = '';
+        }
+        setSidebarEnabled(false);
 
-			// Enable/disable Update button according to new state
-			updateUpdateButtonState();
+        // Enable/disable Update button according to new state
+        updateUpdateButtonState();
 		  } catch (e) {
         console.log('catch block entered');
         console.error('Connection init failed:', e);
@@ -1235,7 +1277,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		} else {
       stopScriptAndResetUI();
 		  try {
-        await ipcRenderer.invoke('conn-power', false);
+        await devApi.connPower(false);
 		  } catch (e) {
         console.error('PWR0 failed:', e);
 		  }
@@ -1262,18 +1304,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   devicePositionLabel.addEventListener('click', async () => {
     try {
-      const resp = await ipcRenderer.invoke('read-device-position');
-      // Parse response: "PS:xxx.x"
-      const match = resp.trim().match(/^PS:(-?\d+\.\d+)$/);
-      if (!match) {
-        devicePositionLabel.textContent = '--.-°';
-        return;
-      }
-
-      const num = Number(match[1]);        // removes leading zeros
-      const value = num.toFixed(1);        // keep one decimal
-
-      devicePositionLabel.textContent = value + '°';
+      const pos = await devApi.readDevicePosition(); // number
+      devicePositionLabel.textContent = pos.toFixed(1) + '°';
     } catch (e) {
       devicePositionLabel.textContent = '--.-°';
       console.error('Failed to read device position:', e);
@@ -1284,26 +1316,36 @@ document.addEventListener('DOMContentLoaded', () => {
   if (readLiveBtn && voltageValueEl && currentValueEl && temp1ValueEl) {
     readLiveBtn.addEventListener('click', async () => {
 	  try {
-	    const voltageResp = await ipcRenderer.invoke('uart-send-command', 'GUM');
-	    const currentResp = await ipcRenderer.invoke('uart-send-command', 'GCS');
-	    const tempResp = await ipcRenderer.invoke('uart-send-command', 'GTS');
+	    // const voltageResp = await ipcRenderer.invoke('uart-send-command', 'GUM');
+	    // const currentResp = await ipcRenderer.invoke('uart-send-command', 'GCS');
+	    // const tempResp = await ipcRenderer.invoke('uart-send-command', 'GTS');
 
-	    function parseResponse(prefix, response) {
-		  if (!response) return '--.-';
-		  response = response.trim();
-		  if (response === 'E.H') return '--.-';
-		  const re = new RegExp(`^${prefix}:(\\d+\\.\\d+)$`);
-		  const m = response.match(re);
-		  return m ? m[1] : '--.-';
-	    }
+	    // function parseResponse(prefix, response) {
+		  // if (!response) return '--.-';
+		  // response = response.trim();
+		  // if (response === 'E.H') return '--.-';
+		  // const re = new RegExp(`^${prefix}:(\\d+\\.\\d+)$`);
+		  // const m = response.match(re);
+		  // return m ? m[1] : '--.-';
+	    // }
 
-	    const voltage = parseResponse('UM', voltageResp);
-	    const current = parseResponse('CS', currentResp);
-	    const temp = parseResponse('TS', tempResp);
+	    // const voltage = parseResponse('UM', voltageResp);
+	    // const current = parseResponse('CS', currentResp);
+	    // const temp = parseResponse('TS', tempResp);
 
-	    voltageValueEl.textContent = voltage;
-	    currentValueEl.textContent = current;
-	    temp1ValueEl.textContent = temp;
+	    // voltageValueEl.textContent = voltage;
+	    // currentValueEl.textContent = current;
+	    // temp1ValueEl.textContent = temp;
+      
+      // One call, clean data
+      const data = await ipcRenderer.invoke('read-live-metrics');
+      
+      // Helper for display
+      const fmt = (val) => (typeof val === 'number') ? val : '--.-';
+
+      voltageValueEl.textContent = fmt(data.voltage);
+      currentValueEl.textContent = fmt(data.current);
+      temp1ValueEl.textContent = fmt(data.temp);      
 	  } catch (e) {
 	    console.error('Failed to read live data:', e);
 	    voltageValueEl.textContent = '--.-';
@@ -1339,7 +1381,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		  console.log('All parameters written successfully');
 		} catch (e) {
 		  console.error('Write failed:', e);
-      const cleanMessage = e.message.split('Error: ').pop();
+      const cleanMessage = formatError(e);
 		  showError ? showError('Error while writing parameters: ' + cleanMessage)
 					: alert('Error while writing parameters: ' + cleanMessage);
 		} finally {
@@ -1384,7 +1426,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		} catch (e) {
 		  console.error('Read failed:', e);
       // Get just the last part after "Error: "
-      const cleanMessage = e.message.split('Error: ').pop();
+      const cleanMessage = formatError(e);
 		  showError ? showError('Error while reading parameters: ' + cleanMessage) 
           : alert('Error while reading parameters: ' + cleanMessage);
 		} finally {
@@ -1519,7 +1561,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rawCommandResponse.value = formatHexWithSpaces(response);
       } catch (e) {
         console.error('Raw command failed:', e);
-        const cleanMessage = e.message.split('Error: ').pop();
+        const cleanMessage = formatError(e);
         showError ? showError('Raw command error: ' + cleanMessage) 
                   : alert('Raw command error: ' + cleanMessage);
       } finally {
@@ -1560,7 +1602,7 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsText(file);
       } catch (e) {
         console.error('Failed to read script file:', e);
-        const cleanMessage = e.message.split('Error: ').pop();
+        const cleanMessage = formatError(e);
         showError ? showError('Failed to read script file: ' + cleanMessage)
             : alert('Failed to read script file: ' + cleanMessage);
         scriptFileInput.value = '';
@@ -1663,7 +1705,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await ipcRenderer.invoke('write-file', { path: filePath, content: output });
       } catch (e) {
         console.error('Failed to save output:', e);
-        const cleanMessage = e.message.split('Error: ').pop();
+        const cleanMessage = formatError(e);
         showError ? showError('Failed to save output: ' + cleanMessage)
             : alert('Failed to save output: ' + cleanMessage);
       }
@@ -1689,14 +1731,14 @@ document.addEventListener('DOMContentLoaded', () => {
       updateProgress(0, totalPages);
 
       // Invoke main process for flashing
-      await ipcRenderer.invoke('perform-update', pages, totalPages);
+      await devApi.performUpdate(pages, totalPages);
 
       updateProgress(totalPages, totalPages);
       hideProgress();
       showSuccess('VPT firmware update completed successfully.', true); // Success variant if you add one
     } catch (e) {
       console.error('VPT firmware update failed:', e);
-      const cleanMessage = e.message.split('Error: ').pop() || e.message;
+      const cleanMessage = formatError(e);
       showError(`Firmware update failed: ${cleanMessage}`);
       hideProgress();
     }
