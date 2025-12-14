@@ -33,12 +33,13 @@ class FirmwareUpdater {
 
     if (isMainUpdate) {
       await uart.send('UPFW1234');
+      await new Promise(resolve => setTimeout(resolve, 10));
     }
 
     await new Promise(resolve => setTimeout(resolve, 10));
     const blsStart = Date.now();
     let blsResponse = null;
-    const timeout = isMainUpdate ? 1000 : 100;
+    const timeout = isMainUpdate ? 30 : 100;
 
     while (Date.now() - blsStart < 5000) {
       try {
@@ -50,7 +51,7 @@ class FirmwareUpdater {
       } catch {
         // ignore timeout, retry
       }
-      await new Promise(resolve => setTimeout(resolve, isMainUpdate ? 100 : 50));
+      //await new Promise(resolve => setTimeout(resolve, isMainUpdate ? 100 : 100));
     }
 
     if (!blsResponse) {
