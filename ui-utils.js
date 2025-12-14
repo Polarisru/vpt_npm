@@ -38,9 +38,16 @@ module.exports = {
 
   updateProgress(current, total) {
     const bar = document.getElementById('progressBar');
+    const textEl = document.getElementById('progressText');
+
     if (bar && total > 0) {
       const ratio = Math.max(0, Math.min(1, current / total));
       bar.style.width = (ratio * 100).toFixed(1) + '%';
+    }
+
+    // --- CHANGED: Explicitly update text ---
+    if (textEl) {
+      textEl.textContent = `Page ${current} / ${total}`;
     }
   },
 

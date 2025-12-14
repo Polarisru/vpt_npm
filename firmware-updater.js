@@ -87,7 +87,7 @@ class FirmwareUpdater {
         } else {
           console.warn(`Page ${page.index} attempt ${attempts} failed`);
           if (attempts < 3) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 300));
           }
         }
       }

@@ -18,9 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const info = new InfoManager();
   const script = new ScriptManager();
   const monitor = new MonitorManager();
-  
+
   pos.setConnectionManager(conn);
   script.setConnectionManager(conn);
+  fw.setConnectionManager(conn);
 
   conn.init();
   eeprom.init();
@@ -38,12 +39,60 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  api.on('selected-port', (event, data) => {
+    const { portPath, fwVersion } = typeof data === 'string' ? { portPath: data, fwVersion: null } : data;
+    
+    // Display Port Name
+    const portLabel = document.getElementById('portName');
+    if (portLabel) {
+      portLabel.textContent = portPath || 'Unknown';
+    }
+
+    // Display VPT Version & Handle Recovery Mode
+    if (fwVersion) {
+      const vptVerElem = document.getElementById('vptVer');
+      if (vptVerElem) {
+        vptVerElem.textContent = 'Ver. ' + fwVersion;
+      }
+
+      // CHECK FOR 00.00 VERSION (Recovery Mode)
+      if (fwVersion === '00.00') {
+        const connType = document.getElementById('connType');
+        const currentLimit = document.getElementById('currentLimit');
+        const connectBtn = document.getElementById('connectBtn');
+        const updateBtn = document.getElementById('updateBtn');
+
+        if (connType) connType.disabled = true;
+        if (currentLimit) currentLimit.disabled = true;
+        // Disable Disconnect/Connect toggling in recovery mode
+        if (connectBtn) connectBtn.disabled = true;
+
+        // Force enable update button even if not "connected" in the normal sense
+        if (updateBtn) {
+          updateBtn.disabled = false;
+        }      
+        
+        ui.showError('Device in Recovery Mode (v00.00). Please update firmware.');
+      }
+    }
+  });
+
   // Listeners from Main Process
   api.on('update-progress', (event, data) => {
-    if (data.current === 0) ui.showProgress(data.text);
-    ui.updateProgress(data.current, data.total);
-    if (data.current === data.total) {
-        setTimeout(() => ui.hideProgress(), 1000);
+    // --- CHANGED: Map step to current, handle start overlay logic ---
+    const current = data.step || data.current; // Handle both just in case
+    const total = data.total;
+
+    if (current === 1 || current === 0) { 
+         if (document.getElementById('progressOverlay').classList.contains('hidden')) {
+             ui.showProgress('Updating Firmware...');
+         }
+    }
+
+    ui.updateProgress(current, total);
+
+    if (current >= total) {
+      setTimeout(() => ui.hideProgress(), 1000);
     }
   });
 
@@ -58,27 +107,21 @@ document.addEventListener('DOMContentLoaded', () => {
   
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
-        // Remove active class
-        tabs.forEach(t => t.classList.remove('active'));
-        panes.forEach(p => p.classList.remove('active'));
-        
-        // Add active
-        tab.classList.add('active');
-        const targetId = tab.dataset.tab;
-        document.getElementById(targetId)?.classList.add('active');
-        
-        // Stop sine wave if leaving main tab
-        if (targetId !== 'main-tab') {
-            pos.stopSine();
-        }
+      tabs.forEach(t => t.classList.remove('active'));
+      panes.forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      const targetId = tab.dataset.tab;
+      document.getElementById(targetId)?.classList.add('active');
+      if (targetId !== 'main-tab') {
+        pos.stopSine();
+      }
     });
   });
 
-  // Close buttons for overlays
   document.getElementById('errorCloseBtn')?.addEventListener('click', () => {
-      document.getElementById('errorOverlay').classList.add('hidden');
+    document.getElementById('errorOverlay').classList.add('hidden');
   });
   document.getElementById('successCloseBtn')?.addEventListener('click', () => {
-      document.getElementById('successOverlay').classList.add('hidden');
+    document.getElementById('successOverlay').classList.add('hidden');
   });
 });
