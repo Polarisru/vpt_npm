@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Volz Programming Tool</title>
+    <link rel="stylesheet" href="main-styles.css">
+</head>
+<body>
+    <div class="main-grid">
+        <!-- Left: Connection Settings -->
+        <div class="sidebar">
+            <h2>Connection Type</h2>
+            <select id="connType">
+                <option value="PWM">PWM</option>
+                <option value="RS485">RS485</option>
+                <option value="CAN">CAN</option>
+            </select>
+            <div id="curr-settings" class="conn-settings">
+                <label>Max. Current (A):</label>
+                <input id="currentLimit" class="conn-settings" type="number" min="1.0" max="9.9" step="0.1" value="5.0">
+            </div>
+            <div id="rs485-settings" class="conn-settings hidden">
+                <label>Baudrate:</label>
+                <select id="rs485-baud">
+                    <option>38400</option>
+                    <option>57600</option>
+                    <option>115200</option>
+                    <option>230400</option>
+                    <option>250000</option>
+                </select>
+                <label>Subtype</label>
+                <select id="rs485-subtype">
+                  <option value="0">Standard</option>
+                  <option value="1">DA22</option>
+                  <option value="2">Big actuators</option>
+                  <option value="3">New actuators</option>
+                  <option value="4">Schiebel</option>
+                </select>
+                <label>ID:</label>
+                <select id="rs485-id"></select>
+            </div>
+
+            <div id="can-settings" class="conn-settings hidden">
+                <label>Bitrate:</label>
+                <select id="can-bitrate">
+                    <option value="250">250k</option>
+                    <option value="500">500k</option>
+                    <option value="1000">1M</option>
+                </select>
+                <label>Base ID (HEX):</label>
+                <input id="can-base-id" type="text" value="3E0">
+                <label>ID:</label>
+                <select id="can-id"></select>
+            </div>
+
+            <button id="connectBtn" class="connect-btn">Connect</button>
+
+			<div class="sidebar-footer">
+				<div id="statusContainer">
+				  <div class="meter" id="voltageMeter">
+					<span class="meter-label">Voltage</span>
+					<span id="supplyValue">--</span> V
+				  </div>
+				  <div class="meter" id="temperatureMeter">
+					<span class="meter-label">Temp</span>
+					<span id="temperatureValue">--</span> °C
+				  </div>
+				</div>
+				
+				<!-- Sidebar footer status box -->
+				<div class="sidebar-status">
+					<div class="sidebar-status-title">Connection</div>
+					<div class="sidebar-status-port" id="portName">No port selected</div>
+					<div class="sidebar-status-ver" id="vptVer">Ver. 1.0</div>
+					<div class="sidebar-status-hint" id="connectionHint">
+						Select connection type and press Connect
+					</div>
+					<div>
+						<button id="updateBtn">Update</button>
+					</div>
+				</div>            
+			  <div class="sidebar-status-ver" id="swVer">Ver. x.x.x</div>
+      </div>
+    </div>
+
+    <!-- Wrapper for center + right so we can disable them together -->
+    <div class="content-wrapper">
+      <!--<div id="contentOverlay" class="content-overlay"></div>-->
+		  <!-- Tabbed center panel -->
+		  <div class="center-panel">
+			<div class="tabs">
+			  <button class="tab-link active" data-tab="main-tab">Main</button>
+			  <button class="tab-link" data-tab="eeprom-tab">EEPROM</button>
+			  <button class="tab-link" data-tab="info-tab">Info</button>
+			  <button class="tab-link" data-tab="script-tab">Script</button>
+			</div>
+
+			<div class="tab-panel">
+			  <div class="tab-pane active" id="main-tab">
+          <!-- your existing .main-content markup, without its outer wrapper -->
+          <div class="main-content">
+            <h2>Motor Position</h2>
+            <div class="position-row">
+              <button id="positionMinBtn" class="position-btn">Min</button>
+              <input type="range" id="positionSlider" min="-45" max="45" value="0" step="0.1">
+              <button id="positionMaxBtn" class="position-btn">Max</button>
+            </div>
+            <div class="firstDiv">
+              <div class="right-col">
+              <span id="devicePositionLabel" class="positionLabel">--.-°</span>
+              </div>
+              <span id="positionLabel" class="positionLabel">0.0°</span>
+              <div class="right-col-btn">
+                <button id="setZeroPosBtn" class="set-zero-btn">Set as Zero Pos</button>
+              </div>
+            </div>
+            
+            <div class="meters-block">
+              <div class="meters-row">
+              <div class="meter">
+                <span class="meter-label">Current</span>
+                <span id="currentValue">--</span> A
+              </div>
+              <div class="meter">
+                <span class="meter-label">Voltage</span>
+                <span id="voltageValue">--</span> V
+              </div>
+              <div class="meter">
+                <span class="meter-label">Temp 1</span>
+                <span id="temp1Value">--</span> °C
+              </div>
+              <div class="meter">
+                <span class="meter-label">Temp 2</span>
+                <span id="temp2Value">--</span> °C
+              </div>
+              </div>
+              <div class="live-actions">
+              <button id="readLiveBtn">Read</button>
+              </div>
+            </div>
+
+            <div class="sine-block">
+              <div class="sine-title">Periodical movement</div>
+              
+              <!-- First row: Waveform + Frequency + Placeholder -->
+              <div class="sine-row-triple">
+                <div class="sine-field">
+                  <div class="sine-label">Waveform</div>
+                  <select id="sineWaveform" class="sine-input">
+                    <option value="sine">Sinusoidal</option>
+                    <option value="rect">Rectangle</option>
+                    <option value="tri">Triangle</option>
+                    <option value="saw">Sawtooth</option>
+                  </select>
+                </div>
+                <div class="sine-field">
+                  <div class="sine-label">Frequency (Hz)</div>
+                  <input type="number" id="sineFrequency"
+                       class="sine-input"
+                       min="0.1" max="10" step="0.1" value="0.5">
+                </div>
+                <div class="sine-field sine-field-placeholder">
+                  <!-- Empty placeholder to align with button below -->
+                </div>
+              </div>
+
+              <!-- Second row: Amplitude + Offset + Start button -->
+              <div class="sine-row-triple">
+                <div class="sine-field">
+                  <div class="sine-label">Amplitude (°)</div>
+                  <input type="number" id="sineAmplitude"
+                       class="sine-input"
+                       min="0" max="180" step="1" value="30">
+                </div>
+                <div class="sine-field">
+                  <div class="sine-label">Offset (°)</div>
+                  <input type="number" id="sineOffset"
+                       class="sine-input"
+                       min="-180" max="180" step="1" value="0">
+                </div>
+                <div class="sine-field sine-field-button">
+                  <button id="sineStartStopBtn" class="sine-btn">Start</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Raw command block -->
+            <div class="raw-block" id="rawBlock">
+              <div class="raw-title">Raw command</div>
+              <div class="raw-grid">
+                <input id="rawCommandInput" class="raw-input" type="text" placeholder="Enter HEX bytes">
+                <button id="rawSendBtn" class="sine-btn">Send</button>
+                <input id="rawCommandResponse" class="raw-input" type="text" placeholder="Response" readonly>
+                <span></span>
+              </div>
+            </div>
+            
+            <div class="logo-block">
+              <img src="volz-servos.png" alt="Volz Servos Logo" class="logo-img">
+            </div>
+          </div>
+			  </div>
+
+			  <div class="tab-pane" id="eeprom-tab">
+				<div class="main-content">
+					<div class="right-header">
+						<h2>Device</h2>
+						<select id="deviceSelect">
+							<option value="">Select device…</option>
+						</select>
+					</div>
+					<div class="param-table-wrapper">
+						<table id="paramTable">
+							<thead>
+								<tr>
+									<th>Parameter</th>
+									<th>Value</th>
+								</tr>
+							</thead>
+							<tbody></tbody>
+						</table>
+					</div>
+					<div class="param-actions">
+						<button id="readParamsBtn" disabled>Read</button>
+						<button id="writeParamsBtn" disabled>Write</button>
+						<button id="saveToFileBtn" disabled>Save to File</button>
+						<button id="loadFromFileBtn" disabled>Load from File</button>
+						<input type="file" id="loadFileInput" accept=".json,application/json" style="display:none">
+					</div>
+				</div>
+			  </div>
+
+			  <div class="tab-pane" id="info-tab">
+			    <div class="main-content">
+					<div class="fw-block">
+					  <div class="fw-title">Firmware update</div>
+
+					  <div class="fw-row">
+              <div class="fw-label">HEX file</div>
+          
+              <div class="fw-file-area">
+                <span id="fwFileName" class="fw-filename">No file selected</span>
+                <button id="fwBrowseBtn" class="fw-browse-btn">Browse…</button>
+                <input type="file" id="fwFileInput" accept=".hex" style="display:none">
+              </div>
+					  </div>
+					  <div class="fw-row">
+              <div class="fw-label">EEPROM file</div>
+          
+              <div class="fw-file-area">
+                <span id="eeFileName" class="fw-filename">No file selected</span>
+                <button id="eeBrowseBtn" class="fw-browse-btn">Browse…</button>
+                <input type="file" id="eeFileInput" accept=".eep" style="display:none">
+              </div>
+					  </div>            
+
+					  <div class="fw-actions">
+						<button id="fwUploadBtn" class="fw-upload-btn">Upload</button>
+					  </div>
+					</div>  
+					
+					<div id="infoBlock" class="info-block">
+					  <div class="info-row">
+						<div class="info-label">Serial Number</div>
+						<input type="text" id="serialNumber" class="info-input" maxlength="32" readonly>
+						<button class="info-read-btn" id="serialReadBtn">Read</button>
+					  </div>
+
+					  <div class="info-row">
+						<div class="info-label">PN Number</div>
+						<input type="text" id="pnNumber" class="info-input" maxlength="32" readonly>
+						<button class="info-read-btn" id="pnReadBtn">Read</button>
+					  </div>
+
+					  <div class="info-row">
+						<div class="info-label">FW Version</div>
+						<input type="text" id="fwVersion" class="info-input" maxlength="32" readonly>
+						<button class="info-read-btn" id="fwReadBtn">Read</button>
+					  </div>
+
+					  <div class="info-row">
+						<div class="info-label">HW Revision</div>
+						<input type="text" id="hwRevision" class="info-input" maxlength="32" readonly>
+						<button class="info-read-btn" id="hwReadBtn">Read</button>
+					  </div>
+					</div>        
+							
+					<div class="wt-block">
+					  <div class="wt-row">
+						<div class="wt-label">Working Time</div>
+						<div class="wt-field">
+						  <input id="workingTime" class="wt-input" type="text" value="0000:00:00" readonly>
+						  <button id="wtReadBtn" class="wt-read-btn">Read</button>
+						</div>
+					  </div>
+					</div>
+					
+					<div id="revBlock" class="rev-block">
+					  <div class="rev-row">
+						<div class="rev-label">Revision String</div>
+						<textarea id="revText" class="rev-textarea"></textarea>
+					  </div>            
+					  <div class="rev-actions">
+						<button id="revReadBtn" class="rev-read-btn">Read</button>
+					  </div>
+					</div>
+				  </div>
+			  </div>
+
+			  <div class="tab-pane" id="script-tab">
+          <div class="script-container">
+            <div class="script-section">
+              <label>Script:</label>
+              <textarea id="scriptInput" rows="12" placeholder="Load a script file..."></textarea>
+            </div>
+            
+            <div class="output-section">
+              <label>Output:</label>
+              <textarea id="scriptOutput" rows="12" readonly placeholder="Output will appear here..."></textarea>
+            </div>
+          </div>
+
+          <div class="script-controls">
+            <input type="file" id="scriptFileInput" accept=".txt,.script" style="display: none;">
+            <button id="scriptBrowseBtn" class="script-btn">Browse Script</button>
+            <button id="scriptSaveOutputBtn" class="script-btn">Save Output</button>
+            <button id="scriptRunBtn" class="script-btn">Run</button>
+          </div>
+			  </div>
+
+			</div>
+		  </div>		
+		</div>
+	</div>
+
+	<div id="errorOverlay" class="modal-overlay hidden">
+	  <div class="modal-dialog">
+		<div class="modal-icon">!</div>
+		<div class="modal-title">Error</div>
+		<div id="errorMessage" class="modal-text"></div>
+		<button id="errorCloseBtn" class="modal-close-btn">Close</button>
+	  </div>
+	</div>	
+  
+  <div id="successOverlay" class="modal-overlay hidden">
+    <div class="modal-dialog">
+      <div class="modal-icon modal-icon-success">✓</div>
+      <div class="modal-title">Success</div>
+      <div id="successMessage" class="modal-text"></div>
+      <button id="successCloseBtn" class="modal-close-btn">OK</button>
+    </div>
+  </div>  
+	
+	<div id="progressOverlay" class="modal-overlay hidden">
+	  <div class="modal-dialog">
+		<div id="progressTitle" class="modal-title">Progress</div>
+		<div class="modal-text" id="progressText"></div>
+		<div class="progress-bar-outer">
+		  <div class="progress-bar-inner" id="progressBar"></div>
+		</div>
+	  </div>
+	</div>
+  
+  <!--<script src="app.js"></script>-->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const tabs = document.querySelectorAll('.tab-link');
+      const panes = document.querySelectorAll('.tab-pane');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+          // 1. Remove 'active' class from all tabs and panes
+          tabs.forEach(t => t.classList.remove('active'));
+          panes.forEach(p => p.classList.remove('active'));
+
+          // 2. Add 'active' class to the clicked tab
+          this.classList.add('active');
+
+          // 3. Find the corresponding pane using the data-tab attribute
+          const targetId = this.getAttribute('data-tab');
+          const targetPane = document.getElementById(targetId);
+
+          // 4. Show the new pane
+          if (targetPane) {
+            targetPane.classList.add('active');
+          }
+          
+          // Optional: Stop background scripts when switching away from 'Script' tab
+          // if (typeof stopScriptAndResetUI === 'function') {
+          //   stopScriptAndResetUI();
+          // }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
