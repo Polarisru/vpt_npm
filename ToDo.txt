@@ -50,8 +50,10 @@ GUI:
   Check error messages                      Later!
   Disable eeprom file for CAN
   Reconnect after update?
-  Return string from script to display
-  GCP command doesn't work in script
+  Return string from script to display      DONE
+  GCP command doesn't work in script        DONE
+  Add FAQ tab
+  Change styles to Volz styling guide
   
 Infrastructure
   Create device parameters                  Later!

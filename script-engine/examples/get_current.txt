@@ -14,7 +14,7 @@ WAIT {settle_ms}
 
 # Reset peak current (ignore response)
 PRINT Resetting peak current
-SEND GCP
+SENDRECV GCP CP:{peak}    # feedback shall be read out
 
 # --- MOVE TO END ---
 PRINT Moving to end position {end_pos} deg
@@ -27,3 +27,5 @@ SENDRECV GCP CP:{peak}
 
 PRINT Peak current from {start_pos} to {end_pos} deg is {peak} A
 PRINT Finished at {timestamp}
+
+RESULT Peak current: FIXED(peak, 2)A

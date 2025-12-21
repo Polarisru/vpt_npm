@@ -130,9 +130,13 @@ class ConnectionManager {
         hint.style.fontWeight = 'normal';
       }
       
-      const overlay = document.getElementById('contentOverlay');
-      if (overlay) overlay.classList.add('hidden');
-
+      //const overlay = document.getElementById('contentOverlay');
+      //if (overlay) overlay.classList.add('hidden');
+      console.log('Connecting...');
+      const welcomeScreen = document.getElementById('welcome-screen');
+      const mainContent   = document.getElementById('main-content');
+      welcomeScreen.style.display = 'none';
+      mainContent.style.display   = 'grid';
     } catch (e) {
       console.error('Connection init failed:', e);
       ui.showError('Connection init failed: ' + ui.formatError(e));
@@ -163,8 +167,13 @@ class ConnectionManager {
       hint.style.fontWeight = 'normal';
     }
 
-    const overlay = document.getElementById('contentOverlay');
-    if (overlay) overlay.classList.remove('hidden');
+    //const overlay = document.getElementById('contentOverlay');
+    //if (overlay) overlay.classList.remove('hidden');
+    console.log('Disconnecting...');
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const mainContent   = document.getElementById('main-content');
+    welcomeScreen.style.display = 'flex';
+    mainContent.style.display   = 'none';
   }
 
   collectConfig() {
@@ -215,6 +224,10 @@ class ConnectionManager {
   stopPolling() {
     if (this.statusTimer) clearInterval(this.statusTimer);
     this.statusTimer = null;
+    const supplyVal = document.getElementById('supplyValue');
+    if (supplyVal) supplyVal.textContent = '--.-';
+    const tempVal = document.getElementById('temperatureValue');
+    if (tempVal) tempVal.textContent = '--.-';
   }
 
   async poll() {
