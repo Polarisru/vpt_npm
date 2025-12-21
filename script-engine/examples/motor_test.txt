@@ -1,0 +1,60 @@
+# Motor positioning test script
+# Tests motor movement to multiple positions
+
+PRINT ================================================
+PRINT Motor Test Script
+PRINT Started at {timestamp}
+PRINT ================================================
+
+# Configuration
+SET target1 = 0
+SET target2 = 45
+SET target3 = 90
+SET target4 = -45
+SET tolerance = 2.0
+SET max_time = 5000
+
+# Test position 1
+PRINT
+PRINT Test 1: Moving to {target1} degrees
+SEND DP{target1}
+WAIT 500
+SENDRECV GPS PS:{position}
+PRINT Result: {position} degrees
+SET error = ABS(target1 - position)
+PRINT Error: {error} degrees
+
+# Test position 2
+PRINT
+PRINT Test 2: Moving to {target2} degrees
+SEND DP{target2}
+WAIT 500
+SENDRECV GPS PS:{position}
+PRINT Result: {position} degrees
+SET error = ABS(target2 - position)
+PRINT Error: {error} degrees
+
+# Test position 3
+PRINT
+PRINT Test 3: Moving to {target3} degrees
+SEND DP{target3}
+WAIT 500
+SENDRECV GPS PS:{position}
+PRINT Result: {position} degrees
+SET error = ABS(target3 - position)
+PRINT Error: {error} degrees
+
+# Test position 4
+PRINT
+PRINT Test 4: Moving to {target4} degrees
+SEND DP{target4}
+WAIT 500
+SENDRECV GPS PS:{position}
+PRINT Result: {position} degrees
+SET error = ABS(target4 - position)
+PRINT Error: {error} degrees
+
+PRINT
+PRINT ================================================
+PRINT All tests completed in {elapsed_sec} seconds
+PRINT ================================================

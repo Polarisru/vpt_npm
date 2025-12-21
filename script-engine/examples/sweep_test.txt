@@ -1,0 +1,55 @@
+# Motor sweep test
+# Moves motor back and forth between two positions
+
+SET min_pos = -90
+SET max_pos = 90
+SET step = 15
+SET cycles = 3
+SET current_cycle = 0
+
+PRINT ================================================
+PRINT Motor Sweep Test
+PRINT Range: {min_pos} to {max_pos} degrees
+PRINT Step: {step} degrees
+PRINT Cycles: {cycles}
+PRINT ================================================
+
+LABEL start_cycle
+SET current_cycle = current_cycle + 1
+PRINT
+PRINT [{elapsed_sec}s] Starting cycle {current_cycle} of {cycles}
+
+# Sweep up
+SET position = min_pos
+LABEL sweep_up
+PRINT [{elapsed_sec}s] Moving to {position}
+SEND DP{position}
+WAIT 300
+
+SET position = position + step
+IF position <= max_pos GOTO sweep_up
+
+# Sweep down
+SET position = max_pos
+LABEL sweep_down
+PRINT [{elapsed_sec}s] Moving to {position}
+SEND DP{position}
+WAIT 300
+
+SET position = position - step
+IF position >= min_pos GOTO sweep_down
+
+# Check if more cycles needed
+IF current_cycle < cycles GOTO start_cycle
+
+# Return to zero
+PRINT
+PRINT [{elapsed_sec}s] Returning to zero position
+SEND DP0
+WAIT 500
+
+PRINT
+PRINT ================================================
+PRINT Sweep test completed
+PRINT Total time: {elapsed_sec} seconds
+PRINT ================================================
