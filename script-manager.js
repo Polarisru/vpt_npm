@@ -107,7 +107,16 @@ class ScriptManager {
 
         try {
           this.currentRunner = new ScriptRunner(script, uartWrapper, logFn);
-          await this.currentRunner.run();
+          const resultText = await this.currentRunner.run();
+          
+          if (resultText && resultText.trim()) {
+            const overlay = document.getElementById('scriptResultOverlay');
+            const msgEl = document.getElementById('scriptResultMessage');
+            if (overlay && msgEl) {
+              msgEl.textContent = resultText;
+              overlay.classList.remove('hidden');
+            }
+          }          
         } catch (e) {
           console.error('Script failed:', e);
           logFn(`ERROR: ${e.message}`);

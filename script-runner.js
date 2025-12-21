@@ -14,7 +14,7 @@ class ScriptRunner {
     this.startTime = Date.now();
     this.maxIterations = 100000;
     this.iterationCount = 0;
-    
+    this.resultText = '';
     this.parse();
   }
 
@@ -100,6 +100,12 @@ class ScriptRunner {
         return { type: 'PRINT', text };
       }
 
+      case 'RESULT': {
+        // return test result
+        const text = this.stripInlineComment(tokens.slice(1).join(' '));
+        return { type: 'RESULT', text };
+      }
+
       case 'IF': {
         // condition is tokens[1..-3], then "GOTO label"
         const condRaw = tokens.slice(1, -2).join(' ');
@@ -125,7 +131,7 @@ class ScriptRunner {
     this.startTime = Date.now();
     this.iterationCount = 0;
     this.pc = 0;
-    
+    this.resultText = '';
     this.logWithTimestamp('Script started');
     
     try {
@@ -139,6 +145,9 @@ class ScriptRunner {
       }
       
       this.logWithTimestamp('Script completed');
+      
+      // Return whatever RESULT last set (may be empty string)
+      return this.resultText;
     } catch (error) {
       this.logWithTimestamp(`Error: ${error.message}`);
       this.running = false;
@@ -169,6 +178,9 @@ class ScriptRunner {
         break;
       case 'PRINT':
         this.executePRINT(cmd);
+        break;
+      case 'RESULT':
+        this.executeRESULT(cmd);
         break;
       case 'IF':
         this.executeIF(cmd);
@@ -260,8 +272,15 @@ class ScriptRunner {
   }
 
   executePRINT(cmd) {
-    const message = this.substituteVars(cmd.text);
-    this.logWithTimestamp(message);
+    const formatted = this.evaluateExpressionsInText(cmd.text);
+    this.logWithTimestamp(formatted);
+  }
+
+  executeRESULT(cmd) {
+    // Evaluate expressions (FIXED(), math) + substitute variables
+    const formatted = this.evaluateExpressionsInText(cmd.text);
+    this.resultText = formatted;
+    this.logWithTimestamp(`RESULT: ${formatted}`);
   }
 
   executeIF(cmd) {
@@ -323,7 +342,7 @@ class ScriptRunner {
     try {
       // Provide common math functions
       return new Function(
-        'ABS', 'SQRT', 'POW', 'MIN', 'MAX', 'FLOOR', 'CEIL', 'ROUND',
+        'ABS', 'SQRT', 'POW', 'MIN', 'MAX', 'FLOOR', 'CEIL', 'ROUND', 'FIXED',
         'return ' + substituted
       )(
         Math.abs,
@@ -333,12 +352,25 @@ class ScriptRunner {
         Math.max,
         Math.floor,
         Math.ceil,
-        Math.round
+        Math.round,
+        (value, decimals) => parseFloat(value.toFixed(Math.max(0, decimals || 0)))
       );
     } catch (error) {
       throw new Error(`Invalid expression: ${expr}`);
     }
   }
+  
+  evaluateExpressionsInText(text) {
+    // Replace function calls like FIXED(var, 1) with evaluated results
+    return text.replace(/([A-Z]+)\s*\(([^)]+)\)/gi, (match, funcName, args) => {
+      const expr = `${funcName}(${args})`;
+      try {
+        return this.evaluateExpression(expr).toString();
+      } catch {
+        return match; // Keep original if evaluation fails
+      }
+    });
+  }  
 
   logWithTimestamp(message) {
     const timestamp = new Date().toLocaleTimeString('en-GB', { 

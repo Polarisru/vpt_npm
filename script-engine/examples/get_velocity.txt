@@ -93,3 +93,4 @@ LABEL error_time
 
 LABEL done
   PRINT Measurement script finished at {timestamp}
+  RESULT Velocity = FIXED(vel_deg_per_s, 1) deg/s

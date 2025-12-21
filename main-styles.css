@@ -1192,6 +1192,11 @@ body {
   color: #38a169;
 }
 
+.modal-icon-info {
+  color: #0d6efd;
+  background-color: #e7f1ff;
+}
+
 .modal-title {
   font-size: 15px;
   font-weight: 700;

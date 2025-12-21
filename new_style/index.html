@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Select COM Port</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Select COM Port</h1>
+        <select id="portSelect">
+            <option>Loading ports...</option>
+        </select>
+        <div class="checkbox-container">
+          <input type="checkbox" id="recoveryMode">
+          <label for="recoveryMode">Recovery mode</label>
+        </div>
+        <button id="connectBtn">Connect</button>
+        <div id="statusLabel" class="status-label"></div>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html>

@@ -93,6 +93,7 @@
 			  <button class="tab-link" data-tab="eeprom-tab">EEPROM</button>
 			  <button class="tab-link" data-tab="info-tab">Info</button>
 			  <button class="tab-link" data-tab="script-tab">Script</button>
+        <button class="tab-link" data-tab="faq-tab">FAQ</button>
 			</div>
 
 			<div class="tab-panel">
@@ -328,6 +329,82 @@
           </div>
 			  </div>
 
+        <div class="tab-pane" id="faq-tab">
+          <div class="faq-container">
+            <h3 class="faq-question">Connection doesn't work</h3>
+            <div class="faq-answer">
+              <ul>
+                <li>Check that the device is powered and the COM port is correct.</li>
+                <li>Verify baud rate and other UART parameters match the device.</li>
+                <li>Make sure no other application is using the same port.</li>
+              </ul>
+            </div>
+
+            <h3 class="faq-question">No movement detected</h3>
+            <div class="faq-answer">
+              <ul>
+                <li>Confirm enable pin / driver is active and no error LED is lit.</li>
+                <li>Check that target position or speed is not zero.</li>
+                <li>Look for error/status codes in the Info tab.</li>
+              </ul>
+            </div>
+
+            <h3 class="faq-question">Movement is jerky or noisy</h3>
+            <div class="faq-answer">
+              <ul>
+                <li>Reduce acceleration or jerk limits in the motion settings.</li>
+                <li>Check motor wiring order and phase sequence.</li>
+                <li>Ensure supply voltage and current rating meet motor requirements.</li>
+              </ul>
+            </div>
+
+            <h3 class="faq-question">Position feedback looks wrong</h3>
+            <div class="faq-answer">
+              <ul>
+                <li>Verify encoder/feedback type and resolution settings.</li>
+                <li>Check for loose encoder connector or damaged cable.</li>
+                <li>Re‑home the axis and compare commanded vs. reported position.</li>
+              </ul>
+            </div>
+
+            <h3 class="faq-question">EEPROM values not saved</h3>
+            <div class="faq-answer">
+              <ul>
+                <li>Press “Write/Apply” after editing parameters, then “Save to EEPROM”.</li>
+                <li>Power‑cycle the device and re‑read parameters to verify.</li>
+                <li>Make sure no write‑protect flag or jumper is enabled on the board.</li>
+              </ul>
+            </div>
+
+            <h3 class="faq-question">Overcurrent or fault error</h3>
+            <div class="faq-answer">
+              <ul>
+                <li>Check motor and power wiring for shorts or reversed polarity.</li>
+                <li>Reduce current limit settings in the driver configuration.</li>
+                <li>Allow the driver to cool down and ensure heatsinking is adequate.</li>
+              </ul>
+            </div>
+
+            <h3 class="faq-question">Voltage/temperature values look unrealistic</h3>
+            <div class="faq-answer">
+              <ul>
+                <li>Check the sensor wiring and reference connections.</li>
+                <li>Confirm ADC scaling, gain, and offset parameters in settings.</li>
+                <li>Compare with an external multimeter or thermometer to cross‑check.</li>
+              </ul>
+            </div>
+
+            <h3 class="faq-question">Script does not start or stops immediately</h3>
+            <div class="faq-answer">
+              <ul>
+                <li>Make sure the device is connected and not in an error state.</li>
+                <li>Check the log/console for syntax errors in the script.</li>
+                <li>Verify safety limits (position, current, temperature) are not triggered at start.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
 			</div>
 		  </div>		
 		</div>
@@ -360,6 +437,15 @@
 		</div>
 	  </div>
 	</div>
+  
+  <div id="scriptResultOverlay" class="modal-overlay hidden">
+    <div class="modal-dialog">
+      <div class="modal-icon modal-icon-success">✓</div>
+      <div class="modal-title">Script result</div>
+      <div id="scriptResultMessage" class="modal-text"></div>
+      <button id="scriptResultCloseBtn" class="modal-close-btn">OK</button>
+    </div>
+  </div>  
   
   <!--<script src="app.js"></script>-->
   <script>

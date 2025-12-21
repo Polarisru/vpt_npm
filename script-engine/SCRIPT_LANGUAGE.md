@@ -71,6 +71,18 @@ PRINT Time: {timestamp}
 
 ---
 
+### RESULT command
+Returns a message to the main window to display it as a system message. Supports variable interpolation.
+
+**Syntax:**
+RESULT message with {variables}
+
+**Examples:**
+RESULT Script finished successfully
+RESULT Resulting position: {position}
+
+---
+
 ### IF command
 Conditional jump to a label if condition is true.
 
@@ -149,6 +161,7 @@ Available in SET and IF expressions:
 - `FLOOR(x)` - Round down to integer
 - `CEIL(x)` - Round up to integer
 - `ROUND(x)` - Round to nearest integer
+- `FIXED(x, y)` - Display a number with a given number of decimal places
 
 **Examples:**
 SET distance = ABS(target - current)

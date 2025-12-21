@@ -124,4 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('successCloseBtn')?.addEventListener('click', () => {
     document.getElementById('successOverlay').classList.add('hidden');
   });
+  document.getElementById('scriptResultCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('scriptResultOverlay').classList.add('hidden');
+  });  
 });

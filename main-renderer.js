@@ -434,6 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const successOverlay   = document.getElementById('successOverlay');
   const successMessage   = document.getElementById('successMessage');
   const successCloseBtn  = document.getElementById('successCloseBtn');
+  const scriptResultCloseBtn  = document.getElementById('scriptResultCloseBtn');
 
   const progressOverlay = document.getElementById('progressOverlay');
   const progressTitle = document.getElementById('progressTitle');
@@ -610,7 +611,13 @@ document.addEventListener('DOMContentLoaded', () => {
     successCloseBtn.addEventListener('click', () => {
       successOverlay.classList.add('hidden');
     });
-  }  
+  } 
+
+  if (scriptResultCloseBtn && scriptResultOverlay) {
+    scriptResultCloseBtn.addEventListener('click', () => {
+      scriptResultOverlay.classList.add('hidden');
+    });
+  }    
   
   function showProgress(title, message) {
     if (!progressOverlay || !progressTitle || !progressBar) return;
@@ -1669,7 +1676,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         currentRunner = new ScriptRunner(script, uartWrapper, logFn);
-        await currentRunner.run();
+        const resultText = await currentRunner.run();
+        
+        // Show result if provided
+        if (resultText && resultText.trim()) {
+          const overlay = document.getElementById('scriptResultOverlay');
+          const msgEl = document.getElementById('scriptResultMessage');
+          if (overlay && msgEl) {
+            msgEl.textContent = resultText;
+            overlay.classList.remove('hidden');
+          }
+        }        
       } catch (e) {
         console.error('Script execution failed:', e);
         logFn(`ERROR: ${e.message}`);
