@@ -69,7 +69,7 @@
 				
 				<!-- Sidebar footer status box -->
 				<div class="sidebar-status">
-					<div class="sidebar-status-title">Connection</div>
+					<div class="sidebar-status-title">VPT Connection</div>
 					<div class="sidebar-status-port" id="portName">No port selected</div>
 					<div class="sidebar-status-ver" id="vptVer">Ver. 1.0</div>
 					<div class="sidebar-status-hint" id="connectionHint">
@@ -79,7 +79,7 @@
 						<button id="updateBtn">Update</button>
 					</div>
 				</div>            
-			  <div class="sidebar-status-ver" id="swVer">Ver. x.x.x</div>
+			  <div class="sidebar-status-ver" id="swVer">SW Ver. x.x.x</div>
       </div>
     </div>
 
@@ -108,48 +108,53 @@
 			  <div class="tab-pane active" id="main-tab">
           <!-- your existing .main-content markup, without its outer wrapper -->
           <div class="main-content">
-            <h2>Motor Position</h2>
-            <div class="position-row">
-              <button id="positionMinBtn" class="position-btn">Min</button>
-              <input type="range" id="positionSlider" min="-45" max="45" value="0" step="0.1">
-              <button id="positionMaxBtn" class="position-btn">Max</button>
-            </div>
-            <div class="firstDiv">
-              <div class="right-col">
-              <span id="devicePositionLabel" class="positionLabel">--.-°</span>
+            <div class="common-block">
+              <div class="block-title">Motor Position</div>
+              <!--<h2>Motor Position</h2>-->
+              <div class="position-row">
+                <button id="positionMinBtn" class="position-btn">Min</button>
+                <input type="range" id="positionSlider" min="-45" max="45" value="0" step="0.1">
+                <button id="positionMaxBtn" class="position-btn">Max</button>
               </div>
-              <span id="positionLabel" class="positionLabel">0.0°</span>
-              <div class="right-col-btn">
-                <button id="setZeroPosBtn" class="set-zero-btn">Set as Zero Pos</button>
+              <div class="firstDiv">
+                <div class="right-col">
+                <span id="devicePositionLabel" class="positionLabel">--.-°</span>
+                </div>
+                <span id="positionLabel" class="positionLabel">0.0°</span>
+                <div class="right-col-btn">
+                  <button id="setZeroPosBtn" class="set-zero-btn">Set as Zero Pos</button>
+                </div>
               </div>
             </div>
             
-            <div class="meters-block">
-              <div class="meters-row">
-              <div class="meter">
-                <span class="meter-label">Current</span>
-                <span id="currentValue">--</span> A
-              </div>
-              <div class="meter">
-                <span class="meter-label">Voltage</span>
-                <span id="voltageValue">--</span> V
-              </div>
-              <div class="meter">
-                <span class="meter-label">Temp 1</span>
-                <span id="temp1Value">--</span> °C
-              </div>
-              <div class="meter">
-                <span class="meter-label">Temp 2</span>
-                <span id="temp2Value">--</span> °C
-              </div>
-              </div>
-              <div class="live-actions">
-              <button id="readLiveBtn">Read</button>
+            <div class="common-block">              
+              <div class="meters-block">
+                <div class="meters-row">
+                <div class="meter">
+                  <span class="meter-label">Current</span>
+                  <span id="currentValue">--</span> A
+                </div>
+                <div class="meter">
+                  <span class="meter-label">Voltage</span>
+                  <span id="voltageValue">--</span> V
+                </div>
+                <div class="meter">
+                  <span class="meter-label">Temp 1</span>
+                  <span id="temp1Value">--</span> °C
+                </div>
+                <div class="meter">
+                  <span class="meter-label">Temp 2</span>
+                  <span id="temp2Value">--</span> °C
+                </div>
+                </div>
+                <div class="live-actions">
+                <button id="readLiveBtn">Read</button>
+                </div>
               </div>
             </div>
-
-            <div class="sine-block">
-              <div class="sine-title">Periodical movement</div>
+            
+            <div class="common-block">
+              <div class="block-title">Periodical movement</div>
               
               <!-- First row: Waveform + Frequency + Placeholder -->
               <div class="sine-row-triple">
@@ -194,8 +199,8 @@
             </div>
 
             <!-- Raw command block -->
-            <div class="raw-block" id="rawBlock">
-              <div class="raw-title">Raw command</div>
+            <div class="common-block" id="rawBlock">
+              <div class="block-title">Raw command</div>
               <div class="raw-grid">
                 <input id="rawCommandInput" class="raw-input" type="text" placeholder="Enter HEX bytes">
                 <button id="rawSendBtn" class="sine-btn">Send</button>
@@ -420,23 +425,38 @@
     <div class="modal-dialog error-dialog">
       <div class="error-line"></div>
       <div class="error-icon">✕</div>
-      <div class="error-body">
-        <div class="error-title">Error</div>
-        <div id="errorMessage" class="error-text"></div>
+      <div class="modal-body">
+        <div class="modal-title">Error</div>
+        <div id="errorMessage" class="modal-text"></div>
       </div>
-      <button id="errorCloseBtn" class="mod-close-btn">OK</button>
+      <button id="errorCloseBtn" class="modal-close-btn">OK</button>
     </div>
   </div>
   
   <div id="successOverlay" class="modal-overlay hidden">
-    <div class="modal-dialog">
-      <div class="modal-icon modal-icon-success">✓</div>
-      <div class="modal-title">Success</div>
-      <div id="successMessage" class="modal-text"></div>
+    <div class="modal-dialog success-dialog">
+      <div class="success-line"></div>
+      <div class="success-icon">✓</div>
+      <div class="modal-body">
+        <div class="modal-title">Success</div>
+        <div id="successMessage" class="modal-text"></div>
+      </div>
       <button id="successCloseBtn" class="modal-close-btn">OK</button>
     </div>
-  </div>  
+  </div>
 	
+  <div id="scriptResultOverlay" class="modal-overlay hidden">
+    <div class="modal-dialog info-dialog">
+      <div class="info-line"></div>
+      <div class="info-icon">i</div>
+      <div class="modal-body">
+        <div class="modal-title">Script result</div>
+        <div id="scriptResultMessage" class="modal-text"></div>
+      </div>
+      <button id="scriptResultCloseBtn" class="modal-close-btn">OK</button>
+    </div>
+  </div>
+  
 	<div id="progressOverlay" class="modal-overlay hidden">
 	  <div class="modal-dialog">
 		<div id="progressTitle" class="modal-title">Progress</div>
@@ -446,19 +466,7 @@
 		</div>
 	  </div>
 	</div>
-  
-  <div id="scriptResultOverlay" class="modal-overlay hidden">
-    <div class="modal-dialog info-dialog">
-      <div class="info-line"></div>
-      <div class="info-icon">i</div>
-      <div class="info-body">
-        <div class="info-title">Script result</div>
-        <div id="scriptResultMessage" class="info-text"></div>
-      </div>
-      <button id="scriptResultCloseBtn" class="mod-close-btn">OK</button>
-    </div>
-  </div>
-  
+
   <script src="app.js"></script>
   <!--<script>
     document.addEventListener('DOMContentLoaded', () => {

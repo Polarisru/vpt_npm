@@ -8,6 +8,7 @@ const FirmwareManager = require('./firmware-manager');
 const InfoManager = require('./info-manager');
 const ScriptManager = require('./script-manager');
 const MonitorManager = require('./monitor-manager');
+const FaqManager = require('./faq-manager');
 
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize Managers
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const info = new InfoManager();
   const script = new ScriptManager();
   const monitor = new MonitorManager();
+  const faqMgr = new FaqManager();
 
   pos.setConnectionManager(conn);
   script.setConnectionManager(conn);
@@ -30,12 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
   info.init();
   script.init();
   monitor.init();
+  faqMgr.init();
 
   // 1. Listen for App Version from main process
   api.on('app-version', (event, version) => {
     const el = document.getElementById('swVer');
     if (el) {
-      el.textContent = `Ver. ${version}`;
+      el.textContent = `SW Ver. ${version}`;
     }
   });
 

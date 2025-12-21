@@ -52,8 +52,9 @@ GUI:
   Reconnect after update?
   Return string from script to display      DONE
   GCP command doesn't work in script        DONE
-  Add FAQ tab
-  Change styles to Volz styling guide
+  Add FAQ tab                               DONE
+  Change styles to Volz styling guide       DONE
+  Optimize css file
   
 Infrastructure
   Create device parameters                  Later!
