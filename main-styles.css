@@ -312,7 +312,7 @@ body {
   line-height: 23px;
 }
 
-.sidebar-status-ver #swVer {
+.sidebar-status-ver#swVer {
   color: #ffffff;
 }
 
@@ -449,18 +449,19 @@ body {
 
 .meters-block {
   display: flex;
-  flex-direction: column;
-  align-items: center;   /* center everything horizontally */
-  gap: 8px;
+  align-items: center;      /* vertically center meters + button */
+  gap: 16px;
 }
 
+/* meters centered as a group */
 .meters-row {
   display: flex;
   gap: 15px;
-  justify-content: center;  /* meters row centered */
-  margin-top: 10px;
+  justify-content: center;  /* centers meters within their own area */
+  flex: 1;                  /* take available width so button can sit at right */
 }
 
+/* individual meter cards (unchanged) */
 .meter {
   border-radius: 4px;
   min-width: 80px;
@@ -472,11 +473,6 @@ body {
   border: 1px solid #b3b3b3;
 }
 
-.live-actions {
-  display: flex;
-  justify-content: center;  /* button centered under meters row */
-}
-
 .meter-label {
   display: block;
   font-size: 13px;
@@ -485,8 +481,12 @@ body {
   margin-bottom: 6px;
 }
 
+/* remove old live-actions wrapper */
+
+/* button aligned to the far right */
 #readLiveBtn {
-  padding: 6px 14px;
+  margin-left: auto;        /* pushes it to the right edge of meters-block */
+  padding: 3px 14px;
   border-radius: 4px;
   border-width: 1px;
   border-color: #2966B0;

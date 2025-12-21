@@ -67,3 +67,5 @@ PRINT Non-linearity measurement completed
 PRINT Max absolute error = {max_err} deg
 PRINT Samples measured  = {sample_ix}
 PRINT Finished at {timestamp}
+
+RESULT Max non-linearity: FIXED(max_err, 2) deg

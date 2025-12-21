@@ -48,12 +48,14 @@ GUI:
   Disconnect if VPT is off                  DONE
   Show error message if can't do connect    DONE
   Check error messages                      Later!
-  Disable eeprom file for CAN
-  Reconnect after update?
   Return string from script to display      DONE
   GCP command doesn't work in script        DONE
   Add FAQ tab                               DONE
   Change styles to Volz styling guide       DONE
+  Separate meters block from movement       DONE
+  PRINT error in script                     DONE
+  Disable eeprom file for CAN
+  Reconnect after update?
   Optimize css file
   
 Infrastructure

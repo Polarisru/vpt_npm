@@ -127,35 +127,8 @@
               </div>
             </div>
             
-            <div class="common-block">              
-              <div class="meters-block">
-                <div class="meters-row">
-                <div class="meter">
-                  <span class="meter-label">Current</span>
-                  <span id="currentValue">--</span> A
-                </div>
-                <div class="meter">
-                  <span class="meter-label">Voltage</span>
-                  <span id="voltageValue">--</span> V
-                </div>
-                <div class="meter">
-                  <span class="meter-label">Temp 1</span>
-                  <span id="temp1Value">--</span> °C
-                </div>
-                <div class="meter">
-                  <span class="meter-label">Temp 2</span>
-                  <span id="temp2Value">--</span> °C
-                </div>
-                </div>
-                <div class="live-actions">
-                <button id="readLiveBtn">Read</button>
-                </div>
-              </div>
-            </div>
-            
             <div class="common-block">
               <div class="block-title">Periodical movement</div>
-              
               <!-- First row: Waveform + Frequency + Placeholder -->
               <div class="sine-row-triple">
                 <div class="sine-field">
@@ -177,7 +150,6 @@
                   <!-- Empty placeholder to align with button below -->
                 </div>
               </div>
-
               <!-- Second row: Amplitude + Offset + Start button -->
               <div class="sine-row-triple">
                 <div class="sine-field">
@@ -195,6 +167,31 @@
                 <div class="sine-field sine-field-button">
                   <button id="sineStartStopBtn" class="sine-btn">Start</button>
                 </div>
+              </div>
+            </div>
+
+            <div class="common-block">              
+              <div class="meters-block">
+                <div class="meters-row">
+                  <div class="meter">
+                    <span class="meter-label">Current</span>
+                    <span id="currentValue">--</span> A
+                  </div>
+                  <div class="meter">
+                    <span class="meter-label">Voltage</span>
+                    <span id="voltageValue">--</span> V
+                  </div>
+                  <div class="meter">
+                    <span class="meter-label">Temp 1</span>
+                    <span id="temp1Value">--</span> °C
+                  </div>
+                  <div class="meter">
+                    <span class="meter-label">Temp 2</span>
+                    <span id="temp2Value">--</span> °C
+                  </div>
+                </div>
+
+                <button id="readLiveBtn">Read</button>
               </div>
             </div>
 
