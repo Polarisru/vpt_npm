@@ -361,15 +361,19 @@ class ScriptRunner {
   }
   
   evaluateExpressionsInText(text) {
-    // Replace function calls like FIXED(var, 1) with evaluated results
-    return text.replace(/([A-Z]+)\s*\(([^)]+)\)/gi, (match, funcName, args) => {
+    // FIRST: substitute variables like {p1}, {t2}
+    let result = this.substituteVars(text);
+    // THEN: evaluate function calls like FIXED(var, 1)
+    result = result.replace(/([A-Z]+)\s*\(([^)]+)\)/gi, (match, funcName, args) => {
       const expr = `${funcName}(${args})`;
       try {
         return this.evaluateExpression(expr).toString();
       } catch {
-        return match; // Keep original if evaluation fails
+        return match; // Keep original if fails
       }
     });
+    
+    return result;
   }  
 
   logWithTimestamp(message) {

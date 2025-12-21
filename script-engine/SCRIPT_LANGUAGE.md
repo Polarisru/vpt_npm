@@ -11,7 +11,6 @@ Sends a command to the device and waits for "OK" acknowledgment.
 SEND command
 
 **Examples:**
-SEND GPS
 SEND DP45.0
 SEND DP{angle}
 
@@ -21,7 +20,7 @@ SEND DP{angle}
 Sends a command and waits for a response matching a pattern and captures numeric value(s) into variable(s).
 
 **Syntax:**
-SENDRECV command
+SENDRECV command response
 
 **Examples:**
 SENDRECV GPS PS:{position} # Sends GPS and captures: PS:45.2 -> position = 45.2

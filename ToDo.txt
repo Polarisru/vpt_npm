@@ -54,9 +54,9 @@ GUI:
   Change styles to Volz styling guide       DONE
   Separate meters block from movement       DONE
   PRINT error in script                     DONE
+  Optimize css file
   Disable eeprom file for CAN
   Reconnect after update?
-  Optimize css file
   
 Infrastructure
   Create device parameters                  Later!

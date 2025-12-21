@@ -23,8 +23,7 @@ const uart = require('./uart.js');
 SET target = 90
 SEND DP{target}
 WAIT 500
-SENDNW GPS
-RECV PS:{position}
+SENDRECV GPS PS:{position}
 PRINT Position: {position}
 
 3. Run it:
@@ -42,7 +41,6 @@ See `SCRIPT_LANGUAGE.md` for complete language reference.
 
 Check the `examples/` folder for:
 - `motor_test.txt` - Basic motor positioning test
-- `position_with_retry.txt` - Positioning with retry logic and timeout
 - `sweep_test.txt` - Back-and-forth sweep motion
 - `voltage_monitor.txt` - Continuous voltage monitoring with statistics
 
