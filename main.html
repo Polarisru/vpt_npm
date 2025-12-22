@@ -9,7 +9,7 @@
     <div class="main-grid">
         <!-- Left: Connection Settings -->
         <div class="sidebar">
-            <label>Connection Type</label>
+            <label>Connection Type:</label>
             <select id="connType">
                 <option value="PWM">PWM</option>
                 <option value="RS485">RS485</option>
@@ -112,9 +112,9 @@
               <div class="block-title">Motor Position</div>
               <!--<h2>Motor Position</h2>-->
               <div class="position-row">
-                <button id="positionMinBtn" class="position-btn">Min</button>
+                <button id="positionMinBtn" class="btn btn-primary btn-pos">Min</button>
                 <input type="range" id="positionSlider" min="-45" max="45" value="0" step="0.1">
-                <button id="positionMaxBtn" class="position-btn">Max</button>
+                <button id="positionMaxBtn" class="btn btn-primary btn-pos">Max</button>
               </div>
               <div class="firstDiv">
                 <div class="right-col">
@@ -122,7 +122,7 @@
                 </div>
                 <span id="positionLabel" class="positionLabel">0.0°</span>
                 <div class="right-col-btn">
-                  <button id="setZeroPosBtn" class="set-zero-btn">Set as Zero Pos</button>
+                  <button id="setZeroPosBtn" class="btn btn-primary btn-zero">Set as Zero Pos</button>
                 </div>
               </div>
             </div>
@@ -165,7 +165,7 @@
                        min="-180" max="180" step="1" value="0">
                 </div>
                 <div class="sine-field sine-field-button">
-                  <button id="sineStartStopBtn" class="sine-btn">Start</button>
+                  <button id="sineStartStopBtn" class="btn btn-primary btn-small">Start</button>
                 </div>
               </div>
             </div>
@@ -191,7 +191,7 @@
                   </div>
                 </div>
 
-                <button id="readLiveBtn">Read</button>
+                <button id="readLiveBtn" class="btn btn-primary btn-small">Read</button>
               </div>
             </div>
 
@@ -200,7 +200,7 @@
               <div class="block-title">Raw command</div>
               <div class="raw-grid">
                 <input id="rawCommandInput" class="raw-input" type="text" placeholder="Enter HEX bytes">
-                <button id="rawSendBtn" class="sine-btn">Send</button>
+                <button id="rawSendBtn" class="btn btn-primary btn-small">Send</button>
                 <input id="rawCommandResponse" class="raw-input" type="text" placeholder="Response" readonly>
                 <span></span>
               </div>
@@ -229,10 +229,10 @@
 						</table>
 					</div>
 					<div class="param-actions">
-						<button id="readParamsBtn" disabled>Read</button>
-						<button id="writeParamsBtn" disabled>Write</button>
-						<button id="saveToFileBtn" disabled>Save to File</button>
-						<button id="loadFromFileBtn" disabled>Load from File</button>
+						<button id="readParamsBtn" class="btn btn-primary btn-big" disabled>Read</button>
+						<button id="writeParamsBtn" class="btn btn-primary btn-big" disabled>Write</button>
+						<button id="saveToFileBtn" class="btn btn-primary btn-big" disabled>Save to File</button>
+						<button id="loadFromFileBtn" class="btn btn-primary btn-big" disabled>Load from File</button>
 						<input type="file" id="loadFileInput" accept=".json,application/json" style="display:none">
 					</div>
 				</div>
@@ -248,7 +248,7 @@
           
               <div class="fw-file-area">
                 <span id="fwFileName" class="fw-filename">No file selected</span>
-                <button id="fwBrowseBtn" class="fw-browse-btn">Browse…</button>
+                <button id="fwBrowseBtn" class="btn btn-primary btn-small">Browse…</button>
                 <input type="file" id="fwFileInput" accept=".hex" style="display:none">
               </div>
 					  </div>
@@ -257,13 +257,13 @@
           
               <div class="fw-file-area">
                 <span id="eeFileName" class="fw-filename">No file selected</span>
-                <button id="eeBrowseBtn" class="fw-browse-btn">Browse…</button>
+                <button id="eeBrowseBtn" class="btn btn-primary btn-small">Browse…</button>
                 <input type="file" id="eeFileInput" accept=".eep" style="display:none">
               </div>
 					  </div>            
 
 					  <div class="fw-actions">
-						<button id="fwUploadBtn" class="fw-upload-btn">Upload</button>
+						<button id="fwUploadBtn" class="btn btn-primary btn-small">Upload</button>
 					  </div>
 					</div>  
 					
@@ -271,25 +271,25 @@
 					  <div class="info-row">
 						<div class="common-label">Serial Number</div>
 						<input type="text" id="serialNumber" class="info-input" maxlength="32" readonly>
-						<button class="info-read-btn" id="serialReadBtn">Read</button>
+						<button class="btn btn-primary btn-small" id="serialReadBtn">Read</button>
 					  </div>
 
 					  <div class="info-row">
 						<div class="common-label">PN Number</div>
 						<input type="text" id="pnNumber" class="info-input" maxlength="32" readonly>
-						<button class="info-read-btn" id="pnReadBtn">Read</button>
+						<button class="btn btn-primary btn-small" id="pnReadBtn">Read</button>
 					  </div>
 
 					  <div class="info-row">
 						<div class="common-label">FW Version</div>
 						<input type="text" id="fwVersion" class="info-input" maxlength="32" readonly>
-						<button class="info-read-btn" id="fwReadBtn">Read</button>
+						<button class="btn btn-primary btn-small" id="fwReadBtn">Read</button>
 					  </div>
 
 					  <div class="info-row">
 						<div class="common-label">HW Revision</div>
 						<input type="text" id="hwRevision" class="info-input" maxlength="32" readonly>
-						<button class="info-read-btn" id="hwReadBtn">Read</button>
+						<button class="btn btn-primary btn-small" id="hwReadBtn">Read</button>
 					  </div>
 					</div>        
 							
@@ -298,7 +298,7 @@
 						<div class="common-label">Working Time</div>
 						<div class="wt-field">
 						  <input id="workingTime" class="wt-input" type="text" value="0000:00:00" readonly>
-						  <button id="wtReadBtn" class="wt-read-btn">Read</button>
+						  <button id="wtReadBtn" class="btn btn-primary btn-small">Read</button>
 						</div>
 					  </div>
 					</div>
@@ -309,7 +309,7 @@
 						<textarea id="revText" class="rev-textarea"></textarea>
 					  </div>            
 					  <div class="rev-actions">
-						<button id="revReadBtn" class="rev-read-btn">Read</button>
+              <button id="revReadBtn" class="btn btn-primary btn-small">Read</button>
 					  </div>
 					</div>
 				  </div>
@@ -330,9 +330,9 @@
 
           <div class="script-controls">
             <input type="file" id="scriptFileInput" accept=".txt,.script" style="display: none;">
-            <button id="scriptBrowseBtn" class="script-btn">Browse Script</button>
-            <button id="scriptSaveOutputBtn" class="script-btn">Save Output</button>
-            <button id="scriptRunBtn" class="script-btn">Run</button>
+            <button id="scriptBrowseBtn" class="btn btn-primary btn-big">Browse Script</button>
+            <button id="scriptSaveOutputBtn" class="btn btn-primary btn-big">Save Output</button>
+            <button id="scriptRunBtn" class="btn btn-primary btn-big">Run</button>
           </div>
 			  </div>
 
@@ -419,7 +419,7 @@
 </div>
 
   <div id="errorOverlay" class="modal-overlay hidden">
-    <div class="modal-dialog error-dialog">
+    <div class="modal-dialog common">
       <div class="error-line"></div>
       <div class="error-icon">✕</div>
       <div class="modal-body">
@@ -431,7 +431,7 @@
   </div>
   
   <div id="successOverlay" class="modal-overlay hidden">
-    <div class="modal-dialog success-dialog">
+    <div class="modal-dialog common">
       <div class="success-line"></div>
       <div class="success-icon">✓</div>
       <div class="modal-body">
@@ -443,7 +443,7 @@
   </div>
 	
   <div id="scriptResultOverlay" class="modal-overlay hidden">
-    <div class="modal-dialog info-dialog">
+    <div class="modal-dialog common">
       <div class="info-line"></div>
       <div class="info-icon">i</div>
       <div class="modal-body">

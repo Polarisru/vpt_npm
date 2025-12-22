@@ -47,7 +47,7 @@ GUI:
   Disconnect if power off after reset       DONE
   Disconnect if VPT is off                  DONE
   Show error message if can't do connect    DONE
-  Check error messages                      Later!
+  Check error messages                      DONE
   Return string from script to display      DONE
   GCP command doesn't work in script        DONE
   Add FAQ tab                               DONE
