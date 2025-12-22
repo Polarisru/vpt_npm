@@ -57,6 +57,7 @@ GUI:
   Optimize css file
   Disable eeprom file for CAN
   Reconnect after update?
+  Re-select EEPROM device after selection
   
 Infrastructure
   Create device parameters                  Later!

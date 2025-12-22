@@ -87,7 +87,7 @@
     <div id="welcome-screen">
       <!-- Put your logo / info text here -->
       <div class="welcome-logo">
-        <img src="volz-servos.png" alt="Volz Servos Logo" class="logo-img">
+        <img src="volz-servos.png" alt="Volz Servos Logo">
       </div>
     </div>
 
@@ -133,7 +133,7 @@
               <div class="sine-row-triple">
                 <div class="sine-field">
                   <div class="common-label">Waveform</div>
-                  <select id="sineWaveform" class="sine-input">
+                  <select id="sineWaveform" class="common-input">
                     <option value="sine">Sinusoidal</option>
                     <option value="rect">Rectangle</option>
                     <option value="tri">Triangle</option>
@@ -142,9 +142,7 @@
                 </div>
                 <div class="sine-field">
                   <div class="common-label">Frequency (Hz)</div>
-                  <input type="number" id="sineFrequency"
-                       class="sine-input"
-                       min="0.1" max="10" step="0.1" value="0.5">
+                  <input type="number" id="sineFrequency" class="common-input" min="0.1" max="10" step="0.1" value="0.5">
                 </div>
                 <div class="sine-field sine-field-placeholder">
                   <!-- Empty placeholder to align with button below -->
@@ -154,15 +152,11 @@
               <div class="sine-row-triple">
                 <div class="sine-field">
                   <div class="common-label">Amplitude (°)</div>
-                  <input type="number" id="sineAmplitude"
-                       class="sine-input"
-                       min="0" max="180" step="1" value="30">
+                  <input type="number" id="sineAmplitude" class="common-input" min="0" max="170" step="1" value="30">
                 </div>
                 <div class="sine-field">
                   <div class="common-label">Offset (°)</div>
-                  <input type="number" id="sineOffset"
-                       class="sine-input"
-                       min="-180" max="180" step="1" value="0">
+                  <input type="number" id="sineOffset" class="common-input" min="-170" max="170" step="1" value="0">
                 </div>
                 <div class="sine-field sine-field-button">
                   <button id="sineStartStopBtn" class="btn btn-primary btn-small">Start</button>
@@ -199,7 +193,7 @@
             <div class="common-block" id="rawBlock">
               <div class="block-title">Raw command</div>
               <div class="raw-grid">
-                <input id="rawCommandInput" class="raw-input" type="text" placeholder="Enter HEX bytes">
+                <input id="rawCommandInput" class="common-input" type="text" placeholder="Enter HEX bytes">
                 <button id="rawSendBtn" class="btn btn-primary btn-small">Send</button>
                 <input id="rawCommandResponse" class="raw-input" type="text" placeholder="Response" readonly>
                 <span></span>
@@ -247,7 +241,7 @@
               <div class="common-label">HEX file</div>
           
               <div class="fw-file-area">
-                <span id="fwFileName" class="fw-filename">No file selected</span>
+                <span id="fwFileName" class="common-input fw">No file selected</span>
                 <button id="fwBrowseBtn" class="btn btn-primary btn-small">Browse…</button>
                 <input type="file" id="fwFileInput" accept=".hex" style="display:none">
               </div>
@@ -256,7 +250,7 @@
               <div class="common-label">EEPROM file</div>
           
               <div class="fw-file-area">
-                <span id="eeFileName" class="fw-filename">No file selected</span>
+                <span id="eeFileName" class="common-input fw">No file selected</span>
                 <button id="eeBrowseBtn" class="btn btn-primary btn-small">Browse…</button>
                 <input type="file" id="eeFileInput" accept=".eep" style="display:none">
               </div>
@@ -270,25 +264,25 @@
 					<div id="infoBlock" class="common-block">
 					  <div class="info-row">
 						<div class="common-label">Serial Number</div>
-						<input type="text" id="serialNumber" class="info-input" maxlength="32" readonly>
+						<input type="text" id="serialNumber" class="common-input" maxlength="32" readonly>
 						<button class="btn btn-primary btn-small" id="serialReadBtn">Read</button>
 					  </div>
 
 					  <div class="info-row">
 						<div class="common-label">PN Number</div>
-						<input type="text" id="pnNumber" class="info-input" maxlength="32" readonly>
+						<input type="text" id="pnNumber" class="common-input" maxlength="32" readonly>
 						<button class="btn btn-primary btn-small" id="pnReadBtn">Read</button>
 					  </div>
 
 					  <div class="info-row">
 						<div class="common-label">FW Version</div>
-						<input type="text" id="fwVersion" class="info-input" maxlength="32" readonly>
+						<input type="text" id="fwVersion" class="common-input" maxlength="32" readonly>
 						<button class="btn btn-primary btn-small" id="fwReadBtn">Read</button>
 					  </div>
 
 					  <div class="info-row">
 						<div class="common-label">HW Revision</div>
-						<input type="text" id="hwRevision" class="info-input" maxlength="32" readonly>
+						<input type="text" id="hwRevision" class="common-input" maxlength="32" readonly>
 						<button class="btn btn-primary btn-small" id="hwReadBtn">Read</button>
 					  </div>
 					</div>        
@@ -297,7 +291,7 @@
 					  <div class="wt-row">
 						<div class="common-label">Working Time</div>
 						<div class="wt-field">
-						  <input id="workingTime" class="wt-input" type="text" value="0000:00:00" readonly>
+						  <input id="workingTime" class="common-input wt" type="text" value="0000:00:00" readonly>
 						  <button id="wtReadBtn" class="btn btn-primary btn-small">Read</button>
 						</div>
 					  </div>
@@ -305,7 +299,7 @@
 					
 					<div id="revBlock" class="common-block">
 					  <div class="rev-row">
-						<div class="rev-label">Revision String</div>
+						<div class="common-label">Revision String</div>
 						<textarea id="revText" class="rev-textarea"></textarea>
 					  </div>            
 					  <div class="rev-actions">
