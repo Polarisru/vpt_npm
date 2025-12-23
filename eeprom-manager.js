@@ -14,9 +14,15 @@ class EepromManager {
     this.loadDevicesJson();
 
     const devSelect = document.getElementById('deviceSelect');
+    //if (devSelect) {
+    //  devSelect.addEventListener('change', () => this.handleDeviceSelect(devSelect.value));
+    //}
     if (devSelect) {
-      devSelect.addEventListener('change', () => this.handleDeviceSelect(devSelect.value));
-    }
+      devSelect.addEventListener('change', (e) => {
+        console.log('Selection changed to:', e.target.value);  // Debug
+        this.handleDeviceSelect(e.target.value);
+      });
+    }    
 
     // Listen to connection type changes to filter the list
     document.addEventListener('conn-type-changed', (e) => {
@@ -39,10 +45,7 @@ class EepromManager {
 
   loadDevicesJson() {
     try {
-      const jsonPath = path.join(__dirname, '../../devices.json'); // Adjust path relative to this file!
-      // If devices.json is in root/src/renderer or similar, adjust. 
-      // Assuming: src/renderer/devices.json and this file is src/renderer/js/eeprom-manager.js
-      // It is safer to use process.cwd() or similar if not bundled.
+      //const jsonPath = path.join(__dirname, '../../devices.json');
       // Let's assume it is in the same folder as main.html
       const p = path.join(process.cwd(), 'devices.json'); 
       if (fs.existsSync(p)) {
@@ -78,15 +81,17 @@ class EepromManager {
   }
 
   handleDeviceSelect(name) {
+    // clear the table first
+    this.clearParamTable();
     const dev = this.allDevices.find(d => d.name === name);
     if (dev) {
       this.buildParamTable(dev);
       this.setRightButtonsEnabled(true);
     } else {
-      this.clearParamTable();
       this.setRightButtonsEnabled(false);
     }
   }
+
 
   setRightButtonsEnabled(enabled) {
     ['readParamsBtn', 'writeParamsBtn', 'saveToFileBtn', 'loadFromFileBtn'].forEach(id => {
@@ -149,7 +154,7 @@ class EepromManager {
       tbody.appendChild(tr);
     });
   }
-
+  
   rawToDisplay(raw, mult, div, offset) {
     const scaled = raw / mult;
     return (scaled / div) + offset;

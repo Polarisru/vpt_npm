@@ -15,6 +15,7 @@ class ScriptRunner {
     this.maxIterations = 100000;
     this.iterationCount = 0;
     this.resultText = '';
+    this.outputFile = null;  // File handle for PRINT redirection
     this.parse();
   }
 
@@ -117,6 +118,11 @@ class ScriptRunner {
       case 'GOTO':
         return { type: 'GOTO', label: tokens[1] };
 
+      case 'FILE': {
+        const filename = this.stripInlineComment(tokens.slice(1).join(' '));
+        return { type: 'FILE', filename };
+      }
+      
       default:
         throw new Error(`Unknown command: ${cmd}`);
     }
@@ -145,20 +151,29 @@ class ScriptRunner {
       }
       
       this.logWithTimestamp('Script completed');
-      
-      // Return whatever RESULT last set (may be empty string)
-      return this.resultText;
+      return this.resultText;    
     } catch (error) {
       this.logWithTimestamp(`Error: ${error.message}`);
       this.running = false;
       throw error;
+    } finally {
+      this.closeOutputFile();  // Always close file
     }
   }
 
   stop() {
     this.running = false;
     this.logWithTimestamp('Script stopped by user');
+    this.closeOutputFile();  // Close file on stop
   }
+  
+  closeOutputFile() {
+    if (this.outputFile) {
+      this.outputFile.end();
+      this.outputFile = null;
+      this.logWithTimestamp('Output file closed');
+    }
+  }  
 
   async executeLine(cmd) {
     if (!this.running) return;
@@ -188,6 +203,9 @@ class ScriptRunner {
       case 'GOTO':
         this.executeGOTO(cmd);
         break;
+      case 'FILE':
+        this.executeFILE(cmd);
+        break;        
     }
   }
 
@@ -273,8 +291,13 @@ class ScriptRunner {
 
   executePRINT(cmd) {
     const formatted = this.evaluateExpressionsInText(cmd.text);
-    this.logWithTimestamp(formatted);
-  }
+    const timestamped = this.logWithTimestamp(formatted);  // Gets timestamp + logs
+    
+    // Write to file if open (with newline)
+    if (this.outputFile) {
+      this.outputFile.write(timestamped + '\n');
+    }
+  }  
 
   executeRESULT(cmd) {
     // Evaluate expressions (FIXED(), math) + substitute variables
@@ -297,6 +320,18 @@ class ScriptRunner {
       throw new Error(`Unknown label: ${cmd.label}`);
     }
     this.pc = this.labels[cmd.label] - 1;
+  }
+  
+  executeFILE(cmd) {
+    const filenameExpr = cmd.filename;
+    let filename = this.substituteVars(filenameExpr);
+    filename = this.safeFilename(filename);    
+    try {
+      this.outputFile = require('fs').createWriteStream(filename, { flags: 'w' });
+      this.logWithTimestamp(`PRINT output redirected to: ${filename}`);
+    } catch (error) {
+      throw new Error(`Cannot open file "${filename}": ${error.message}`);
+    }
   }
 
   substituteVars(text) {
@@ -376,6 +411,15 @@ class ScriptRunner {
     return result;
   }  
 
+  safeFilename(name) {
+    // Remove/Replace Windows-invalid chars + format timestamp for filenames
+    return name.replace(/[<>:"/\\|?*]/g, '')
+               .replace(/T/g, '_')
+               .replace(/:/g, '-')           // ISO colons → dashes
+               .replace(/\.(\d{3})Z/, '')    // Remove .320Z milliseconds
+               .replace(/\s+/g, '_');
+  }
+
   logWithTimestamp(message) {
     const timestamp = new Date().toLocaleTimeString('en-GB', { 
       hour12: false, 
@@ -385,7 +429,9 @@ class ScriptRunner {
       fractionalSecondDigits: 3
     });
     
-    this.log(`[${timestamp}] ${message}`);
+    const timestamped = `[${timestamp}] ${message}`;
+    this.log(timestamped);  // Still logs to console
+    return timestamped;     // Now returns for file use
   }
 
   getState() {

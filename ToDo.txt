@@ -54,10 +54,11 @@ GUI:
   Change styles to Volz styling guide       DONE
   Separate meters block from movement       DONE
   PRINT error in script                     DONE
-  Optimize css file
+  Optimize css file                         DONE
+  Add FILE command to scripts processor     DONE
+  Re-select EEPROM device after selection   DONE
   Disable eeprom file for CAN
   Reconnect after update?
-  Re-select EEPROM device after selection
   
 Infrastructure
   Create device parameters                  Later!
