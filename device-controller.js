@@ -1,5 +1,5 @@
 // device-controller.js
-const uart = require('./uart');
+//const uart = require('./uart');
 
 class PriorityLock {
   constructor() {
@@ -33,9 +33,17 @@ class PriorityLock {
 }
 
 class DeviceController {
-  constructor() {
-    this.uartLock = new PriorityLock();
-  }
+  // constructor() {
+    // this.uartLock = new PriorityLock();
+  // }
+  constructor(uartAdapter) {
+      this.uart = uartAdapter || null; 
+      this.uartLock = new PriorityLock();
+  }  
+  
+  setUart(uartAdapter) {
+      this.uart = uartAdapter;
+  }  
 
   // --- Core Queueing Methods ---
 
@@ -43,7 +51,7 @@ class DeviceController {
   async queuedSendAndWait(cmd, matcher, timeoutMs = 1000) {
     await this.uartLock.acquire('high');
     try {
-      return await uart.sendAndWait(cmd, matcher, timeoutMs);
+      return await this.uart.sendAndWait(cmd, matcher, timeoutMs);
     } finally {
       this.uartLock.release();
     }
@@ -53,10 +61,18 @@ class DeviceController {
   async pollingRequest(cmd, matcher, timeoutMs = 1000) {
     await this.uartLock.acquire('low');
     try {
-      return await uart.sendAndWait(cmd, matcher, timeoutMs);
+      return await this.uart.sendAndWait(cmd, matcher, timeoutMs);
     } finally {
       this.uartLock.release();
     }
+  }
+
+  async readLiveMetrics() {
+      // This was previously an ipcMain handler in main.js
+      const voltage = await this.readMonitorVoltage();
+      const current = await this.readMonitorCurrent();
+      const temp = await this.readMonitorTemperature();
+      return { voltage, current, temp };
   }
 
   // --- Device API helpers ---
@@ -299,7 +315,7 @@ class DeviceController {
 
   // Used on app exit
   async shutdown() {
-    if (!uart.isOpen()) {
+    if (!this.uart.isOpen()) {
       console.log('shutdown: UART not open, skipping PWR0');
       return;
     }
@@ -318,8 +334,9 @@ class DeviceController {
       console.error('shutdown: PWR0 failed:', e.message);
     }
     // now close UART once
-    uart.close();
+    this.uart.close();
   }
 }
 
-module.exports = new DeviceController();
+//module.exports = new DeviceController();
+module.exports = DeviceController;

@@ -3,10 +3,11 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const uart = require('./uart');
-const deviceController = require('./device-controller');
+const DeviceController = require('./device-controller');
 const FirmwareUpdater = require('./firmware-updater');
 
 // Initialize updater with the device controller instance
+const deviceController = new DeviceController(uart);
 const firmwareUpdater = new FirmwareUpdater(deviceController);
 
 let selectWindow;
@@ -172,11 +173,11 @@ ipcMain.handle('read-live-metrics', async () => {
 
   // Fetch all 3 sequentially
   // We handle them here so the Renderer gets one nice object
-  const voltage = await deviceController.readMonitorVoltage();
-  const current = await deviceController.readMonitorCurrent();
-  const temp = await deviceController.readMonitorTemperature();
-
-  return { voltage, current, temp };
+  // const voltage = await deviceController.readMonitorVoltage();
+  // const current = await deviceController.readMonitorCurrent();
+  // const temp = await deviceController.readMonitorTemperature();
+  // return { voltage, current, temp };
+  return await deviceController.readLiveMetrics();
 });
 
 ipcMain.handle('uart-send-wait', async (_e, cmd, matchStringOrTimeout, timeoutArg) => {
