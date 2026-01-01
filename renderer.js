@@ -1,73 +1,61 @@
-// renderer.js  (small first window)
+// src/renderer/js/renderer.js
 
-console.log('Renderer script started');
+const api = require('./api');
 
-const { SerialPort } = require('serialport');
-const { ipcRenderer } = require('electron');
+document.addEventListener('DOMContentLoaded', async () => {
+    const portSelect = document.getElementById('portSelect');
+    const connectBtn = document.getElementById('connectBtn');
+    const statusLabel = document.getElementById('statusLabel');
 
-let statusLabel = null;
-
-// List ports when page loads
-SerialPort.list()
-    .then(ports => {
-        console.log('Ports received:', ports);
-        const select = document.getElementById('portSelect');
-
-        if (!select) return;
-
-        if (ports.length === 0) {
-            select.innerHTML = '<option>No ports found</option>';
-        } else {
-            select.innerHTML = '';
-            ports.forEach(port => {
-                const option = document.createElement('option');
-                option.value = port.path;
-                option.text = port.path;
-                select.appendChild(option);
-            });
+    // 1. Populate Port List
+    if (portSelect) {
+        portSelect.innerHTML = '<option>Loading ports...</option>';
+        try {
+            const ports = await api.listPorts();
+            
+            if (ports.length === 0) {
+                portSelect.innerHTML = '<option>No ports found</option>';
+            } else {
+                portSelect.innerHTML = '';
+                ports.forEach(port => {
+                    const option = document.createElement('option');
+                    option.value = port.path;
+                    option.text = port.friendlyName || port.path;
+                    portSelect.appendChild(option);
+                });
+            }
+        } catch (err) {
+            console.error('Error listing ports:', err);
+            portSelect.innerHTML = '<option>Error loading ports</option>';
         }
-    })
-    .catch(err => {
-        console.error('Error listing ports:', err);
-        const select = document.getElementById('portSelect');
-        if (select) {
-            select.innerHTML = '<option>Error: ' + err.message + '</option>';
+    }
+
+    // 2. Handle Connect Button
+    if (connectBtn && portSelect) {
+        connectBtn.addEventListener('click', () => {
+            const selectedPort = portSelect.value;
+            const isRecovery = document.getElementById('recoveryMode')?.checked || false;
+
+            if (!selectedPort || selectedPort === 'No ports found' || selectedPort.startsWith('Error')) {
+                return;
+            }
+
+            if (statusLabel) {
+                statusLabel.textContent = isRecovery ? 'Opening (Recovery)...' : 'Connecting...';
+                statusLabel.className = 'info';
+            }
+
+            // Call API to handle connection/navigation
+            api.selectPort(selectedPort, isRecovery);
+        });
+    }
+
+    // 3. Handle Errors (Electron specific feedback)
+    api.onPortCheckFailed((message) => {
+        console.log('Port check failed:', message);
+        if (statusLabel) {
+            statusLabel.textContent = message || 'Connection failed';
+            statusLabel.className = 'error';
         }
     });
-
-document.addEventListener('DOMContentLoaded', () => {
-    const connectBtn = document.getElementById('connectBtn');
-    const portSelect = document.getElementById('portSelect');
-    statusLabel = document.getElementById('statusLabel');
-
-    if (!connectBtn || !portSelect) return;
-
-    connectBtn.addEventListener('click', () => {
-      const selectedPort = portSelect.value;
-      // Get checkbox state
-      const isRecovery = document.getElementById('recoveryMode').checked;
-
-      if (!selectedPort || selectedPort === 'No ports found') return;
-
-      if (statusLabel) {
-        statusLabel.textContent = isRecovery ? 'Opening in Recovery Mode...' : 'Checking device...';
-        statusLabel.classList.remove('ok', 'error');
-        statusLabel.classList.add('info');
-      }
-
-      console.log('Selected port:', selectedPort, 'Recovery:', isRecovery);
-      
-      // Send object instead of just string
-      ipcRenderer.send('port-selected', { portPath: selectedPort, recovery: isRecovery });
-    });    
-});
-
-// Error from main when device not available / timeout / access denied
-ipcRenderer.on('port-check-failed', (_event, message) => {
-  console.log('Port check failed:', message);
-  if (statusLabel) {
-    statusLabel.textContent = message || 'VPT not connected';
-    statusLabel.classList.remove('ok', 'info');
-    statusLabel.classList.add('error');
-  }
 });

@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
           updateBtn.disabled = false;
         }      
         
-        ui.showError('Device in Recovery Mode (v00.00). Please update firmware.');
+        ui.showSuccess('Connected in Recovery Mode (v00.00).\nReady for VPT firmware update.');
       }
     }
   });
