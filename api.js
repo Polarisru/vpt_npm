@@ -4,24 +4,27 @@
 const isElectron = typeof navigator === 'object' && typeof navigator.userAgent === 'string' && navigator.userAgent.indexOf('Electron') >= 0;
 
 let ipcRenderer;
-let SerialPort; // Add SerialPort for listing ports in Electron
+let SerialPort; 
 let DeviceController;
 let CapSerial, CapFilesystem, Directory, Encoding;
 let mobileController = null;
 
+// --- LOAD DEPENDENCIES ---
 if (isElectron) {
-    // --- ELECTRON MODE ---
+    // ELECTRON MODE
     const electron = require('electron');
     ipcRenderer = electron.ipcRenderer;
-    // Load SerialPort only in Electron for listing ports
     try {
         SerialPort = require('serialport').SerialPort;
     } catch (e) {
-        console.warn('SerialPort module not found in renderer (normal if using context isolation)');
+        console.warn('SerialPort module not found in renderer');
     }
 } else {
-    // --- CAPACITOR / MOBILE MODE ---
-    DeviceController = require('./device-controller');
+    // MOBILE MODE
+    // Expect DeviceController to be global (loaded via script tag) or required if bundled
+    DeviceController = (typeof window !== 'undefined' && window.DeviceController) ? window.DeviceController : require('./device-controller');
+    
+    // Capacitor Plugins (Assuming standard require works or they are global shims)
     const { Serial } = require('@adeunis/capacitor-serial');
     CapSerial = Serial;
     const { Filesystem, Directory: Dir, Encoding: Enc } = require('@capacitor/filesystem');
@@ -29,7 +32,6 @@ if (isElectron) {
     Directory = Dir;
     Encoding = Enc;
 
-    // ... (Keep your MobileUartAdapter class code here) ...
     class MobileUartAdapter {
         constructor() {
             this.isOpenFlag = false;
@@ -77,53 +79,33 @@ if (isElectron) {
     mobileController = new DeviceController(adapter);
 }
 
-module.exports = {
-    // --- NEW METHODS FOR RENDERER.JS REFACTORING ---
-
-    /**
-     * Returns a list of available ports.
-     * Electron: Returns real COM ports.
-     * Mobile: Returns a single static "USB OTG" entry.
-     */
+// --- DEFINE API OBJECT ---
+const api = {
     async listPorts() {
         if (isElectron) {
             if (!SerialPort) return [];
             return await SerialPort.list();
         } else {
-            // Mobile always assumes one OTG device
             return [{ path: 'USB', friendlyName: 'USB OTG Device' }];
         }
     },
 
-    /**
-     * Handles the "Connect" action from the start screen.
-     * Electron: Sends IPC to main process to connect and open window.
-     * Mobile: Navigates to main.html (connection happens there).
-     */
     async selectPort(portPath, isRecovery) {
         if (isElectron) {
             ipcRenderer.send('port-selected', { portPath, recovery: isRecovery });
         } else {
-            // Mobile: Just navigate. Connection/Handshake happens in app.js
             window.location.href = 'main.html';
         }
     },
 
-    /**
-     * Listen for connection failures (Electron only).
-     */
     onPortCheckFailed(callback) {
         if (isElectron) {
             ipcRenderer.on('port-check-failed', (event, message) => callback(message));
         }
     },
 
-    // ---------------------------------------------------
-
-    // ... (Keep all your existing API methods below: connInit, connPower, handshake, etc.) ...
-    
     async handshake() {
-        if (isElectron) return { fwVersion: '00.00' }; // Handled by main.js
+        if (isElectron) return { fwVersion: '00.00' }; 
         return mobileController.handshake();
     },
 
@@ -136,86 +118,114 @@ module.exports = {
         return true;
     },
 
-    // ... (rest of your existing methods: connPower, setPosition, etc.) ...
     async connPower(on) {
         if (isElectron) return ipcRenderer.invoke('conn-power', on);
         return mobileController.setPower(on);
     },
+
     async setPosition(degrees) {
         if (isElectron) return ipcRenderer.invoke('set-position', degrees);
         return mobileController.setPosition(degrees);
     },
+
     async readSupply() {
         if (isElectron) return ipcRenderer.invoke('read-supply');
         return mobileController.readSupply();
     },
+
     async readTemperature() {
         if (isElectron) return ipcRenderer.invoke('read-temperature');
         return mobileController.readTemperature();
     },
+
     async readStatus() {
         if (isElectron) return ipcRenderer.invoke('read-status');
         return mobileController.readStatus();
     },
+
     async readDevicePosition() {
         if (isElectron) return ipcRenderer.invoke('read-device-position');
         return mobileController.readDevicePosition();
     },
+
     async readLiveMetrics() {
         if (isElectron) return ipcRenderer.invoke('read-live-metrics');
         return mobileController.readLiveMetrics();
     },
+
     async writeParam(p) {
         if (isElectron) return ipcRenderer.invoke('write-param', p);
         const { address, type, value } = p;
         return mobileController.writeParam(address, type, value);
     },
+
     async readByte(addr) {
         if (isElectron) return ipcRenderer.invoke('read-byte', addr);
         return mobileController.readByte(addr);
     },
+
     async readAsciiRange(args) {
         if (isElectron) return ipcRenderer.invoke('read-ascii-range', args);
         const { start, end } = args;
         return mobileController.readAsciiRange(start, end);
     },
+
     async sendTextCommand(cmd, prefix) {
         if (isElectron) return ipcRenderer.invoke('send-text-command', { cmd, prefix });
         return mobileController.sendTextCommand(cmd, prefix);
     },
+
     async sendRawCommand(bytes) {
         if (isElectron) return ipcRenderer.invoke('send-raw-command', { bytes });
         return mobileController.sendRawCommand(bytes);
     },
+
     async performUpdate(pages, totalPages) {
         if (isElectron) return ipcRenderer.invoke('perform-update', pages, totalPages);
         throw new Error('Firmware update not supported on mobile yet');
     },
+
     async performUpload(pages, totalPages) {
         if (isElectron) return ipcRenderer.invoke('perform-upload', pages, totalPages);
         throw new Error('Upload not supported on mobile yet');
     },
+
     async readFile(path) {
         if (isElectron) return ipcRenderer.invoke('read-file', path);
         const ret = await CapFilesystem.readFile({ path, directory: Directory.Documents, encoding: Encoding.UTF8 });
         return ret.data;
     },
+
     async writeFile(path, content) {
         if (isElectron) return ipcRenderer.invoke('write-file', { path, content });
         await CapFilesystem.writeFile({ path, data: content, directory: Directory.Documents, encoding: Encoding.UTF8 });
     },
+
     async selectHexFile() {
         if (isElectron) return ipcRenderer.invoke('select-hex-file');
         return { canceled: true, filePaths: [] };
     },
+
     async saveDialog(opts) {
         if (isElectron) return ipcRenderer.invoke('save-dialog', opts);
         return { canceled: true };
     },
+
     on(channel, listener) {
         if (isElectron) ipcRenderer.on(channel, listener);
     },
+
     removeListener(channel, listener) {
         if (isElectron) ipcRenderer.removeListener(channel, listener);
     }
 };
+
+// --- EXPORT LOGIC ---
+if (typeof module !== 'undefined' && module.exports) {
+    // Electron / Node
+    module.exports = api;
+}
+if (typeof window !== 'undefined') {
+    // Browser / Mobile
+    window.api = api;
+}

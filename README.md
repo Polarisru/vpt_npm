@@ -23,3 +23,6 @@ Ctrl+Shift+I
 ## Add UART port permissions
 sudo usermod -a -G dialout your_user
 sudo usermod -a -G tty your_user 
+
+## Android
+npx cap sync android
