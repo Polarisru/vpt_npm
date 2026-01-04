@@ -9,8 +9,10 @@
     "postinstall": "electron-rebuild",
     "build:win": "electron-builder --win",
     "package": "electron-forge package",
-    "make": "electron-forge make"
-  },
+    "make": "electron-forge make",
+    "build:android": "webpack && npx cap sync",
+    "run:android": "npm run build:android && npx cap run android"
+  },  
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -25,8 +27,16 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.10.2",
     "@electron-forge/plugin-fuses": "^7.10.2",
     "@electron/fuses": "^1.8.0",
+    "buffer": "^6.0.3",
+    "copy-webpack-plugin": "^13.0.1",
     "electron": "^39.2.2",
-    "electron-rebuild": "^3.2.9"
+    "electron-rebuild": "^3.2.9",
+    "events": "^3.3.0",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
+    "webpack": "^5.104.1",
+    "webpack-cli": "^6.0.1"
   },
   "build": {
     "appId": "com.volz-servos.vpt",
@@ -40,6 +50,7 @@
   "dependencies": {
     "@adeunis/capacitor-serial": "^1.0.6",
     "@capacitor/android": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
     "@capacitor/filesystem": "^8.0.0",
     "electron-squirrel-startup": "^1.0.1",
     "serialport": "^13.0.0"
