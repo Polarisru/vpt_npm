@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 1. Populate Port List
     if (portSelect) {
-        portSelect.innerHTML = '<option>Loading ports...</option>';
+        //portSelect.innerHTML = '<option>Loading ports...</option>';
         try {
             const ports = await api.listPorts();
             
